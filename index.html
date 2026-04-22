@@ -2,676 +2,947 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Elie</title>
-<link rel="manifest" href="/manifest.json">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#f4f3ef">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Elie">
-<meta name="theme-color" content="#09090b">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
-  }
-</script>
+<link rel="manifest" href="manifest.json">
+<title>Elie</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ================================================================
-   ELIE — Premium Dashboard v3
-   Palette : noir profond + accents vifs, inspiration Linear / Arc
-   ================================================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  :root {
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --surface-2: #faf9f6;
+    --ink: #18181b;
+    --ink-2: #3f3f46;
+    --ink-3: #71717a;
+    --ink-4: #a1a1aa;
+    --line: #e7e5e0;
+    --line-2: #eeece7;
 
-:root{
-  /* Backgrounds */
-  --bg:#09090b;
-  --surface:#131316;
-  --surface-hi:#1a1a1f;
-  --surface-higher:#22222a;
-  /* Borders */
-  --border:#27272c;
-  --border-hi:#33333a;
-  /* Text */
-  --text:#fafaf7;
-  --text-mu:#8a8a95;
-  --text-dim:#565660;
-  --text-faint:#3a3a42;
-  /* Accents */
-  --green:#30d158;
-  --amber:#ff9f0a;
-  --red:#ff453a;
-  --blue:#64d2ff;
-  --purple:#bf5af2;
-  --pink:#ff375f;
-  /* Radii */
-  --r-sm:10px;
-  --r-md:14px;
-  --r-lg:18px;
-  --r-xl:24px;
-  /* Typography */
-  --font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-  --font-serif:'Instrument Serif',Georgia,serif;
-}
+    --green: #2f7d4f;
+    --green-bg: #e8f1ea;
+    --orange: #c85a2c;
+    --orange-bg: #f9ebe2;
+    --gold: #a67414;
+    --gold-bg: #f6eedc;
+    --blue: #2c5a8a;
+    --blue-bg: #e5edf5;
+    --violet: #6b4a8a;
+    --violet-bg: #ece5f3;
 
-html,body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
-body{
-  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-  background:
-    radial-gradient(1200px 600px at 50% -200px,rgba(100,210,255,.06),transparent 70%),
-    radial-gradient(800px 400px at 100% 100%,rgba(191,90,242,.04),transparent 60%),
-    var(--bg);
-  min-height:100vh;
-}
+    --shadow-sm: 0 1px 2px rgba(24,24,27,.04);
+    --shadow: 0 1px 2px rgba(24,24,27,.04), 0 4px 16px rgba(24,24,27,.04);
+    --shadow-lg: 0 8px 24px rgba(24,24,27,.08), 0 24px 48px rgba(24,24,27,.06);
 
-button,input,select,textarea{font-family:inherit;color:inherit}
-a{color:inherit;text-decoration:none}
+    --r-sm: 10px;
+    --r: 16px;
+    --r-lg: 22px;
 
-/* ============ HEADER : wordmark + date ============ */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 20px 8px;
-}
-.wm{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.5px}
-.wm-logo{
-  width:22px;height:22px;border-radius:8px;
-  background:linear-gradient(135deg,var(--green),#2b9c47);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-serif);font-style:italic;font-size:15px;color:#071008;font-weight:400;
-}
-.wm-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.topdate{font-size:12px;color:var(--text-dim);font-variant-numeric:tabular-nums}
+    --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
 
-/* ============ HERO : greeting + clock ============ */
-.hero{padding:8px 20px 20px}
-.greet{
-  font-family:var(--font-serif);font-style:italic;
-  font-size:36px;line-height:1;letter-spacing:-.5px;
-  color:var(--text);
-}
-.greet span{color:var(--green);font-style:italic}
-.subline{
-  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-  margin-top:10px;
-}
-.subtext{font-size:13px;color:var(--text-mu);font-weight:400}
-.clock{
-  font-size:28px;font-weight:300;letter-spacing:-1px;
-  font-variant-numeric:tabular-nums;
-  color:var(--text);line-height:1;
-}
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: contain;
+  }
 
-/* ============ STATUS PILLS : 3 mini-stats ============ */
-.pills{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
-  padding:0 20px 16px;
-}
-.pill{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-md);padding:10px 12px;
-  display:flex;flex-direction:column;gap:2px;
-  transition:border-color .15s;
-  cursor:pointer;
-}
-.pill:active{transform:scale(.98)}
-.pill-label{
-  font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;
-  color:var(--text-dim);
-  display:flex;align-items:center;gap:5px;
-}
-.pill-dot{width:5px;height:5px;border-radius:50%}
-.pill-value{font-size:18px;font-weight:600;letter-spacing:-.5px;line-height:1.1}
-.pill-hint{font-size:10px;color:var(--text-dim)}
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
 
-.pill.urgent{border-color:rgba(255,69,58,.3);background:linear-gradient(180deg,rgba(255,69,58,.06),var(--surface))}
-.pill.urgent .pill-dot{background:var(--red);box-shadow:0 0 6px var(--red)}
-.pill.urgent .pill-value{color:var(--red)}
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 8px 16px 120px;
+  }
 
-.pill.tasks .pill-dot{background:var(--amber)}
-.pill.tasks .pill-value{color:var(--amber)}
+  /* ═══ TOP BAR ═══ */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 4px 8px;
+  }
+  .topbar .date {
+    font-size: 13px;
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .topbar .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
 
-.pill.budget.ok .pill-dot{background:var(--green)}
-.pill.budget.ok .pill-value{color:var(--green)}
+  /* ═══ HERO ═══ */
+  .hero {
+    padding: 24px 4px 28px;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 46px;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--ink-2);
+  }
+  .hero .sub {
+    margin-top: 10px;
+    font-size: 15px;
+    color: var(--ink-3);
+    font-weight: 400;
+  }
 
-/* ============ CARDS GRID ============ */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px}
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:14px 14px 12px;
-  position:relative;overflow:hidden;
-  transition:border-color .2s;
-}
-.card:hover{border-color:var(--border-hi)}
-.card-full{grid-column:1/-1}
+  /* ═══ SECTION ═══ */
+  .section {
+    margin-top: 28px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 4px 12px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    letter-spacing: 0.02em;
+  }
+  .section-meta {
+    font-size: 12px;
+    color: var(--ink-4);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
 
-.card-head{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:10px;
-}
-.card-title{
-  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;
-  color:var(--text-mu);display:flex;align-items:center;gap:6px;
-}
-.card-ico{width:12px;height:12px;opacity:.6}
-.card-badge{
-  font-size:10px;font-weight:600;color:var(--text-dim);
-  padding:2px 7px;border-radius:10px;background:var(--surface-hi);
-  font-variant-numeric:tabular-nums;
-}
+  /* ═══ CARD ═══ */
+  .card {
+    background: var(--surface);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
 
-/* ---- Mails ---- */
-.mail-row{
-  display:flex;align-items:center;gap:10px;padding:7px 0;
-  border-bottom:1px solid var(--border);cursor:pointer;
-  transition:opacity .15s;
-}
-.mail-row:last-child{border:none;padding-bottom:0}
-.mail-row:first-child{padding-top:0}
-.mail-row:hover{opacity:.75}
-.mail-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.mail-dot.red{background:var(--red);box-shadow:0 0 6px rgba(255,69,58,.5)}
-.mail-dot.amber{background:var(--amber)}
-.mail-dot.gray{background:var(--text-faint)}
-.mail-body{flex:1;min-width:0}
-.mail-subj{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-.mail-from{font-size:10px;color:var(--text-dim);margin-top:1px;font-variant-numeric:tabular-nums}
+  /* ═══ MAILS ═══ */
+  .mails-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mails-count {
+    font-family: var(--font-display);
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .mails-count-label {
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.35;
+  }
+  .mails-count-label strong { color: var(--ink); font-weight: 600; }
 
-/* ---- Tasks ---- */
-.task-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
-.task-row:last-child{border:none;padding-bottom:0}
-.task-row:first-child{padding-top:0}
-.ck{
-  width:18px;height:18px;border-radius:50%;
-  border:1.5px solid var(--border-hi);flex-shrink:0;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .2s;
-}
-.ck:hover{border-color:var(--green)}
-.ck.done{background:var(--green);border-color:var(--green)}
-.ck.done::after{
-  content:'';display:block;width:5px;height:3px;
-  border-left:1.5px solid var(--bg);border-bottom:1.5px solid var(--bg);
-  transform:rotate(-45deg) translateY(-1px);
-}
-.task-name{font-size:12px;flex:1;color:var(--text)}
-.task-name.done{color:var(--text-dim);text-decoration:line-through}
-.chip-xs{
-  font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;
-  flex-shrink:0;text-transform:uppercase;letter-spacing:.5px;
-}
-.chip-xs.red{background:rgba(255,69,58,.12);color:var(--red)}
-.chip-xs.amber{background:rgba(255,159,10,.12);color:var(--amber)}
+  .mail {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mail:last-child { border-bottom: none; }
+  .mail-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .mail-dot.urgent { background: var(--orange); }
+  .mail-dot.normal { background: var(--blue); }
+  .mail-dot.info { background: var(--ink-4); }
+  .mail-body { flex: 1; min-width: 0; }
+  .mail-from {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mail-subj {
+    font-size: 13px;
+    color: var(--ink-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+  }
+  .mail-time {
+    font-size: 12px;
+    color: var(--ink-4);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
 
-/* ---- Budget ---- */
-.budget-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-top:4px}
-.budget-item{display:flex;flex-direction:column;gap:4px}
-.budget-row{display:flex;justify-content:space-between;align-items:baseline}
-.budget-name{font-size:11px;color:var(--text-mu);font-weight:500}
-.budget-value{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
-.budget-value.ok{color:var(--green)}
-.budget-value.warn{color:var(--amber)}
-.budget-value.over{color:var(--red)}
-.budget-bar{height:4px;background:var(--surface-hi);border-radius:2px;overflow:hidden;position:relative}
-.budget-fill{height:100%;border-radius:2px;transition:width .6s ease;position:relative}
-.budget-fill.ok{background:linear-gradient(90deg,#2b9c47,var(--green))}
-.budget-fill.warn{background:linear-gradient(90deg,#cc7f07,var(--amber))}
-.budget-fill.over{background:linear-gradient(90deg,#cc3730,var(--red))}
+  /* ═══ TASKS ═══ */
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .task:last-child { border-bottom: none; }
+  .task-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    flex-shrink: 0;
+    margin-top: 1px;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .task-check.done {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .task-check.done::after {
+    content: '';
+    width: 10px; height: 6px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+  .task-body { flex: 1; min-width: 0; }
+  .task-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  .task.done .task-title {
+    color: var(--ink-4);
+    text-decoration: line-through;
+  }
+  .task-meta {
+    display: flex; gap: 8px; align-items: center;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .task-tag {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .task-tag.urgent { background: var(--orange-bg); color: var(--orange); }
+  .task-tag.today { background: var(--blue-bg); color: var(--blue); }
+  .task-tag.soon { background: var(--gold-bg); color: var(--gold); }
 
-.budget-summary{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-top:12px;padding-top:10px;border-top:1px solid var(--border);
-}
-.budget-total{font-size:11px;color:var(--text-mu)}
-.budget-total strong{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+  /* ═══ BUDGET ═══ */
+  .budget {
+    padding: 20px 18px;
+  }
+  .budget-top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .budget-spent {
+    font-family: var(--font-display);
+    font-size: 42px;
+    line-height: 1;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .budget-spent .currency {
+    font-size: 22px;
+    color: var(--ink-3);
+    margin-left: 2px;
+  }
+  .budget-right {
+    text-align: right;
+  }
+  .budget-total {
+    font-size: 13px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .budget-total strong { color: var(--ink); font-weight: 600; }
+  .budget-delta {
+    font-size: 12px;
+    color: var(--green);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .budget-bar {
+    height: 8px;
+    background: var(--line-2);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .budget-bar-fill {
+    height: 100%;
+    background: var(--ink);
+    border-radius: 999px;
+    transition: width .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .budget-cats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .budget-cat {
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: var(--r-sm);
+    border: 1px solid var(--line);
+  }
+  .budget-cat-name {
+    font-size: 11px;
+    color: var(--ink-3);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .budget-cat-val {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
 
-/* ---- Apprendre (spaced repetition) ---- */
-.learn-card{
-  border:1px solid rgba(100,210,255,.15);
-  background:linear-gradient(180deg,rgba(100,210,255,.03),var(--surface));
-}
-.learn-card:hover{border-color:rgba(100,210,255,.3)}
-.learn-scroll{
-  display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;
-  margin:0 -14px;padding:2px 14px 4px;
-  scroll-snap-type:x mandatory;
-}
-.learn-scroll::-webkit-scrollbar{display:none}
-.review-item{
-  flex-shrink:0;width:72%;max-width:260px;
-  background:var(--surface-hi);border:1px solid var(--border);
-  border-radius:var(--r-md);padding:12px 14px;
-  scroll-snap-align:start;cursor:pointer;
-  transition:all .2s;display:flex;flex-direction:column;gap:8px;
-  min-height:128px;
-}
-.review-item:hover{border-color:var(--border-hi);background:var(--surface-higher)}
-.review-item.done{opacity:.4;background:var(--surface)}
-.review-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.review-cat{
-  font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;
-  padding:2px 7px;border-radius:10px;
-}
-.review-cat.concept{background:rgba(191,90,242,.15);color:var(--purple)}
-.review-cat.outil{background:rgba(48,209,88,.12);color:var(--green)}
-.review-cat.vocab{background:rgba(100,210,255,.12);color:var(--blue)}
-.review-cat.archi{background:rgba(255,159,10,.12);color:var(--amber)}
-.review-pal{font-size:9px;font-weight:500;color:var(--text-dim);font-variant-numeric:tabular-nums}
-.review-term{font-size:17px;font-weight:600;letter-spacing:-.3px;line-height:1.1;color:var(--text)}
-.review-hint{font-size:11px;color:var(--text-mu);line-height:1.4;margin-top:auto}
-.review-cta{
-  display:flex;align-items:center;gap:4px;
-  font-size:10px;font-weight:600;color:var(--blue);
-  margin-top:2px;
-}
+  /* ═══ APPRENDRE ═══ */
+  .learn-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 16px;
+    margin: 0 -16px;
+    scrollbar-width: none;
+  }
+  .learn-scroll::-webkit-scrollbar { display: none; }
 
-/* ============ ACTIONS GRID ============ */
-.actions{padding:18px 20px 12px}
-.actions-head{
-  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;
-  color:var(--text-mu);margin-bottom:10px;
-}
-.actions-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.action-btn{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-md);padding:12px 4px 10px;
-  cursor:pointer;transition:all .15s;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-}
-.action-btn:hover{background:var(--surface-hi);border-color:var(--border-hi)}
-.action-btn:active{transform:scale(.95)}
-.action-ico{width:20px;height:20px;color:var(--text-mu)}
-.action-btn:hover .action-ico{color:var(--text)}
-.action-label{font-size:9px;color:var(--text-mu);font-weight:500;line-height:1}
+  .learn-card {
+    flex: 0 0 78%;
+    scroll-snap-align: start;
+    background: var(--surface);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    padding: 18px 18px 16px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+  }
+  .learn-card:active {
+    transform: scale(0.98);
+  }
+  .learn-cat {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .learn-cat.voc { background: var(--violet-bg); color: var(--violet); }
+  .learn-cat.concept { background: var(--blue-bg); color: var(--blue); }
+  .learn-cat.outil { background: var(--green-bg); color: var(--green); }
+  .learn-cat.archi { background: var(--gold-bg); color: var(--gold); }
+  .learn-cat.business { background: var(--orange-bg); color: var(--orange); }
 
-/* ============ FOOTER ============ */
-.footer{
-  padding:20px 20px 32px;text-align:center;
-  font-size:10px;color:var(--text-faint);
-  display:flex;align-items:center;justify-content:center;gap:6px;
-}
-.footer-dot{width:4px;height:4px;border-radius:50%;background:var(--green)}
+  .learn-term {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin-top: 10px;
+    font-weight: 400;
+  }
+  .learn-preview {
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.45;
+    margin-top: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .learn-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .learn-step {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-4);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .learn-arrow {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-2);
+  }
 
-/* ============ TOAST ============ */
-.toast{
-  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--surface-higher);border:1px solid var(--border-hi);
-  color:var(--text);font-size:12px;padding:10px 18px;border-radius:20px;
-  opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;z-index:99;
-  box-shadow:0 8px 24px rgba(0,0,0,.4);
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* ═══ SHORTCUTS ═══ */
+  .shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .shortcut {
+    background: var(--surface);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-sm);
+    padding: 16px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform .15s;
+    text-align: center;
+  }
+  .shortcut:active { transform: scale(0.96); }
+  .shortcut-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shortcut-icon.alarm { background: var(--orange-bg); color: var(--orange); }
+  .shortcut-icon.timer { background: var(--green-bg); color: var(--green); }
+  .shortcut-icon.note { background: var(--gold-bg); color: var(--gold); }
+  .shortcut-icon.call { background: var(--blue-bg); color: var(--blue); }
+  .shortcut-icon.music { background: var(--violet-bg); color: var(--violet); }
+  .shortcut-icon.map { background: var(--green-bg); color: var(--green); }
+  .shortcut-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-2);
+    line-height: 1.2;
+  }
 
-/* ============ DETAIL SHEET (for apprendre click) ============ */
-.sheet-bg{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-  z-index:98;opacity:0;pointer-events:none;transition:opacity .25s;
-}
-.sheet-bg.open{opacity:1;pointer-events:auto}
-.sheet{
-  position:fixed;bottom:0;left:0;right:0;z-index:99;
-  background:var(--surface);border-top-left-radius:24px;border-top-right-radius:24px;
-  padding:28px 24px calc(32px + env(safe-area-inset-bottom));
-  transform:translateY(100%);transition:transform .3s cubic-bezier(.3,0,.2,1);
-  border:1px solid var(--border);border-bottom:none;
-  max-height:80vh;overflow-y:auto;
-}
-.sheet.open{transform:translateY(0)}
-.sheet-handle{
-  width:36px;height:4px;background:var(--border-hi);border-radius:2px;
-  margin:-12px auto 18px;
-}
-.sheet-cat{
-  display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;
-  letter-spacing:1px;padding:3px 10px;border-radius:10px;margin-bottom:12px;
-}
-.sheet-term{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:16px;line-height:1.1}
-.sheet-block{margin-bottom:16px}
-.sheet-block-label{
-  font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;
-  color:var(--text-dim);margin-bottom:4px;
-}
-.sheet-block-text{font-size:14px;line-height:1.5;color:var(--text)}
-.sheet-actions{display:flex;gap:8px;margin-top:24px}
-.sheet-btn{
-  flex:1;padding:12px;border-radius:var(--r-md);
-  font-size:13px;font-weight:600;cursor:pointer;text-align:center;
-  transition:all .15s;border:1px solid transparent;
-}
-.sheet-btn.primary{background:var(--green);color:var(--bg)}
-.sheet-btn.primary:active{transform:scale(.97)}
-.sheet-btn.secondary{background:transparent;border-color:var(--border-hi);color:var(--text)}
-.sheet-btn.secondary:hover{background:var(--surface-hi)}
+  /* ═══ BOTTOM SHEET ═══ */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(24,24,27,.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+    z-index: 40;
+  }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    border-radius: 28px 28px 0 0;
+    padding: 10px 22px calc(24px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1);
+    z-index: 50;
+    max-height: 82vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+  .sheet.open { transform: translateY(0); }
+  .sheet-handle {
+    width: 36px; height: 4px;
+    background: var(--line);
+    border-radius: 999px;
+    margin: 8px auto 18px;
+  }
+  .sheet-cat {
+    display: inline-flex;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--violet-bg);
+    color: var(--violet);
+  }
+  .sheet-term {
+    font-family: var(--font-display);
+    font-size: 40px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-top: 12px;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .sheet-section {
+    margin-top: 22px;
+  }
+  .sheet-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .sheet-text {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .sheet-text em {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink-2);
+  }
+  .sheet-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 26px;
+  }
+  .btn {
+    flex: 1;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn:active { opacity: .7; }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .btn-secondary {
+    background: var(--surface-2);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+
+  /* ═══ FOOTER ═══ */
+  .footer {
+    margin-top: 40px;
+    padding: 20px 8px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-4);
+  }
+  .footer em {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--ink-3);
+  }
 </style>
 </head>
 <body>
+<div class="app">
 
-<!-- ============ TOP BAR ============ -->
-<div class="topbar">
-  <div class="wm">
-    <div class="wm-logo">E</div>
-    <span>Elie</span>
-    <span class="wm-dot"></span>
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="date" id="topdate">—</div>
+    <div class="avatar">E</div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1><em id="greet">Bonjour</em>, Alexis.</h1>
+    <p class="sub" id="subtitle">Voici ta journée.</p>
+  </section>
+
+  <!-- MAILS -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-title">Mails</div>
+      <div class="section-meta">Gmail · 3 non lus</div>
+    </div>
+    <div class="card">
+      <div class="mails-summary">
+        <div class="mails-count">3</div>
+        <div class="mails-count-label">
+          <strong>3 messages</strong> à traiter<br>
+          dont 1 priorité
+        </div>
+      </div>
+      <div class="mail">
+        <div class="mail-dot urgent"></div>
+        <div class="mail-body">
+          <div class="mail-from">Camille — Studio</div>
+          <div class="mail-subj">Devis à valider avant 18 h</div>
+        </div>
+        <div class="mail-time">10:24</div>
+      </div>
+      <div class="mail">
+        <div class="mail-dot normal"></div>
+        <div class="mail-body">
+          <div class="mail-from">Notion</div>
+          <div class="mail-subj">Nouveau commentaire sur EMPIRE</div>
+        </div>
+        <div class="mail-time">09:11</div>
+      </div>
+      <div class="mail">
+        <div class="mail-dot info"></div>
+        <div class="mail-body">
+          <div class="mail-from">Vercel</div>
+          <div class="mail-subj">Deployment ready · elie</div>
+        </div>
+        <div class="mail-time">08:47</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TASKS -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-title">Tâches</div>
+      <div class="section-meta">2 / 5 aujourd'hui</div>
+    </div>
+    <div class="card">
+      <div class="task">
+        <div class="task-check" onclick="toggleTask(this)"></div>
+        <div class="task-body">
+          <div class="task-title">Appeler le notaire pour dossier Rivoli</div>
+          <div class="task-meta">
+            <span class="task-tag urgent">Urgent</span>
+            <span>avant 12 h</span>
+          </div>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-check" onclick="toggleTask(this)"></div>
+        <div class="task-body">
+          <div class="task-title">Relancer proposition Empire × Studio</div>
+          <div class="task-meta">
+            <span class="task-tag today">Aujourd'hui</span>
+          </div>
+        </div>
+      </div>
+      <div class="task done">
+        <div class="task-check done" onclick="toggleTask(this)"></div>
+        <div class="task-body">
+          <div class="task-title">Valider maquette v5 Elie</div>
+          <div class="task-meta">
+            <span>Fait · 09:12</span>
+          </div>
+        </div>
+      </div>
+      <div class="task">
+        <div class="task-check" onclick="toggleTask(this)"></div>
+        <div class="task-body">
+          <div class="task-title">Préparer pitch client vendredi</div>
+          <div class="task-meta">
+            <span class="task-tag soon">Vendredi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUDGET -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-title">Budget</div>
+      <div class="section-meta">Avril</div>
+    </div>
+    <div class="card">
+      <div class="budget">
+        <div class="budget-top">
+          <div class="budget-spent">1 240<span class="currency">€</span></div>
+          <div class="budget-right">
+            <div class="budget-total">sur <strong>2 400 €</strong></div>
+            <div class="budget-delta">−12 % vs mars</div>
+          </div>
+        </div>
+        <div class="budget-bar">
+          <div class="budget-bar-fill" style="width: 52%"></div>
+        </div>
+        <div class="budget-cats">
+          <div class="budget-cat">
+            <div class="budget-cat-name">Logement</div>
+            <div class="budget-cat-val">680 €</div>
+          </div>
+          <div class="budget-cat">
+            <div class="budget-cat-name">Courses</div>
+            <div class="budget-cat-val">240 €</div>
+          </div>
+          <div class="budget-cat">
+            <div class="budget-cat-name">Abonnements</div>
+            <div class="budget-cat-val">185 €</div>
+          </div>
+          <div class="budget-cat">
+            <div class="budget-cat-name">Sorties</div>
+            <div class="budget-cat-val">135 €</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APPRENDRE -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-title">Apprendre</div>
+      <div class="section-meta">5 cartes · aujourd'hui</div>
+    </div>
+    <div class="learn-scroll" id="learnScroll"></div>
+  </section>
+
+  <!-- SHORTCUTS -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-title">Raccourcis</div>
+    </div>
+    <div class="shortcuts">
+      <div class="shortcut">
+        <div class="shortcut-icon alarm">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3L2 6"/><path d="M22 6l-3-3"/></svg>
+        </div>
+        <div class="shortcut-label">Alarme</div>
+      </div>
+      <div class="shortcut">
+        <div class="shortcut-icon timer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/></svg>
+        </div>
+        <div class="shortcut-label">Minuteur</div>
+      </div>
+      <div class="shortcut">
+        <div class="shortcut-icon note">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        </div>
+        <div class="shortcut-label">Note</div>
+      </div>
+      <div class="shortcut">
+        <div class="shortcut-icon call">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <div class="shortcut-label">Appeler</div>
+      </div>
+      <div class="shortcut">
+        <div class="shortcut-icon music">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <div class="shortcut-label">Musique</div>
+      </div>
+      <div class="shortcut">
+        <div class="shortcut-icon map">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="shortcut-label">Maps</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <em>Elie v5</em> · Assistante personnelle
   </div>
-  <div class="topdate" id="topdate">—</div>
 </div>
 
-<!-- ============ HERO ============ -->
-<div class="hero">
-  <div class="greet" id="greet">Bonjour, <span>Alexis</span></div>
-  <div class="subline">
-    <div class="subtext" id="subtext">Briefing du jour</div>
-    <div class="clock" id="clock">—:—</div>
-  </div>
-</div>
-
-<!-- ============ STATUS PILLS ============ -->
-<div class="pills">
-  <div class="pill urgent">
-    <div class="pill-label"><span class="pill-dot"></span>Urgences</div>
-    <div class="pill-value">3</div>
-    <div class="pill-hint">à traiter</div>
-  </div>
-  <div class="pill tasks">
-    <div class="pill-label"><span class="pill-dot"></span>Tâches</div>
-    <div class="pill-value">4</div>
-    <div class="pill-hint">aujourd'hui</div>
-  </div>
-  <div class="pill budget ok">
-    <div class="pill-label"><span class="pill-dot"></span>Budget</div>
-    <div class="pill-value">44%</div>
-    <div class="pill-hint">jour 15/30</div>
-  </div>
-</div>
-
-<!-- ============ GRID CARDS ============ -->
-<div class="grid">
-
-  <!-- Mails -->
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg class="card-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Mails
-      </div>
-      <div class="card-badge">4</div>
-    </div>
-    <div class="mail-row"><div class="mail-dot red"></div><div class="mail-body"><div class="mail-subj">Saisie Attribution</div><div class="mail-from">Caisse d'Épargne · 04:40</div></div></div>
-    <div class="mail-row"><div class="mail-dot red"></div><div class="mail-body"><div class="mail-subj">Contrat à signer</div><div class="mail-from">Synergie · 14:21</div></div></div>
-    <div class="mail-row"><div class="mail-dot amber"></div><div class="mail-body"><div class="mail-subj">Impôts 2025</div><div class="mail-from">Revolut · 16:41</div></div></div>
-    <div class="mail-row"><div class="mail-dot gray"></div><div class="mail-body"><div class="mail-subj">Bulletin mars 2026</div><div class="mail-from">Synergie · 05:40</div></div></div>
-  </div>
-
-  <!-- Aujourd'hui -->
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg class="card-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        Aujourd'hui
-      </div>
-      <div class="card-badge">4</div>
-    </div>
-    <div class="task-row"><div class="ck" onclick="tck(this)"></div><div class="task-name">Vendre les crypto</div><div class="chip-xs red">Urgent</div></div>
-    <div class="task-row"><div class="ck" onclick="tck(this)"></div><div class="task-name">Signer contrat</div><div class="chip-xs red">Urgent</div></div>
-    <div class="task-row"><div class="ck" onclick="tck(this)"></div><div class="task-name">Lire message banque</div><div class="chip-xs red">Urgent</div></div>
-    <div class="task-row"><div class="ck" onclick="tck(this)"></div><div class="task-name">Auditer abonnements</div><div class="chip-xs amber">Moyen</div></div>
-  </div>
-
-  <!-- Budget -->
-  <div class="card card-full">
-    <div class="card-head">
-      <div class="card-title">
-        <svg class="card-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
-        Budget Avril
-      </div>
-      <div class="card-badge">Jour 15/30</div>
-    </div>
-    <div class="budget-grid">
-      <div class="budget-item">
-        <div class="budget-row"><span class="budget-name">Alimentation</span><span class="budget-value warn">298/450€</span></div>
-        <div class="budget-bar"><div class="budget-fill warn" style="width:66%"></div></div>
-      </div>
-      <div class="budget-item">
-        <div class="budget-row"><span class="budget-name">Lifestyle</span><span class="budget-value ok">168/412€</span></div>
-        <div class="budget-bar"><div class="budget-fill ok" style="width:41%"></div></div>
-      </div>
-      <div class="budget-item">
-        <div class="budget-row"><span class="budget-name">Divers</span><span class="budget-value ok">129/235€</span></div>
-        <div class="budget-bar"><div class="budget-fill ok" style="width:55%"></div></div>
-      </div>
-      <div class="budget-item">
-        <div class="budget-row"><span class="budget-name">Reconstruction</span><span class="budget-value ok">500/1500€</span></div>
-        <div class="budget-bar"><div class="budget-fill ok" style="width:33%"></div></div>
-      </div>
-    </div>
-    <div class="budget-summary">
-      <div class="budget-total">Total dépensé : <strong>1 095€</strong> / 2 597€</div>
-      <div class="budget-total"><strong style="color:var(--green)">−58% restant</strong></div>
-    </div>
-  </div>
-
-  <!-- Apprendre (spaced repetition) -->
-  <div class="card card-full learn-card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg class="card-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        Apprendre · Révisions du jour
-      </div>
-      <div class="card-badge" id="reviewBadge">5</div>
-    </div>
-    <div class="learn-scroll" id="learnScroll">
-      <!-- Cartes injectées dynamiquement par JS -->
-    </div>
-  </div>
-
-</div>
-
-<!-- ============ ACTIONS ============ -->
-<div class="actions">
-  <div class="actions-head">Actions rapides</div>
-  <div class="actions-grid">
-    <div class="action-btn" onclick="toast('Mails — à connecter Gmail API')">
-      <svg class="action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      <div class="action-label">Mails</div>
-    </div>
-    <div class="action-btn" onclick="toast('Notion — à connecter API')">
-      <svg class="action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      <div class="action-label">Notion</div>
-    </div>
-    <div class="action-btn" onclick="toast('Budget — à connecter Revolut API')">
-      <svg class="action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
-      <div class="action-label">Budget</div>
-    </div>
-    <div class="action-btn" onclick="toast('Trades — journal Notion')">
-      <svg class="action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-      <div class="action-label">Trades</div>
-    </div>
-    <div class="action-btn" onclick="toast('Immo — 2 biens suivis')">
-      <svg class="action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <div class="action-label">Immo</div>
-    </div>
-    <div class="action-btn" onclick="toast('Dettes — 22 000€ suivis')">
-      <svg class="action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <div class="action-label">Dettes</div>
-    </div>
-  </div>
-</div>
-
-<div class="footer">
-  <span class="footer-dot"></span>
-  <span>Elie v3 · synchronisée</span>
-</div>
-
-<!-- ============ TOAST ============ -->
-<div class="toast" id="toast"></div>
-
-<!-- ============ DETAIL SHEET (review card detail) ============ -->
-<div class="sheet-bg" id="sheetBg" onclick="closeSheet()"></div>
-<div class="sheet" id="sheet">
+<!-- BOTTOM SHEET -->
+<div class="backdrop" id="backdrop" onclick="closeSheet()"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true">
   <div class="sheet-handle"></div>
-  <div id="sheetContent"></div>
-</div>
+  <div class="sheet-cat" id="sheetCat">Vocabulaire</div>
+  <h2 class="sheet-term" id="sheetTerm">—</h2>
+  <div class="sheet-section">
+    <div class="sheet-label">Définition</div>
+    <div class="sheet-text" id="sheetDef">—</div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-label">Image mentale</div>
+    <div class="sheet-text"><em id="sheetImg">—</em></div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-label">Exemple concret</div>
+    <div class="sheet-text" id="sheetEx">—</div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-secondary" onclick="closeSheet()">À revoir</button>
+    <button class="btn btn-primary" onclick="closeSheet()">Je sais</button>
+  </div>
+</aside>
 
 <script>
-// ================================================================
-// JS : horloge, tâches, révisions
-// ================================================================
+  // ─── DATE ───
+  (function () {
+    const d = new Date();
+    const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+    const s = d.toLocaleDateString('fr-FR', opts);
+    document.getElementById('topdate').textContent = s.charAt(0).toUpperCase() + s.slice(1);
+    const h = d.getHours();
+    let g = 'Bonjour';
+    if (h < 6) g = 'Bonne nuit';
+    else if (h < 12) g = 'Bonjour';
+    else if (h < 18) g = 'Bon après-midi';
+    else g = 'Bonsoir';
+    document.getElementById('greet').textContent = g;
+  })();
 
-// -------- Horloge & salutation --------
-function upd(){
-  const n=new Date();
-  const D=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  const M=['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
-  const h=n.getHours(), m=n.getMinutes();
-  document.getElementById('clock').textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
-  document.getElementById('topdate').textContent = D[n.getDay()]+' '+n.getDate()+' '+M[n.getMonth()];
-  document.getElementById('greet').innerHTML = (h>=5&&h<19?'Bonjour, ':'Bonsoir, ')+'<span>Alexis</span>';
-  document.getElementById('subtext').textContent = 'Briefing du '+n.getDate()+' '+M[n.getMonth()]+' '+n.getFullYear();
-}
-upd(); setInterval(upd, 30000);
+  // ─── REVIEW CARDS (placeholder data, later from Notion) ───
+  const REVIEWS = [
+    {
+      term: 'PWA',
+      cat: 'Vocabulaire',
+      catClass: 'voc',
+      step: 'J+1',
+      def: "Progressive Web App. C'est un site web qui peut s'installer sur ton téléphone comme une vraie app, avec icône sur l'écran d'accueil et fonctionnement hors ligne.",
+      img: "Une sirène : moitié poisson, moitié humain. La PWA c'est moitié site, moitié app — les deux natures en un seul corps.",
+      ex: "Elie que tu utilises là est une PWA. Tu l'as installée sur ton iPhone sans passer par l'App Store."
+    },
+    {
+      term: 'Service Worker',
+      cat: 'Concept',
+      catClass: 'concept',
+      step: 'J+1',
+      def: "Script JavaScript qui tourne en arrière-plan, séparé de la page. Il intercepte les requêtes réseau et sert les fichiers depuis le cache — c'est lui qui rend une PWA utilisable hors connexion.",
+      img: "Un portier de club très pro : toute demande passe par lui. Il sait si le truc est déjà dans ses poches (cache) ou s'il doit appeler le bar au fond (réseau).",
+      ex: "Le fichier sw.js d'Elie met en cache la page d'accueil. Même en mode avion, tu la revois."
+    },
+    {
+      term: 'Repository',
+      cat: 'Outil',
+      catClass: 'outil',
+      step: 'J+1',
+      def: "« Dépôt » en français. Dossier de projet sur GitHub qui garde l'historique complet de chaque modification de code, versionné ligne par ligne.",
+      img: "Une bibliothèque avec un livre en 1000 éditions empilées : tu peux toujours revenir à l'édition de 2021 pour voir comment le chapitre 3 était écrit.",
+      ex: "Ton repo elie contient l'index.html, le sw.js, le manifest — plus chaque version successive depuis le premier upload."
+    },
+    {
+      term: "Variable d'environnement",
+      cat: 'Concept',
+      catClass: 'concept',
+      step: 'J+1',
+      def: "Valeur secrète (clé API, mot de passe) stockée séparément du code et lue au moment de l'exécution. N'apparaît jamais dans le repo public.",
+      img: "Un coffre-fort à la banque : le papier avec ta combinaison est chez toi, jamais dans la lettre. Le code dit « va chercher dans le coffre », pas « voici la combinaison ».",
+      ex: "Quand on branchera l'API Claude, ta clé sera stockée dans Vercel comme variable d'env — visible nulle part sur GitHub."
+    },
+    {
+      term: 'CDN',
+      cat: 'Architecture',
+      catClass: 'archi',
+      step: 'J+1',
+      def: "Content Delivery Network. Réseau mondial de serveurs qui copient ton site dans des dizaines de villes, pour que chaque visiteur télécharge depuis le plus proche.",
+      img: "Au lieu d'une seule pizzeria à Milan qui livre le monde entier, tu as une pizzeria par ville : livraison en 10 min partout.",
+      ex: "Vercel est un CDN. Ton elie.vercel.app est servi depuis Paris pour toi, depuis Tokyo pour un utilisateur japonais."
+    }
+  ];
 
-// -------- Tâches (checkbox) --------
-function tck(el){
-  el.classList.toggle('done');
-  const name = el.nextElementSibling;
-  if(name) name.classList.toggle('done');
-  if(el.classList.contains('done')) toast('Tâche cochée ✓');
-}
-
-// -------- Toast (notification bas d'écran) --------
-function toast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._to);
-  t._to = setTimeout(()=>t.classList.remove('show'), 2200);
-}
-
-// ================================================================
-// APPRENDRE — Données de révision (courbe de l'oubli)
-// Placeholder : à remplacer par un fetch vers la BDD Notion plus tard.
-// Chaque item = une notion apprise pendant les sessions Cowork.
-// ================================================================
-
-const REVIEWS = [
-  {
-    term: 'PWA',
-    cat: 'concept', catLabel: 'Concept',
-    palier: 'J+1',
-    def: 'Progressive Web App — site web qui se comporte comme une vraie app native (icône, plein écran, offline).',
-    image: 'Une maison normale à qui on ajoute une plaque, des volets et un garde-manger pour qu\'elle vive seule, sans dépendre du magasin.',
-    example: 'Ton app Elie installée sur iPhone via Safari "Sur l\'écran d\'accueil" — pas passée par l\'App Store.'
-  },
-  {
-    term: 'Service Worker',
-    cat: 'outil', catLabel: 'Outil',
-    palier: 'J+1',
-    def: 'Script JS qui tourne en arrière-plan dans le navigateur, intercepte les requêtes et gère un cache local.',
-    image: 'Le gardien silencieux de ta maison PWA : il stocke des provisions pour que ça marche même sans connexion.',
-    example: 'Dans Elie : sw.js capture les fichiers essentiels dans un cache "elie-v3". Incrémenter la version force un refresh.'
-  },
-  {
-    term: 'Repository',
-    cat: 'vocab', catLabel: 'Vocabulaire',
-    palier: 'J+1',
-    def: 'Dossier de projet stocké sur GitHub, avec historique complet de chaque modification (chaque "commit").',
-    image: 'Google Drive, mais qui se souvient de chaque version de chaque fichier, avec un tampon date + auteur.',
-    example: 'Ton repo "elie-app" sur GitHub — source unique de vérité, branchée sur Vercel pour redéploiements automatiques.'
-  },
-  {
-    term: 'Variable d\'environnement',
-    cat: 'concept', catLabel: 'Concept',
-    palier: 'J+1',
-    def: 'Secret stocké côté hébergeur (pas dans le code), injecté à l\'exécution. Pour cacher les clés API.',
-    image: 'Un coffre-fort de l\'hôtel : le client (le code) sait qu\'il y a un trésor dedans, mais seul le staff (Vercel) a la clé.',
-    example: 'Quand on activera l\'API Anthropic, la clé ira dans ANTHROPIC_API_KEY sur Vercel, jamais dans le repo GitHub.'
-  },
-  {
-    term: 'CDN',
-    cat: 'archi', catLabel: 'Architecture',
-    palier: 'J+1',
-    def: 'Content Delivery Network — réseau mondial de serveurs qui servent ton site depuis le plus proche de l\'utilisateur.',
-    image: 'Au lieu d\'une seule boulangerie à Paris qui livre dans toute la France, une boulangerie dans chaque ville.',
-    example: 'Vercel distribue Elie depuis des dizaines de data centers : quand quelqu\'un à Tokyo ouvre ton app, elle charge en 50ms.'
-  }
-];
-
-// -------- Rendu des cartes de révision --------
-function renderReviews(){
-  const box = document.getElementById('learnScroll');
-  box.innerHTML = '';
-  const active = REVIEWS.filter(r => !r._done);
-  document.getElementById('reviewBadge').textContent = active.length;
-  REVIEWS.forEach((r, i) => {
-    const el = document.createElement('div');
-    el.className = 'review-item' + (r._done ? ' done' : '');
-    el.onclick = () => openReview(i);
-    el.innerHTML = `
-      <div class="review-head">
-        <span class="review-cat ${r.cat}">${r.catLabel}</span>
-        <span class="review-pal">${r.palier}</span>
-      </div>
-      <div class="review-term">${r.term}</div>
-      <div class="review-hint">${r.def.split('—')[0].trim().slice(0,50)}…</div>
-      <div class="review-cta">
-        ${r._done ? '✓ Révisé' : 'Réviser →'}
+  // ─── RENDER CARDS ───
+  const scroll = document.getElementById('learnScroll');
+  REVIEWS.forEach((r) => {
+    const card = document.createElement('div');
+    card.className = 'learn-card';
+    card.innerHTML = `
+      <span class="learn-cat ${r.catClass}">${r.cat}</span>
+      <div class="learn-term">${r.term}</div>
+      <div class="learn-preview">${r.def}</div>
+      <div class="learn-footer">
+        <span class="learn-step">Révision · ${r.step}</span>
+        <div class="learn-arrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </div>
       </div>
     `;
-    box.appendChild(el);
+    card.addEventListener('click', () => openSheet(r));
+    scroll.appendChild(card);
   });
-}
-renderReviews();
 
-// -------- Sheet détail (fiche complète de la notion) --------
-function openReview(i){
-  const r = REVIEWS[i];
+  // ─── SHEET ───
   const sheet = document.getElementById('sheet');
-  const bg = document.getElementById('sheetBg');
-  document.getElementById('sheetContent').innerHTML = `
-    <div class="sheet-cat ${r.cat}" style="background:var(--surface-hi);color:var(--text-mu)">${r.catLabel} · ${r.palier}</div>
-    <div class="sheet-term">${r.term}</div>
-    <div class="sheet-block">
-      <div class="sheet-block-label">Définition</div>
-      <div class="sheet-block-text">${r.def}</div>
-    </div>
-    <div class="sheet-block">
-      <div class="sheet-block-label">Image mentale</div>
-      <div class="sheet-block-text">${r.image}</div>
-    </div>
-    <div class="sheet-block">
-      <div class="sheet-block-label">Exemple concret</div>
-      <div class="sheet-block-text">${r.example}</div>
-    </div>
-    <div class="sheet-actions">
-      <div class="sheet-btn secondary" onclick="closeSheet()">Plus tard</div>
-      <div class="sheet-btn primary" onclick="markReviewed(${i})">J'ai compris ✓</div>
-    </div>
-  `;
-  sheet.classList.add('open');
-  bg.classList.add('open');
-}
+  const backdrop = document.getElementById('backdrop');
 
-function closeSheet(){
-  document.getElementById('sheet').classList.remove('open');
-  document.getElementById('sheetBg').classList.remove('open');
-}
+  function openSheet(r) {
+    const catEl = document.getElementById('sheetCat');
+    catEl.textContent = r.cat;
+    catEl.className = `sheet-cat ${r.catClass}`;
+    document.getElementById('sheetTerm').textContent = r.term;
+    document.getElementById('sheetDef').textContent = r.def;
+    document.getElementById('sheetImg').textContent = r.img;
+    document.getElementById('sheetEx').textContent = r.ex;
+    sheet.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
 
-function markReviewed(i){
-  REVIEWS[i]._done = true;
-  renderReviews();
-  closeSheet();
-  toast('Notion révisée — prochain palier programmé');
-}
+  function closeSheet() {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.style.overflow = '';
+  }
 
-// -------- Pills cliquables --------
-document.querySelectorAll('.pill').forEach(p => {
-  p.addEventListener('click', () => {
-    toast('Détail à connecter aux APIs');
-  });
-});
+  // ─── TASKS ───
+  function toggleTask(el) {
+    el.classList.toggle('done');
+    el.closest('.task').classList.toggle('done');
+  }
+
+  // ─── SERVICE WORKER ───
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>

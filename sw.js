@@ -1,5 +1,5 @@
-// Service Worker Elie — v3 (refonte premium, sans chat API)
-const CACHE = 'elie-v3';
+// Service Worker Elie — v5 (refonte claire, hiérarchie forte)
+const CACHE = 'elie-v5';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])));
   self.skipWaiting();
