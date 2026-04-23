@@ -1,5 +1,5 @@
-// Service Worker Elie — v5 (refonte claire, hiérarchie forte)
-const CACHE = 'elie-v5';
+// Service Worker Elie — v6 (refonte claire, hiérarchie forte)
+const CACHE = 'elie-v6';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])));
   self.skipWaiting();
