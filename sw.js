@@ -1,5 +1,6 @@
-// Service Worker Elie — v7 (refonte claire, hiérarchie forte)
-const CACHE = 'elie-v7';
+// Service Worker Elie — 20260423-3
+// ⚠️  Ne pas modifier manuellement — version gérée automatiquement
+const CACHE = 'elie-20260423-3';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])));
   self.skipWaiting();
@@ -13,6 +14,10 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 self.addEventListener('fetch', e => {
+  // Les appels API ne sont jamais mis en cache — toujours frais
+  if (e.request.url.includes('/api/')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
- 

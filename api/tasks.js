@@ -47,7 +47,8 @@ export default async function handler(req, res) {
         })
       }),
 
-      // 2. Tâches avec Date = aujourd'hui (onglet "Aujourd'hui")
+      // 2. Tâches avec Date ≤ aujourd'hui (en retard + aujourd'hui)
+      //    on_or_before = "aujourd'hui ou avant" → aucune tâche du passé ne passe à travers
       fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
         method: 'POST',
         headers: headers(token),
@@ -55,10 +56,13 @@ export default async function handler(req, res) {
           filter: {
             and: [
               ...baseFilter.and,
-              { property: 'Date', date: { equals: today } }
+              { property: 'Date', date: { on_or_before: today } }
             ]
           },
-          sorts: [{ property: 'Importance', direction: 'descending' }],
+          sorts: [
+            { property: 'Date',       direction: 'ascending'  },
+            { property: 'Importance', direction: 'descending' }
+          ],
           page_size: 25
         })
       })
@@ -92,7 +96,7 @@ export default async function handler(req, res) {
       .map(t => ({ ...t, score: scoreTask(t, today) }))
       .filter(t => t.score > 0)           // on ignore les tâches sans contexte
       .sort((a, b) => b.score - a.score)  // les mieux scorées en premier
-      .slice(0, 5);                        // top 5 seulement
+      .slice(0, 10);                       // top 10 : 5 affichés + 5 en réserve
 
     return res.status(200).json({
       suggested: scored,

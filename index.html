@@ -339,6 +339,25 @@
   }
   .task-skeleton:last-child { border-bottom: none; }
 
+  /* ═══ ANIMATIONS TÂCHES ═══ */
+  @keyframes taskOut {
+    0%   { opacity: 1; transform: translateX(0);    max-height: 80px; }
+    40%  { opacity: 0; transform: translateX(24px); max-height: 80px; }
+    100% { opacity: 0; transform: translateX(24px); max-height: 0; padding-top: 0; padding-bottom: 0; border: none; }
+  }
+  @keyframes taskIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .task.completing {
+    animation: taskOut 0.35s cubic-bezier(.4,0,.2,1) forwards;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .task.entering {
+    animation: taskIn 0.3s cubic-bezier(.2,.8,.2,1) both;
+  }
+
   /* ═══ ÉTAT VIDE / ERREUR ═══ */
   .tasks-empty {
     padding: 28px 18px;
@@ -1000,8 +1019,10 @@
 
   // ─── TASKS — deux onglets : "Elie choisit" et "Aujourd'hui" ───
 
-  // Stocke les données reçues de l'API pour switcher entre onglets sans re-fetch
+  // TASKS_DATA : données brutes reçues de l'API
+  // COMPLETED  : IDs des tâches cochées dans cette session
   let TASKS_DATA = { suggested: [], today: [] };
+  let COMPLETED  = new Set();
   let ACTIVE_TAB = 'suggested';
 
   // switchTab : bascule entre les deux vues
@@ -1012,29 +1033,30 @@
     renderCurrentTab();
   }
 
-  // renderCurrentTab : affiche la liste de l'onglet actif
   function renderCurrentTab() {
-    const tasks = ACTIVE_TAB === 'suggested'
-      ? TASKS_DATA.suggested
-      : TASKS_DATA.today;
-    renderTaskList(tasks, ACTIVE_TAB);
+    const raw    = ACTIVE_TAB === 'suggested' ? TASKS_DATA.suggested : TASKS_DATA.today;
+    const tasks  = raw.filter(t => !COMPLETED.has(t.id));
+    // "Elie choisit" : 5 affichés max, le reste est en réserve silencieuse
+    const visible = ACTIVE_TAB === 'suggested' ? tasks.slice(0, 5) : tasks;
+    renderTaskList(visible, ACTIVE_TAB);
   }
 
-  // renderTaskList : construit le HTML d'une liste de tâches
   function renderTaskList(tasks, mode) {
     const card = document.getElementById('tasksCard');
-
     if (!tasks || tasks.length === 0) {
       const msg = mode === 'today'
-        ? '<strong>Rien de prévu aujourd\'hui</strong>Assigne une date à tes tâches Notion pour les voir ici.'
+        ? '<strong>Aucune tâche en retard ni prévue ✓</strong>Profite ou planifie la prochaine dans Notion.'
         : '<strong>Tout roule ✓</strong>Aucune tâche urgente ou en cours.';
       card.innerHTML = `<div class="tasks-empty">${msg}</div>`;
       return;
     }
+    card.innerHTML = tasks.map(taskHTML).join('');
+  }
 
-    card.innerHTML = tasks.map(t => `
-      <div class="task ${t.done ? 'done' : ''}">
-        <div class="task-check ${t.done ? 'done' : ''}" onclick="toggleTask(this)"></div>
+  function taskHTML(t) {
+    return `
+      <div class="task" data-id="${t.id}">
+        <div class="task-check" onclick="completeTask(this, '${t.id}')"></div>
         <div class="task-body">
           <div class="task-title">${escHtml(t.title)}</div>
           <div class="task-meta">
@@ -1042,46 +1064,57 @@
             ${t.domain ? `<span>${escHtml(t.domain)}</span>` : ''}
           </div>
         </div>
-      </div>
-    `).join('');
+      </div>`;
   }
 
-  // toggleTask : coche/décoche visuellement
-  function toggleTask(el) {
-    el.classList.toggle('done');
-    el.closest('.task').classList.toggle('done');
+  // completeTask : coche + appel API + disparition + remplacement
+  async function completeTask(checkEl, taskId) {
+    const taskEl = checkEl.closest('.task');
+    if (!taskEl || taskEl.classList.contains('completing')) return;
+
+    // Feedback visuel immédiat — on n'attend pas la réponse Notion
+    checkEl.classList.add('done');
+    taskEl.classList.add('completing');
+
+    // Appel API + délai animation en parallèle
+    await Promise.all([
+      fetch('/api/complete-task', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ taskId })
+      }).catch(e => console.warn('[completeTask]', e)),
+      new Promise(r => setTimeout(r, 350))
+    ]);
+
+    // Retire la tâche du pool local et re-render (le suivant arrive)
+    COMPLETED.add(taskId);
+    updateBadges();
+    renderCurrentTab();
   }
 
-  // escHtml : protection XSS — jamais injecter du texte brut dans le DOM
+  function updateBadges() {
+    const sug = TASKS_DATA.suggested.filter(t => !COMPLETED.has(t.id));
+    const tod = TASKS_DATA.today.filter(t => !COMPLETED.has(t.id));
+    document.getElementById('badgeSuggested').textContent = Math.min(sug.length, 5);
+    document.getElementById('badgeToday').textContent     = tod.length;
+  }
+
   function escHtml(str) {
     return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // fetchTasks : récupère les données et met à jour l'UI
   async function fetchTasks() {
     try {
       const res = await fetch('/api/tasks');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
-      TASKS_DATA = {
-        suggested: data.suggested ?? [],
-        today:     data.today     ?? []
-      };
-
-      // Mise à jour des badges sur les onglets
-      document.getElementById('badgeSuggested').textContent = TASKS_DATA.suggested.length;
-      document.getElementById('badgeToday').textContent     = TASKS_DATA.today.length || '0';
-
-      // Méta dans le header de section
+      TASKS_DATA = { suggested: data.suggested ?? [], today: data.today ?? [] };
       document.getElementById('tasksMeta').textContent =
         `Notion · ${data.meta?.totalActive ?? '?'} actives`;
-
-      // Affiche l'onglet courant
+      updateBadges();
       renderCurrentTab();
 
     } catch (err) {
