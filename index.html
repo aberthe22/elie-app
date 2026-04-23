@@ -276,6 +276,34 @@
   .task-tag.today { background: var(--blue-bg); color: var(--blue); }
   .task-tag.soon { background: var(--gold-bg); color: var(--gold); }
 
+  /* ═══ SKELETON LOADING ═══ */
+  .skeleton {
+    background: linear-gradient(90deg, var(--line-2) 25%, var(--surface-2) 50%, var(--line-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+  }
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .task-skeleton {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .task-skeleton:last-child { border-bottom: none; }
+
+  /* ═══ ÉTAT VIDE / ERREUR ═══ */
+  .tasks-empty {
+    padding: 28px 18px;
+    text-align: center;
+    color: var(--ink-4);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .tasks-empty strong { display: block; color: var(--ink-3); font-size: 15px; margin-bottom: 4px; }
+
   /* ═══ BUDGET ═══ */
   .budget {
     padding: 20px 18px;
@@ -657,44 +685,29 @@
   <section class="section">
     <div class="section-head">
       <div class="section-title">Tâches</div>
-      <div class="section-meta">2 / 5 aujourd'hui</div>
+      <div class="section-meta" id="tasksMeta">Notion · chargement…</div>
     </div>
-    <div class="card">
-      <div class="task">
-        <div class="task-check" onclick="toggleTask(this)"></div>
-        <div class="task-body">
-          <div class="task-title">Appeler le notaire pour dossier Rivoli</div>
-          <div class="task-meta">
-            <span class="task-tag urgent">Urgent</span>
-            <span>avant 12 h</span>
-          </div>
+    <div class="card" id="tasksCard">
+      <!-- Skeleton de chargement (3 lignes fantômes) -->
+      <div class="task-skeleton">
+        <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div class="skeleton" style="height:13px;width:65%;margin-bottom:7px"></div>
+          <div class="skeleton" style="height:10px;width:35%"></div>
         </div>
       </div>
-      <div class="task">
-        <div class="task-check" onclick="toggleTask(this)"></div>
-        <div class="task-body">
-          <div class="task-title">Relancer proposition Empire × Studio</div>
-          <div class="task-meta">
-            <span class="task-tag today">Aujourd'hui</span>
-          </div>
+      <div class="task-skeleton">
+        <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div class="skeleton" style="height:13px;width:80%;margin-bottom:7px"></div>
+          <div class="skeleton" style="height:10px;width:25%"></div>
         </div>
       </div>
-      <div class="task done">
-        <div class="task-check done" onclick="toggleTask(this)"></div>
-        <div class="task-body">
-          <div class="task-title">Valider maquette v5 Elie</div>
-          <div class="task-meta">
-            <span>Fait · 09:12</span>
-          </div>
-        </div>
-      </div>
-      <div class="task">
-        <div class="task-check" onclick="toggleTask(this)"></div>
-        <div class="task-body">
-          <div class="task-title">Préparer pitch client vendredi</div>
-          <div class="task-meta">
-            <span class="task-tag soon">Vendredi</span>
-          </div>
+      <div class="task-skeleton">
+        <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div class="skeleton" style="height:13px;width:50%;margin-bottom:7px"></div>
+          <div class="skeleton" style="height:10px;width:40%"></div>
         </div>
       </div>
     </div>
@@ -931,11 +944,79 @@
     document.body.style.overflow = '';
   }
 
-  // ─── TASKS ───
+  // ─── TASKS — données réelles depuis Notion via /api/tasks ───
+
+  // toggleTask : coche/décoche visuellement une tâche
+  // (le vrai "marquer comme fait" dans Notion sera pour plus tard)
   function toggleTask(el) {
     el.classList.toggle('done');
     el.closest('.task').classList.toggle('done');
   }
+
+  // renderTasks : construit le HTML des tâches depuis les données de l'API
+  function renderTasks(tasks) {
+    const card = document.getElementById('tasksCard');
+    const meta = document.getElementById('tasksMeta');
+
+    if (!tasks || tasks.length === 0) {
+      card.innerHTML = `
+        <div class="tasks-empty">
+          <strong>Tout est fait 🎉</strong>
+          Aucune tâche en cours dans Notion.
+        </div>`;
+      meta.textContent = 'Notion · 0 tâche';
+      return;
+    }
+
+    const done  = tasks.filter(t => t.done).length;
+    const total = tasks.length;
+    meta.textContent = `Notion · ${done} / ${total}`;
+
+    card.innerHTML = tasks.map(t => `
+      <div class="task ${t.done ? 'done' : ''}">
+        <div class="task-check ${t.done ? 'done' : ''}" onclick="toggleTask(this)"></div>
+        <div class="task-body">
+          <div class="task-title">${escHtml(t.title)}</div>
+          <div class="task-meta">
+            ${t.tag ? `<span class="task-tag ${t.tagClass}">${escHtml(t.tag)}</span>` : ''}
+            ${t.domain ? `<span>${escHtml(t.domain)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // escHtml : sécurise les textes avant insertion dans le DOM
+  // (protection contre injections XSS — bonne pratique pro)
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // fetchTasks : appelle notre proxy Vercel, gère les erreurs
+  async function fetchTasks() {
+    try {
+      const res = await fetch('/api/tasks');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { tasks } = await res.json();
+      renderTasks(tasks);
+    } catch (err) {
+      console.warn('[Elie] Tâches indisponibles:', err.message);
+      // En cas d'erreur (hors ligne, API down…) on affiche un message doux
+      document.getElementById('tasksCard').innerHTML = `
+        <div class="tasks-empty">
+          <strong>Connexion Notion impossible</strong>
+          Vérifie ta connexion ou les variables d'environnement Vercel.
+        </div>`;
+      document.getElementById('tasksMeta').textContent = 'Notion · erreur';
+    }
+  }
+
+  // On lance le chargement dès que la page est prête
+  fetchTasks();
 
   // ─── SERVICE WORKER ───
   if ('serviceWorker' in navigator) {
