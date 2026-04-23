@@ -276,6 +276,51 @@
   .task-tag.today { background: var(--blue-bg); color: var(--blue); }
   .task-tag.soon { background: var(--gold-bg); color: var(--gold); }
 
+  /* ═══ ONGLETS TÂCHES ═══ */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 4px 12px;
+  }
+  .tab {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-3);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+    letter-spacing: 0.01em;
+  }
+  .tab.active {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-sm);
+  }
+  .tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 5px;
+    background: var(--line-2);
+    color: var(--ink-3);
+    vertical-align: middle;
+  }
+  .tab.active .tab-badge {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
   /* ═══ SKELETON LOADING ═══ */
   .skeleton {
     background: linear-gradient(90deg, var(--line-2) 25%, var(--surface-2) 50%, var(--line-2) 75%);
@@ -687,8 +732,17 @@
       <div class="section-title">Tâches</div>
       <div class="section-meta" id="tasksMeta">Notion · chargement…</div>
     </div>
+    <!-- Onglets -->
+    <div class="tabs">
+      <button class="tab active" id="tabSuggested" onclick="switchTab('suggested')">
+        ✦ Elie choisit<span class="tab-badge" id="badgeSuggested">—</span>
+      </button>
+      <button class="tab" id="tabToday" onclick="switchTab('today')">
+        Aujourd'hui<span class="tab-badge" id="badgeToday">—</span>
+      </button>
+    </div>
     <div class="card" id="tasksCard">
-      <!-- Skeleton de chargement (3 lignes fantômes) -->
+      <!-- Skeleton de chargement -->
       <div class="task-skeleton">
         <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
         <div style="flex:1">
@@ -944,33 +998,39 @@
     document.body.style.overflow = '';
   }
 
-  // ─── TASKS — données réelles depuis Notion via /api/tasks ───
+  // ─── TASKS — deux onglets : "Elie choisit" et "Aujourd'hui" ───
 
-  // toggleTask : coche/décoche visuellement une tâche
-  // (le vrai "marquer comme fait" dans Notion sera pour plus tard)
-  function toggleTask(el) {
-    el.classList.toggle('done');
-    el.closest('.task').classList.toggle('done');
+  // Stocke les données reçues de l'API pour switcher entre onglets sans re-fetch
+  let TASKS_DATA = { suggested: [], today: [] };
+  let ACTIVE_TAB = 'suggested';
+
+  // switchTab : bascule entre les deux vues
+  function switchTab(tab) {
+    ACTIVE_TAB = tab;
+    document.getElementById('tabSuggested').classList.toggle('active', tab === 'suggested');
+    document.getElementById('tabToday').classList.toggle('active', tab === 'today');
+    renderCurrentTab();
   }
 
-  // renderTasks : construit le HTML des tâches depuis les données de l'API
-  function renderTasks(tasks) {
+  // renderCurrentTab : affiche la liste de l'onglet actif
+  function renderCurrentTab() {
+    const tasks = ACTIVE_TAB === 'suggested'
+      ? TASKS_DATA.suggested
+      : TASKS_DATA.today;
+    renderTaskList(tasks, ACTIVE_TAB);
+  }
+
+  // renderTaskList : construit le HTML d'une liste de tâches
+  function renderTaskList(tasks, mode) {
     const card = document.getElementById('tasksCard');
-    const meta = document.getElementById('tasksMeta');
 
     if (!tasks || tasks.length === 0) {
-      card.innerHTML = `
-        <div class="tasks-empty">
-          <strong>Tout est fait 🎉</strong>
-          Aucune tâche en cours dans Notion.
-        </div>`;
-      meta.textContent = 'Notion · 0 tâche';
+      const msg = mode === 'today'
+        ? '<strong>Rien de prévu aujourd\'hui</strong>Assigne une date à tes tâches Notion pour les voir ici.'
+        : '<strong>Tout roule ✓</strong>Aucune tâche urgente ou en cours.';
+      card.innerHTML = `<div class="tasks-empty">${msg}</div>`;
       return;
     }
-
-    const done  = tasks.filter(t => t.done).length;
-    const total = tasks.length;
-    meta.textContent = `Notion · ${done} / ${total}`;
 
     card.innerHTML = tasks.map(t => `
       <div class="task ${t.done ? 'done' : ''}">
@@ -978,7 +1038,7 @@
         <div class="task-body">
           <div class="task-title">${escHtml(t.title)}</div>
           <div class="task-meta">
-            ${t.tag ? `<span class="task-tag ${t.tagClass}">${escHtml(t.tag)}</span>` : ''}
+            ${t.tag    ? `<span class="task-tag ${t.tagClass}">${escHtml(t.tag)}</span>` : ''}
             ${t.domain ? `<span>${escHtml(t.domain)}</span>` : ''}
           </div>
         </div>
@@ -986,8 +1046,13 @@
     `).join('');
   }
 
-  // escHtml : sécurise les textes avant insertion dans le DOM
-  // (protection contre injections XSS — bonne pratique pro)
+  // toggleTask : coche/décoche visuellement
+  function toggleTask(el) {
+    el.classList.toggle('done');
+    el.closest('.task').classList.toggle('done');
+  }
+
+  // escHtml : protection XSS — jamais injecter du texte brut dans le DOM
   function escHtml(str) {
     return String(str)
       .replace(/&/g, '&amp;')
@@ -996,26 +1061,40 @@
       .replace(/"/g, '&quot;');
   }
 
-  // fetchTasks : appelle notre proxy Vercel, gère les erreurs
+  // fetchTasks : récupère les données et met à jour l'UI
   async function fetchTasks() {
     try {
       const res = await fetch('/api/tasks');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { tasks } = await res.json();
-      renderTasks(tasks);
+      const data = await res.json();
+
+      TASKS_DATA = {
+        suggested: data.suggested ?? [],
+        today:     data.today     ?? []
+      };
+
+      // Mise à jour des badges sur les onglets
+      document.getElementById('badgeSuggested').textContent = TASKS_DATA.suggested.length;
+      document.getElementById('badgeToday').textContent     = TASKS_DATA.today.length || '0';
+
+      // Méta dans le header de section
+      document.getElementById('tasksMeta').textContent =
+        `Notion · ${data.meta?.totalActive ?? '?'} actives`;
+
+      // Affiche l'onglet courant
+      renderCurrentTab();
+
     } catch (err) {
       console.warn('[Elie] Tâches indisponibles:', err.message);
-      // En cas d'erreur (hors ligne, API down…) on affiche un message doux
       document.getElementById('tasksCard').innerHTML = `
         <div class="tasks-empty">
           <strong>Connexion Notion impossible</strong>
-          Vérifie ta connexion ou les variables d'environnement Vercel.
+          Vérifie ta connexion ou les variables Vercel.
         </div>`;
       document.getElementById('tasksMeta').textContent = 'Notion · erreur';
     }
   }
 
-  // On lance le chargement dès que la page est prête
   fetchTasks();
 
   // ─── SERVICE WORKER ───
