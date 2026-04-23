@@ -1,132 +1,184 @@
 // ═══════════════════════════════════════════════════════════
 //  api/tasks.js  —  Vercel Serverless Function
-//  Ce fichier tourne sur les SERVEURS de Vercel, pas sur ton
-//  iPhone. Il peut lire tes clés secrètes sans jamais les
-//  exposer dans le navigateur.
+//  Retourne deux listes :
+//  · suggested : top 5 tâches scorées par l'algorithme Elie
+//  · today     : toutes les tâches avec Date = aujourd'hui
 // ═══════════════════════════════════════════════════════════
 
 export default async function handler(req, res) {
 
-  // ── CORS ────────────────────────────────────────────────
-  // "CORS" = qui a le droit d'appeler cette fonction.
-  // On autorise seulement les requêtes GET depuis n'importe
-  // quelle origine (ton app Elie sur Vercel ou en local).
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── VARIABLES D'ENVIRONNEMENT ────────────────────────────
-  // Ces valeurs existent dans le "coffre-fort" Vercel.
-  // Jamais dans GitHub, jamais visibles côté client.
   const token = process.env.NOTION_TOKEN;
   const dbId  = process.env.NOTION_TASKS_DB_ID;
 
   if (!token || !dbId) {
-    return res.status(500).json({
-      error: 'Variables d\'environnement manquantes (NOTION_TOKEN, NOTION_TASKS_DB_ID)'
-    });
+    return res.status(500).json({ error: 'Variables d\'environnement manquantes' });
   }
 
+  const today = new Date().toISOString().split('T')[0]; // "2026-04-23"
+
+  // ── FILTRE DE BASE ────────────────────────────────────────
+  // Conditions communes aux deux requêtes
+  const baseFilter = {
+    and: [
+      { property: 'État',           status:   { does_not_equal: 'Terminé'  } },
+      { property: 'élément parent', relation: { is_empty: true             } }
+    ]
+  };
+
   try {
-    // ── APPEL API NOTION ──────────────────────────────────
-    // On interroge la base de données avec un filtre :
-    // "donne-moi toutes les tâches dont l'état ≠ Terminé"
-    const notionRes = await fetch(
-      `https://api.notion.com/v1/databases/${dbId}/query`,
-      {
+    // ── DEUX APPELS EN PARALLÈLE ──────────────────────────
+    // Promise.all = on lance les deux requêtes Notion en même
+    // temps au lieu d'attendre la première pour faire la seconde.
+    // Résultat : 2x plus rapide.
+    const [allRes, todayRes] = await Promise.all([
+
+      // 1. Toutes les tâches non-terminées (pour le scoring Elie)
+      fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
         method: 'POST',
-        headers: {
-          'Authorization':   `Bearer ${token}`,
-          'Notion-Version':  '2022-06-28',   // version stable de l'API
-          'Content-Type':    'application/json',
-        },
+        headers: headers(token),
+        body: JSON.stringify({
+          filter: baseFilter,
+          sorts: [{ property: 'Importance', direction: 'descending' }],
+          page_size: 50
+        })
+      }),
+
+      // 2. Tâches avec Date = aujourd'hui (onglet "Aujourd'hui")
+      fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+        method: 'POST',
+        headers: headers(token),
         body: JSON.stringify({
           filter: {
             and: [
-              {
-                // Seulement les tâches pas encore terminées
-                property: 'État',
-                status: { does_not_equal: 'Terminé' }
-              },
-              {
-                // Seulement les tâches de niveau racine (pas les sous-tâches)
-                property: 'élément parent',
-                relation: { is_empty: true }
-              }
+              ...baseFilter.and,
+              { property: 'Date', date: { equals: today } }
             ]
           },
-          sorts: [
-            // 1. Les tâches "Haute" importance en premier
-            { property: 'Importance', direction: 'descending' },
-            // 2. Puis par date croissante (les plus urgentes en tête)
-            { property: 'Date', direction: 'ascending'  }
-          ],
-          page_size: 10
+          sorts: [{ property: 'Importance', direction: 'descending' }],
+          page_size: 25
         })
-      }
-    );
+      })
+    ]);
 
-    if (!notionRes.ok) {
-      const err = await notionRes.text();
-      throw new Error(`Notion ${notionRes.status}: ${err}`);
-    }
+    if (!allRes.ok)   throw new Error(`Notion all: ${allRes.status}`);
+    if (!todayRes.ok) throw new Error(`Notion today: ${todayRes.status}`);
 
-    const data = await notionRes.json();
+    const [allData, todayData] = await Promise.all([
+      allRes.json(),
+      todayRes.json()
+    ]);
 
     // ── TRANSFORMATION ────────────────────────────────────
-    // L'API Notion renvoie un objet très verbeux.
-    // On ne garde que ce dont Elie a besoin — propre et léger.
-    const today = new Date().toISOString().split('T')[0]; // "2026-04-23"
+    const allTasks   = allData.results.map(p  => parsePage(p, today));
+    const todayTasks = todayData.results.map(p => parsePage(p, today));
 
-    const tasks = data.results.map(page => {
-      const p = page.properties;
-      const dateRaw  = p['Date']?.date?.start ?? null;
-      const statut   = p['État']?.status?.name ?? 'Pas commencé';
-      const importance = p['Importance']?.select?.name ?? null;
+    // ── SCORING ELIE ──────────────────────────────────────
+    // Chaque tâche reçoit un score. On prend les 5 meilleurs.
+    //
+    // Logique :
+    //   En retard              → +40 pts  (priorité absolue)
+    //   Date = aujourd'hui     → +25 pts
+    //   Date dans 3 jours      → +15 pts
+    //   Date dans 7 jours      → +10 pts
+    //   Importance Haute       → +30 pts
+    //   Importance Moyenne     → +15 pts
+    //   Statut "En cours"      → +20 pts  (déjà commencé)
+    //   Statut "Bloqué"        → +10 pts  (à débloquer)
+    const scored = allTasks
+      .map(t => ({ ...t, score: scoreTask(t, today) }))
+      .filter(t => t.score > 0)           // on ignore les tâches sans contexte
+      .sort((a, b) => b.score - a.score)  // les mieux scorées en premier
+      .slice(0, 5);                        // top 5 seulement
 
-      // Calcul du tag affiché dans Elie
-      let tag = null;
-      let tagClass = null;
-
-      if (dateRaw && dateRaw < today) {
-        tag = 'En retard'; tagClass = 'urgent';
-      } else if (importance === 'Haute') {
-        tag = 'Urgent'; tagClass = 'urgent';
-      } else if (dateRaw === today) {
-        tag = 'Aujourd\'hui'; tagClass = 'today';
-      } else if (importance === 'Moyenne' || dateRaw) {
-        tag = dateRaw
-          ? new Date(dateRaw).toLocaleDateString('fr-FR', { weekday: 'long' })
-          : 'Bientôt';
-        tagClass = 'soon';
-      }
-
-      return {
-        id:         page.id,
-        title:      p['Tâche']?.title?.[0]?.plain_text ?? 'Sans titre',
-        status:     statut,
-        done:       statut === 'Terminé',
-        importance,
-        domain:     p['Domaine']?.select?.name ?? null,
-        date:       dateRaw,
-        tag,
-        tagClass,
-        url:        page.url
-      };
-    });
-
-    // On trie : tâches non-faites d'abord
-    tasks.sort((a, b) => Number(a.done) - Number(b.done));
-
-    // ── RÉPONSE ───────────────────────────────────────────
     return res.status(200).json({
-      tasks,
-      total: tasks.length,
-      done:  tasks.filter(t => t.done).length
+      suggested: scored,
+      today:     todayTasks,
+      meta: {
+        totalActive: allTasks.length,
+        todayCount:  todayTasks.length
+      }
     });
 
   } catch (error) {
-    console.error('[api/tasks] Erreur:', error.message);
+    console.error('[api/tasks]', error.message);
     return res.status(500).json({ error: error.message });
   }
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+
+function headers(token) {
+  return {
+    'Authorization':  `Bearer ${token}`,
+    'Notion-Version': '2022-06-28',
+    'Content-Type':   'application/json',
+  };
+}
+
+function parsePage(page, today) {
+  const p = page.properties;
+  const dateRaw    = p['Date']?.date?.start ?? null;
+  const importance = p['Importance']?.select?.name ?? null;
+  const status     = p['État']?.status?.name ?? 'Pas commencé';
+
+  // Tag affiché dans la carte
+  let tag = null, tagClass = null;
+  if (dateRaw && dateRaw < today) {
+    tag = 'En retard'; tagClass = 'urgent';
+  } else if (importance === 'Haute') {
+    tag = 'Urgent'; tagClass = 'urgent';
+  } else if (dateRaw === today) {
+    tag = 'Aujourd\'hui'; tagClass = 'today';
+  } else if (dateRaw) {
+    const label = new Date(dateRaw + 'T12:00:00')
+      .toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
+    tag = label.charAt(0).toUpperCase() + label.slice(1);
+    tagClass = 'soon';
+  } else if (importance === 'Moyenne') {
+    tag = 'Moyenne'; tagClass = 'soon';
+  }
+
+  return {
+    id:         page.id,
+    title:      p['Tâche']?.title?.[0]?.plain_text ?? 'Sans titre',
+    status,
+    done:       status === 'Terminé',
+    importance,
+    domain:     p['Domaine']?.select?.name ?? null,
+    date:       dateRaw,
+    tag,
+    tagClass,
+    url:        page.url
+  };
+}
+
+function scoreTask(task, today) {
+  let score = 0;
+
+  // Score par date
+  if (task.date) {
+    if (task.date < today)  score += 40;  // en retard
+    else if (task.date === today) score += 25;  // aujourd'hui
+    else {
+      const days = Math.ceil(
+        (new Date(task.date) - new Date(today)) / 86400000
+      );
+      if (days <= 3) score += 15;
+      else if (days <= 7) score += 10;
+    }
+  }
+
+  // Score par importance
+  if (task.importance === 'Haute')   score += 30;
+  if (task.importance === 'Moyenne') score += 15;
+
+  // Score par statut
+  if (task.status === 'En cours') score += 20;
+  if (task.status === 'Bloqué')   score += 10;
+
+  return score;
 }
