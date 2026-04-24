@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
-<meta name="theme-color" content="#f4f3ef">
+<meta name="theme-color" content="#F2F0EB">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Elie">
@@ -13,821 +13,695 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-  :root {
-    --bg: #f4f3ef;
-    --surface: #ffffff;
-    --surface-2: #faf9f6;
-    --ink: #18181b;
-    --ink-2: #3f3f46;
-    --ink-3: #71717a;
-    --ink-4: #a1a1aa;
-    --line: #e7e5e0;
-    --line-2: #eeece7;
+:root {
+  /* Palette premium claire */
+  --bg:        #F2F0EB;
+  --surface:   #FFFFFF;
+  --surface-2: #F8F6F2;
+  --line:      #E5E2DB;
+  --line-2:    #EDEAE4;
 
-    --green: #2f7d4f;
-    --green-bg: #e8f1ea;
-    --orange: #c85a2c;
-    --orange-bg: #f9ebe2;
-    --gold: #a67414;
-    --gold-bg: #f6eedc;
-    --blue: #2c5a8a;
-    --blue-bg: #e5edf5;
-    --violet: #6b4a8a;
-    --violet-bg: #ece5f3;
+  --ink:   #1A1714;
+  --ink-2: #5C574F;
+  --ink-3: #9E988F;
+  --ink-4: #C5BFB6;
 
-    --shadow-sm: 0 1px 2px rgba(24,24,27,.04);
-    --shadow: 0 1px 2px rgba(24,24,27,.04), 0 4px 16px rgba(24,24,27,.04);
-    --shadow-lg: 0 8px 24px rgba(24,24,27,.08), 0 24px 48px rgba(24,24,27,.06);
+  /* Brand — Navy profond */
+  --navy:    #1E3D6E;
+  --navy-bg: #EEF2F9;
 
-    --r-sm: 10px;
-    --r: 16px;
-    --r-lg: 22px;
+  /* Semantics */
+  --urgent:    #B8310F;
+  --urgent-bg: #FBF0EC;
+  --today:     #1E3D6E;
+  --today-bg:  #EEF2F9;
+  --soon:      #9B6B0A;
+  --soon-bg:   #FBF4E4;
+  --done:      #216B44;
+  --done-bg:   #E8F5EE;
 
-    --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
-    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  }
+  --r-sm: 10px;
+  --r:    16px;
+  --r-lg: 22px;
 
-  html, body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--font-ui);
-    font-size: 15px;
-    line-height: 1.5;
-    letter-spacing: -0.005em;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    overscroll-behavior-y: contain;
-  }
+  --shadow-sm: 0 1px 3px rgba(26,23,20,.06);
+  --shadow:    0 1px 3px rgba(26,23,20,.05), 0 4px 16px rgba(26,23,20,.06);
+  --shadow-lg: 0 8px 24px rgba(26,23,20,.10), 0 24px 48px rgba(26,23,20,.06);
 
-  body {
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-ui:    'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
 
-  .app {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 8px 16px 120px;
-  }
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -.005em;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
+}
+body {
+  min-height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
 
-  /* ═══ TOP BAR ═══ */
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 4px 8px;
-  }
-  .topbar .date {
-    font-size: 13px;
-    color: var(--ink-3);
-    font-weight: 500;
-    letter-spacing: 0.01em;
-  }
-  .topbar .avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: var(--ink);
-    color: var(--bg);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display);
-    font-style: italic;
-    font-size: 18px;
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 10px 16px 120px;
+}
 
-  /* ═══ HERO ═══ */
-  .hero {
-    padding: 24px 4px 28px;
-  }
-  .hero h1 {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: 46px;
-    line-height: 1.02;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-  }
-  .hero h1 em {
-    font-style: italic;
-    color: var(--ink-2);
-  }
-  .hero .sub {
-    margin-top: 10px;
-    font-size: 15px;
-    color: var(--ink-3);
-    font-weight: 400;
-  }
+/* ═══ TOPBAR ═══ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 4px 16px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.logo-mark {
+  width: 34px; height: 34px;
+  background: var(--navy);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(30,61,110,.3);
+}
+.logo-info {}
+.logo-name { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+.logo-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--ink-3);
+}
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--done);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.35 } }
 
-  /* ═══ SECTION ═══ */
-  .section {
-    margin-top: 28px;
-  }
-  .section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 4px 12px;
-  }
-  .section-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink-2);
-    letter-spacing: 0.02em;
-  }
-  .section-meta {
-    font-size: 12px;
-    color: var(--ink-4);
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-  }
+.date-badge {
+  font-size: 12px; color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 4px 12px;
+  box-shadow: var(--shadow-sm);
+}
 
-  /* ═══ CARD ═══ */
-  .card {
-    background: var(--surface);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
+/* ═══ HERO ═══ */
+.hero {
+  padding: 4px 4px 28px;
+}
+.hero-greeting {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 34px;
+  color: var(--ink);
+  line-height: 1.05;
+  margin-bottom: 6px;
+}
+.hero-greeting em {
+  font-style: normal;
+  color: var(--navy);
+}
+.hero-time {
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: -3px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 20px;
+}
 
-  /* ═══ MAILS ═══ */
-  .mails-summary {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--line);
-  }
-  .mails-count {
-    font-family: var(--font-display);
-    font-size: 36px;
-    line-height: 1;
-    font-weight: 400;
-    color: var(--ink);
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
-  }
-  .mails-count-label {
-    font-size: 13px;
-    color: var(--ink-3);
-    line-height: 1.35;
-  }
-  .mails-count-label strong { color: var(--ink); font-weight: 600; }
+/* Urgences widget dans le hero */
+.urgences-widget {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--urgent);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.urgences-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--line-2);
+}
+.urgences-icon {
+  width: 26px; height: 26px;
+  background: var(--urgent-bg);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.urgences-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--urgent);
+  flex: 1;
+}
+.urgences-count {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.urgences-list { padding: 4px 0; }
+.urgences-task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line-2);
+}
+.urgences-task:last-child { border-bottom: none; }
+.urg-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--urgent);
+  flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.urg-check:hover { background: var(--urgent-bg); }
+.urg-check.done {
+  background: var(--done);
+  border-color: var(--done);
+}
+.urg-check.done::after {
+  content: '';
+  width: 10px; height: 6px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translate(1px,-1px);
+}
+.urg-text {
+  flex: 1;
+  font-size: 14px; font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.urg-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: .04em;
+  padding: 2px 8px; border-radius: 6px;
+  background: var(--urgent-bg);
+  color: var(--urgent);
+  white-space: nowrap;
+}
+.urgences-skeleton {
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.urgences-empty {
+  padding: 14px 16px;
+  font-size: 13px; color: var(--done);
+  font-weight: 500;
+}
 
-  .mail {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--line);
-  }
-  .mail:last-child { border-bottom: none; }
-  .mail-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .mail-dot.urgent { background: var(--orange); }
-  .mail-dot.normal { background: var(--blue); }
-  .mail-dot.info { background: var(--ink-4); }
-  .mail-body { flex: 1; min-width: 0; }
-  .mail-from {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .mail-subj {
-    font-size: 13px;
-    color: var(--ink-3);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 1px;
-  }
-  .mail-time {
-    font-size: 12px;
-    color: var(--ink-4);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-  }
+/* ═══ SECTIONS ═══ */
+.section { margin-top: 28px; }
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 12px;
+}
+.section-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: .02em;
+}
+.section-meta {
+  font-size: 12px; color: var(--ink-4);
+  font-weight: 500;
+}
 
-  /* ═══ TASKS ═══ */
-  .task {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--line);
-  }
-  .task:last-child { border-bottom: none; }
-  .task-check {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    border: 1.5px solid var(--line);
-    background: var(--surface);
-    flex-shrink: 0;
-    margin-top: 1px;
-    cursor: pointer;
-    transition: all .15s;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .task-check.done {
-    background: var(--green);
-    border-color: var(--green);
-  }
-  .task-check.done::after {
-    content: '';
-    width: 10px; height: 6px;
-    border-left: 2px solid #fff;
-    border-bottom: 2px solid #fff;
-    transform: rotate(-45deg) translate(1px, -1px);
-  }
-  .task-body { flex: 1; min-width: 0; }
-  .task-title {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink);
-    line-height: 1.35;
-  }
-  .task.done .task-title {
-    color: var(--ink-4);
-    text-decoration: line-through;
-  }
-  .task-meta {
-    display: flex; gap: 8px; align-items: center;
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--ink-3);
-  }
-  .task-tag {
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-  }
-  .task-tag.urgent { background: var(--orange-bg); color: var(--orange); }
-  .task-tag.today { background: var(--blue-bg); color: var(--blue); }
-  .task-tag.soon { background: var(--gold-bg); color: var(--gold); }
+/* ═══ CARD ═══ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
 
-  /* ═══ BOUTON AJOUTER TÂCHE ═══ */
-  .add-task-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    border: 1.5px solid var(--line);
-    background: var(--surface);
-    color: var(--ink-3);
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
-    flex-shrink: 0;
-  }
-  .add-task-btn:hover {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--surface);
-    transform: scale(1.08);
-  }
-  .add-task-btn:active { transform: scale(0.95); }
+/* ═══ MAILS ═══ */
+.mail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-2);
+}
+.mail:last-child { border-bottom: none; }
+.mail-av {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.mail-body { flex: 1; min-width: 0; }
+.mail-from { font-size: 13px; font-weight: 600; margin-bottom: 1px; }
+.mail-subj { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mail-meta { text-align: right; flex-shrink: 0; }
+.mail-time { font-size: 11px; color: var(--ink-3); }
+.unread { width: 7px; height: 7px; border-radius: 50%; background: var(--navy); margin: 3px 0 0 auto; }
 
-  /* ═══ MODALE NOUVELLE TÂCHE ═══ */
-  .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(24,24,27,0.35);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 100;
-    display: flex;
-    align-items: flex-end;
-    padding: 0 0 env(safe-area-inset-bottom);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-  }
-  .modal-backdrop.open {
-    opacity: 1;
-    pointer-events: all;
-  }
-  .modal-sheet {
-    width: 100%;
-    max-width: 480px;
-    margin: 0 auto;
-    background: var(--surface);
-    border-radius: var(--r-lg) var(--r-lg) 0 0;
-    padding: 20px 20px 32px;
-    box-shadow: var(--shadow-lg);
-    transform: translateY(20px);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  .modal-backdrop.open .modal-sheet {
-    transform: translateY(0);
-  }
-  .modal-handle {
-    width: 36px;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--line);
-    margin: 0 auto 20px;
-  }
-  .modal-title {
-    font-family: var(--font-display);
-    font-size: 20px;
-    color: var(--ink);
-    margin-bottom: 16px;
-  }
-  .modal-input {
-    width: 100%;
-    padding: 12px 14px;
-    border-radius: var(--r-sm);
-    border: 1.5px solid var(--line);
-    background: var(--surface-2);
-    font-family: var(--font-ui);
-    font-size: 15px;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .modal-input::placeholder { color: var(--ink-4); }
-  .modal-input:focus { border-color: var(--ink-3); }
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 14px;
-  }
-  .modal-cancel {
-    flex: 1;
-    padding: 12px;
-    border-radius: var(--r-sm);
-    border: 1.5px solid var(--line);
-    background: transparent;
-    font-family: var(--font-ui);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink-3);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .modal-cancel:hover { background: var(--surface-2); }
-  .modal-submit {
-    flex: 2;
-    padding: 12px;
-    border-radius: var(--r-sm);
-    border: none;
-    background: var(--ink);
-    font-family: var(--font-ui);
-    font-size: 14px;
-    font-weight: 600;
-    color: #fff;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-  }
-  .modal-submit:hover { opacity: 0.85; }
-  .modal-submit:active { transform: scale(0.98); }
-  .modal-submit:disabled { opacity: 0.45; cursor: not-allowed; }
-  .modal-feedback {
-    font-size: 12px;
-    margin-top: 8px;
-    min-height: 16px;
-    color: var(--green);
-  }
-  .modal-feedback.error { color: var(--orange); }
+/* ═══ TÂCHES ═══ */
 
-  /* ═══ ONGLETS TÂCHES ═══ */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    padding: 0 4px 12px;
-  }
-  .tab {
-    flex: 1;
-    padding: 8px 10px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--ink-3);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    text-align: center;
-    transition: all .15s;
-    letter-spacing: 0.01em;
-  }
-  .tab.active {
-    background: var(--surface);
-    color: var(--ink);
-    box-shadow: var(--shadow-sm);
-  }
-  .tab-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: 99px;
-    font-size: 10px;
-    font-weight: 700;
-    margin-left: 5px;
-    background: var(--line-2);
-    color: var(--ink-3);
-    vertical-align: middle;
-  }
-  .tab.active .tab-badge {
-    background: var(--ink);
-    color: var(--bg);
-  }
+/* Bouton "Nouvelle tâche" — pleine largeur, proéminent */
+.new-task-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(30,61,110,.25);
+  transition: opacity .15s, transform .1s;
+}
+.new-task-btn:hover { opacity: .88; }
+.new-task-btn:active { transform: scale(.98); }
+.new-task-btn svg { flex-shrink: 0; }
 
-  /* ═══ SKELETON LOADING ═══ */
-  .skeleton {
-    background: linear-gradient(90deg, var(--line-2) 25%, var(--surface-2) 50%, var(--line-2) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
-    border-radius: 6px;
-  }
-  @keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-  .task-skeleton {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--line);
-  }
-  .task-skeleton:last-child { border-bottom: none; }
+/* Onglets */
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.tab {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: var(--shadow-sm);
+  transition: color .15s, background .15s, border-color .15s;
+}
+.tab.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(26,23,20,.2);
+}
+.tab-badge {
+  font-size: 11px; font-weight: 600;
+  padding: 1px 6px; border-radius: 10px;
+  background: rgba(255,255,255,.18);
+}
+.tab:not(.active) .tab-badge {
+  background: var(--line);
+  color: var(--ink-3);
+}
 
-  /* ═══ ANIMATIONS TÂCHES ═══ */
-  @keyframes taskOut {
-    0%   { opacity: 1; transform: translateX(0);    max-height: 80px; }
-    40%  { opacity: 0; transform: translateX(24px); max-height: 80px; }
-    100% { opacity: 0; transform: translateX(24px); max-height: 0; padding-top: 0; padding-bottom: 0; border: none; }
-  }
-  @keyframes taskIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .task.completing {
-    animation: taskOut 0.35s cubic-bezier(.4,0,.2,1) forwards;
-    overflow: hidden;
-    pointer-events: none;
-  }
-  .task.entering {
-    animation: taskIn 0.3s cubic-bezier(.2,.8,.2,1) both;
-  }
+/* Tâche individuelle */
+.task {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-2);
+  transition: opacity .3s;
+}
+.task:last-child { border-bottom: none; }
+.task.completing { opacity: .4; pointer-events: none; }
+.task-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--line);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, border-color .2s;
+  margin-top: 1px;
+}
+.task-check:hover { border-color: var(--done); }
+.task-check.done {
+  background: var(--done);
+  border-color: var(--done);
+}
+.task-check.done::after {
+  content: '';
+  width: 10px; height: 6px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translate(1px,-1px);
+}
+.task-body { flex: 1; min-width: 0; }
+.task-title {
+  font-size: 14px; font-weight: 500;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.task.done .task-title {
+  color: var(--ink-4);
+  text-decoration: line-through;
+}
+.task-meta {
+  display: flex; gap: 6px; align-items: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  font-size: 11px; color: var(--ink-3);
+}
+.task-tag {
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .02em;
+}
+.task-tag.urgent { background: var(--urgent-bg); color: var(--urgent); }
+.task-tag.today  { background: var(--today-bg);  color: var(--today); }
+.task-tag.soon   { background: var(--soon-bg);   color: var(--soon); }
 
-  /* ═══ ÉTAT VIDE / ERREUR ═══ */
-  .tasks-empty {
-    padding: 28px 18px;
-    text-align: center;
-    color: var(--ink-4);
-    font-size: 13px;
-    line-height: 1.5;
-  }
-  .tasks-empty strong { display: block; color: var(--ink-3); font-size: 15px; margin-bottom: 4px; }
+/* Skeleton */
+.task-skeleton {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line-2);
+}
+.task-skeleton:last-child { border-bottom: none; }
+.skeleton {
+  background: linear-gradient(90deg, var(--line-2) 25%, var(--surface-2) 50%, var(--line-2) 75%);
+  background-size: 200% 100%;
+  border-radius: 5px;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
 
-  /* ═══ BUDGET ═══ */
-  .budget {
-    padding: 20px 18px;
-  }
-  .budget-top {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .budget-spent {
-    font-family: var(--font-display);
-    font-size: 42px;
-    line-height: 1;
-    font-weight: 400;
-    color: var(--ink);
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
-  }
-  .budget-spent .currency {
-    font-size: 22px;
-    color: var(--ink-3);
-    margin-left: 2px;
-  }
-  .budget-right {
-    text-align: right;
-  }
-  .budget-total {
-    font-size: 13px;
-    color: var(--ink-3);
-    font-variant-numeric: tabular-nums;
-  }
-  .budget-total strong { color: var(--ink); font-weight: 600; }
-  .budget-delta {
-    font-size: 12px;
-    color: var(--green);
-    font-weight: 600;
-    margin-top: 2px;
-  }
-  .budget-bar {
-    height: 8px;
-    background: var(--line-2);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-bottom: 14px;
-  }
-  .budget-bar-fill {
-    height: 100%;
-    background: var(--ink);
-    border-radius: 999px;
-    transition: width .5s cubic-bezier(.2,.8,.2,1);
-  }
-  .budget-cats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .budget-cat {
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border-radius: var(--r-sm);
-    border: 1px solid var(--line);
-  }
-  .budget-cat-name {
-    font-size: 11px;
-    color: var(--ink-3);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .budget-cat-val {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--ink);
-    margin-top: 2px;
-    font-variant-numeric: tabular-nums;
-  }
+.tasks-empty {
+  padding: 20px 16px;
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+.tasks-empty strong {
+  display: block;
+  font-size: 14px;
+  color: var(--ink-2);
+  margin-bottom: 4px;
+}
 
-  /* ═══ APPRENDRE ═══ */
-  .learn-scroll {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    padding: 4px 16px;
-    margin: 0 -16px;
-    scrollbar-width: none;
-  }
-  .learn-scroll::-webkit-scrollbar { display: none; }
+/* ═══ BUDGET ═══ */
+.budget-block { padding: 16px; }
+.budget-top {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.budget-spent {
+  font-size: 34px; font-weight: 700; letter-spacing: -1.5px;
+  line-height: 1;
+}
+.budget-spent .currency { font-size: 18px; font-weight: 500; color: var(--ink-3); margin-left: 2px; }
+.budget-right { text-align: right; }
+.budget-total { font-size: 12px; color: var(--ink-3); }
+.budget-delta { font-size: 12px; color: var(--done); font-weight: 600; margin-top: 2px; }
+.budget-bar {
+  height: 5px; background: var(--line); border-radius: 3px;
+  margin-bottom: 16px; overflow: hidden;
+}
+.budget-bar-fill { height: 5px; background: var(--navy); border-radius: 3px; }
+.budget-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.budget-cat {
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+}
+.budget-cat-name { font-size: 11px; color: var(--ink-3); margin-bottom: 3px; }
+.budget-cat-val { font-size: 15px; font-weight: 600; }
 
-  .learn-card {
-    flex: 0 0 78%;
-    scroll-snap-align: start;
-    background: var(--surface);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow);
-    padding: 18px 18px 16px;
-    cursor: pointer;
-    transition: transform .15s, box-shadow .15s;
-    display: flex;
-    flex-direction: column;
-    min-height: 180px;
-  }
-  .learn-card:active {
-    transform: scale(0.98);
-  }
-  .learn-cat {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-start;
-    padding: 3px 9px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .learn-cat.voc { background: var(--violet-bg); color: var(--violet); }
-  .learn-cat.concept { background: var(--blue-bg); color: var(--blue); }
-  .learn-cat.outil { background: var(--green-bg); color: var(--green); }
-  .learn-cat.archi { background: var(--gold-bg); color: var(--gold); }
-  .learn-cat.business { background: var(--orange-bg); color: var(--orange); }
+/* ═══ APPRENDRE ═══ */
+.learn-scroll {
+  display: flex; gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+.learn-scroll::-webkit-scrollbar { display: none; }
+.learn-card {
+  flex-shrink: 0; width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 14px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  scroll-snap-align: start;
+  transition: box-shadow .15s, border-color .15s;
+}
+.learn-card:hover { border-color: var(--navy); box-shadow: var(--shadow); }
+.learn-cat {
+  display: inline-block; font-size: 10px;
+  font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 2px 7px; border-radius: 5px;
+  margin-bottom: 8px;
+}
+.learn-cat.voc     { background: var(--navy-bg); color: var(--navy); }
+.learn-cat.concept { background: var(--soon-bg); color: var(--soon); }
+.learn-cat.outil   { background: var(--done-bg); color: var(--done); }
+.learn-cat.archi   { background: var(--urgent-bg); color: var(--urgent); }
+.learn-term {
+  font-size: 15px; font-weight: 600;
+  color: var(--ink); margin-bottom: 6px;
+}
+.learn-preview {
+  font-size: 12px; color: var(--ink-3); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.learn-footer { display: flex; align-items: center; justify-content: space-between; }
+.learn-step { font-size: 11px; font-weight: 600; color: var(--navy); }
+.learn-arrow { color: var(--ink-4); }
 
-  .learn-term {
-    font-family: var(--font-display);
-    font-size: 26px;
-    line-height: 1.1;
-    letter-spacing: -0.015em;
-    color: var(--ink);
-    margin-top: 10px;
-    font-weight: 400;
-  }
-  .learn-preview {
-    font-size: 13px;
-    color: var(--ink-3);
-    line-height: 1.45;
-    margin-top: 8px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .learn-footer {
-    margin-top: auto;
-    padding-top: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .learn-step {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--ink-4);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  .learn-arrow {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: var(--surface-2);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--ink-2);
-  }
+/* ═══ RACCOURCIS ═══ */
+.shortcuts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.shortcut {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: border-color .15s, box-shadow .15s;
+}
+.shortcut:hover { border-color: var(--navy); box-shadow: var(--shadow); }
+.shortcut-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 8px;
+  color: #fff;
+}
+.shortcut-icon.mail   { background: var(--navy); }
+.shortcut-icon.notion { background: #1a1a1a; }
+.shortcut-icon.cal    { background: var(--urgent); }
+.shortcut-icon.pay    { background: #2d6a4f; }
+.shortcut-icon.note   { background: var(--soon); }
+.shortcut-icon.call   { background: #4a1d96; }
+.shortcut-label { font-size: 11px; color: var(--ink-3); font-weight: 500; }
 
-  /* ═══ SHORTCUTS ═══ */
-  .shortcuts {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-  .shortcut {
-    background: var(--surface);
-    border-radius: var(--r);
-    box-shadow: var(--shadow-sm);
-    padding: 16px 10px 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: transform .15s;
-    text-align: center;
-  }
-  .shortcut:active { transform: scale(0.96); }
-  .shortcut-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .shortcut-icon.alarm { background: var(--orange-bg); color: var(--orange); }
-  .shortcut-icon.timer { background: var(--green-bg); color: var(--green); }
-  .shortcut-icon.note { background: var(--gold-bg); color: var(--gold); }
-  .shortcut-icon.call { background: var(--blue-bg); color: var(--blue); }
-  .shortcut-icon.music { background: var(--violet-bg); color: var(--violet); }
-  .shortcut-icon.map { background: var(--green-bg); color: var(--green); }
-  .shortcut-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--ink-2);
-    line-height: 1.2;
-  }
+/* ═══ FOOTER ═══ */
+.footer {
+  margin-top: 40px; padding: 20px 8px;
+  text-align: center;
+  font-size: 12px; color: var(--ink-4);
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
 
-  /* ═══ BOTTOM SHEET ═══ */
-  .backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(24,24,27,.35);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s;
-    z-index: 40;
-  }
-  .backdrop.open { opacity: 1; pointer-events: auto; }
+/* ═══ BOTTOM SHEET (cartes apprendre) ═══ */
+.backdrop {
+  position: fixed; inset: 0;
+  background: rgba(26,23,20,.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.backdrop.open { opacity: 1; pointer-events: all; }
+.sheet {
+  position: fixed; bottom: 0;
+  left: 50%; transform: translateX(-50%) translateY(100%);
+  width: 100%; max-width: 480px;
+  background: var(--surface);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  padding: 20px 24px 40px;
+  z-index: 51;
+  box-shadow: var(--shadow-lg);
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1);
+}
+.sheet.open { transform: translateX(-50%) translateY(0); }
+.sheet-handle { width: 32px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 18px; }
+.sheet-cat {
+  display: inline-block; font-size: 10px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 5px;
+  margin-bottom: 8px;
+}
+.sheet-cat.voc     { background: var(--navy-bg); color: var(--navy); }
+.sheet-cat.concept { background: var(--soon-bg); color: var(--soon); }
+.sheet-cat.outil   { background: var(--done-bg); color: var(--done); }
+.sheet-cat.archi   { background: var(--urgent-bg); color: var(--urgent); }
+.sheet-term {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 26px; color: var(--ink);
+  margin-bottom: 18px; line-height: 1.15;
+}
+.sheet-section { margin-bottom: 14px; }
+.sheet-label {
+  font-size: 10px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
+}
+.sheet-text { font-size: 14px; color: var(--ink-2); line-height: 1.55; }
+.sheet-actions { display: flex; gap: 10px; margin-top: 22px; }
+.btn {
+  flex: 1; padding: 13px 10px; border-radius: var(--r-sm);
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: opacity .15s;
+}
+.btn:hover { opacity: .85; }
+.btn-secondary { background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); }
+.btn-primary { background: var(--ink); border: none; color: #fff; }
 
-  .sheet {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    background: var(--surface);
-    border-radius: 28px 28px 0 0;
-    padding: 10px 22px calc(24px + env(safe-area-inset-bottom));
-    transform: translateY(100%);
-    transition: transform .35s cubic-bezier(.2,.8,.2,1);
-    z-index: 50;
-    max-height: 82vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-  }
-  .sheet.open { transform: translateY(0); }
-  .sheet-handle {
-    width: 36px; height: 4px;
-    background: var(--line);
-    border-radius: 999px;
-    margin: 8px auto 18px;
-  }
-  .sheet-cat {
-    display: inline-flex;
-    padding: 3px 9px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    background: var(--violet-bg);
-    color: var(--violet);
-  }
-  .sheet-term {
-    font-family: var(--font-display);
-    font-size: 40px;
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    margin-top: 12px;
-    color: var(--ink);
-    font-weight: 400;
-  }
-  .sheet-section {
-    margin-top: 22px;
-  }
-  .sheet-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--ink-3);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .sheet-text {
-    font-size: 15px;
-    line-height: 1.55;
-    color: var(--ink);
-  }
-  .sheet-text em {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-size: 17px;
-    color: var(--ink-2);
-  }
-  .sheet-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 26px;
-  }
-  .btn {
-    flex: 1;
-    padding: 14px 16px;
-    border: none;
-    border-radius: 14px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity .15s;
-  }
-  .btn:active { opacity: .7; }
-  .btn-primary {
-    background: var(--ink);
-    color: var(--bg);
-  }
-  .btn-secondary {
-    background: var(--surface-2);
-    color: var(--ink);
-    border: 1px solid var(--line);
-  }
-
-  /* ═══ FOOTER ═══ */
-  .footer {
-    margin-top: 40px;
-    padding: 20px 8px;
-    text-align: center;
-    font-size: 12px;
-    color: var(--ink-4);
-  }
-  .footer em {
-    font-family: var(--font-display);
-    font-style: italic;
-    color: var(--ink-3);
-  }
+/* ═══ MODALE NOUVELLE TÂCHE ═══ */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(26,23,20,.4);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 100;
+  display: flex; align-items: flex-end;
+  padding-bottom: env(safe-area-inset-bottom);
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  width: 100%; max-width: 480px; margin: 0 auto;
+  background: var(--surface);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  padding: 20px 20px 32px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px);
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.modal-backdrop.open .modal-sheet { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 20px; }
+.modal-title {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 22px; color: var(--ink); margin-bottom: 16px;
+}
+.modal-input {
+  width: 100%; padding: 12px 14px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line);
+  background: var(--surface-2);
+  font-family: var(--font-ui); font-size: 15px; color: var(--ink);
+  outline: none; transition: border-color .15s;
+}
+.modal-input::placeholder { color: var(--ink-4); }
+.modal-input:focus { border-color: var(--navy); }
+.modal-actions { display: flex; gap: 10px; margin-top: 14px; }
+.modal-cancel {
+  flex: 1; padding: 12px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--line); background: transparent;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 500;
+  color: var(--ink-3); cursor: pointer; transition: background .15s;
+}
+.modal-cancel:hover { background: var(--surface-2); }
+.modal-submit {
+  flex: 2; padding: 12px; border-radius: var(--r-sm);
+  border: none; background: var(--navy);
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+  color: #fff; cursor: pointer;
+  transition: opacity .15s, transform .1s;
+  box-shadow: 0 2px 8px rgba(30,61,110,.25);
+}
+.modal-submit:hover { opacity: .88; }
+.modal-submit:active { transform: scale(.98); }
+.modal-submit:disabled { opacity: .4; cursor: not-allowed; }
+.modal-feedback { font-size: 12px; margin-top: 8px; min-height: 16px; color: var(--done); }
+.modal-feedback.error { color: var(--urgent); }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- TOP BAR -->
+  <!-- TOPBAR -->
   <header class="topbar">
-    <div class="date" id="topdate">—</div>
-    <div class="avatar">E</div>
+    <div class="logo">
+      <div class="logo-mark">E</div>
+      <div class="logo-info">
+        <div class="logo-name">Elie</div>
+        <div class="logo-status"><span class="dot"></span>Connectée</div>
+      </div>
+    </div>
+    <div class="date-badge" id="dateBadge">—</div>
   </header>
 
   <!-- HERO -->
   <section class="hero">
-    <h1><em id="greet">Bonjour</em>, Alexis.</h1>
-    <p class="sub" id="subtitle">Voici ta journée.</p>
+    <div class="hero-greeting">Bonjour, <em>Alexis</em>.</div>
+    <div class="hero-time" id="clock">--:--</div>
+
+    <!-- URGENCES WIDGET — dynamique -->
+    <div class="urgences-widget" id="urgencesWidget">
+      <div class="urgences-head">
+        <div class="urgences-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="urgences-title">Urgences</div>
+        <div class="urgences-count" id="urgencesCount">chargement…</div>
+      </div>
+      <div class="urgences-list" id="urgencesList">
+        <!-- Skeleton -->
+        <div class="urgences-skeleton">
+          <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
+          <div class="skeleton" style="height:13px;flex:1;border-radius:4px"></div>
+        </div>
+        <div class="urgences-skeleton">
+          <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
+          <div class="skeleton" style="height:13px;flex:1;border-radius:4px"></div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- MAILS -->
@@ -837,53 +711,48 @@
       <div class="section-meta">Gmail · 3 non lus</div>
     </div>
     <div class="card">
-      <div class="mails-summary">
-        <div class="mails-count">3</div>
-        <div class="mails-count-label">
-          <strong>3 messages</strong> à traiter<br>
-          dont 1 priorité
-        </div>
-      </div>
       <div class="mail">
-        <div class="mail-dot urgent"></div>
+        <div class="mail-av" style="background:#3b82f6">A</div>
         <div class="mail-body">
-          <div class="mail-from">Camille — Studio</div>
-          <div class="mail-subj">Devis à valider avant 18 h</div>
+          <div class="mail-from">Antoine Durand</div>
+          <div class="mail-subj">Contrat signé — voir pièce jointe</div>
         </div>
-        <div class="mail-time">10:24</div>
+        <div class="mail-meta"><div class="mail-time">09:14</div><div class="unread"></div></div>
       </div>
       <div class="mail">
-        <div class="mail-dot normal"></div>
+        <div class="mail-av" style="background:#8b5cf6">N</div>
         <div class="mail-body">
           <div class="mail-from">Notion</div>
-          <div class="mail-subj">Nouveau commentaire sur EMPIRE</div>
+          <div class="mail-subj">Rappel : 3 tâches en retard</div>
         </div>
-        <div class="mail-time">09:11</div>
+        <div class="mail-meta"><div class="mail-time">08:30</div><div class="unread"></div></div>
       </div>
       <div class="mail">
-        <div class="mail-dot info"></div>
+        <div class="mail-av" style="background:#ef4444">L</div>
         <div class="mail-body">
-          <div class="mail-from">Vercel</div>
-          <div class="mail-subj">Deployment ready · elie</div>
+          <div class="mail-from">Laure Martin</div>
+          <div class="mail-subj">Disponible jeudi matin ?</div>
         </div>
-        <div class="mail-time">08:47</div>
+        <div class="mail-meta"><div class="mail-time">Hier</div></div>
       </div>
     </div>
   </section>
 
-  <!-- TASKS -->
+  <!-- TÂCHES -->
   <section class="section">
     <div class="section-head">
       <div class="section-title">Tâches</div>
-      <div style="display:flex;align-items:center;gap:10px;line-height:1;">
-        <div class="section-meta" id="tasksMeta">Notion · chargement…</div>
-        <button class="add-task-btn" id="addTaskBtn" onclick="openTaskModal()" title="Nouvelle tâche" style="flex-shrink:0;vertical-align:middle;">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
-            <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
+      <div class="section-meta" id="tasksMeta">Notion · chargement…</div>
     </div>
+
+    <!-- Bouton "Nouvelle tâche" — pleine largeur -->
+    <button class="new-task-btn" onclick="openTaskModal()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Nouvelle tâche
+    </button>
+
     <!-- Onglets -->
     <div class="tabs">
       <button class="tab active" id="tabSuggested" onclick="switchTab('suggested')">
@@ -893,27 +762,27 @@
         Aujourd'hui<span class="tab-badge" id="badgeToday">—</span>
       </button>
     </div>
+
     <div class="card" id="tasksCard">
-      <!-- Skeleton de chargement -->
       <div class="task-skeleton">
         <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
         <div style="flex:1">
-          <div class="skeleton" style="height:13px;width:65%;margin-bottom:7px"></div>
-          <div class="skeleton" style="height:10px;width:35%"></div>
+          <div class="skeleton" style="height:13px;width:65%;margin-bottom:7px;border-radius:4px"></div>
+          <div class="skeleton" style="height:10px;width:35%;border-radius:4px"></div>
         </div>
       </div>
       <div class="task-skeleton">
         <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
         <div style="flex:1">
-          <div class="skeleton" style="height:13px;width:80%;margin-bottom:7px"></div>
-          <div class="skeleton" style="height:10px;width:25%"></div>
+          <div class="skeleton" style="height:13px;width:80%;margin-bottom:7px;border-radius:4px"></div>
+          <div class="skeleton" style="height:10px;width:25%;border-radius:4px"></div>
         </div>
       </div>
       <div class="task-skeleton">
         <div class="skeleton" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"></div>
         <div style="flex:1">
-          <div class="skeleton" style="height:13px;width:50%;margin-bottom:7px"></div>
-          <div class="skeleton" style="height:10px;width:40%"></div>
+          <div class="skeleton" style="height:13px;width:50%;margin-bottom:7px;border-radius:4px"></div>
+          <div class="skeleton" style="height:10px;width:40%;border-radius:4px"></div>
         </div>
       </div>
     </div>
@@ -926,34 +795,22 @@
       <div class="section-meta">Avril</div>
     </div>
     <div class="card">
-      <div class="budget">
+      <div class="budget-block">
         <div class="budget-top">
-          <div class="budget-spent">1 240<span class="currency">€</span></div>
+          <div class="budget-spent">1 240<span class="currency"> €</span></div>
           <div class="budget-right">
             <div class="budget-total">sur <strong>2 400 €</strong></div>
             <div class="budget-delta">−12 % vs mars</div>
           </div>
         </div>
         <div class="budget-bar">
-          <div class="budget-bar-fill" style="width: 52%"></div>
+          <div class="budget-bar-fill" style="width:52%"></div>
         </div>
         <div class="budget-cats">
-          <div class="budget-cat">
-            <div class="budget-cat-name">Logement</div>
-            <div class="budget-cat-val">680 €</div>
-          </div>
-          <div class="budget-cat">
-            <div class="budget-cat-name">Courses</div>
-            <div class="budget-cat-val">240 €</div>
-          </div>
-          <div class="budget-cat">
-            <div class="budget-cat-name">Abonnements</div>
-            <div class="budget-cat-val">185 €</div>
-          </div>
-          <div class="budget-cat">
-            <div class="budget-cat-name">Sorties</div>
-            <div class="budget-cat-val">135 €</div>
-          </div>
+          <div class="budget-cat"><div class="budget-cat-name">Logement</div><div class="budget-cat-val">680 €</div></div>
+          <div class="budget-cat"><div class="budget-cat-name">Courses</div><div class="budget-cat-val">240 €</div></div>
+          <div class="budget-cat"><div class="budget-cat-name">Abonnements</div><div class="budget-cat-val">185 €</div></div>
+          <div class="budget-cat"><div class="budget-cat-name">Sorties</div><div class="budget-cat-val">135 €</div></div>
         </div>
       </div>
     </div>
@@ -968,197 +825,153 @@
     <div class="learn-scroll" id="learnScroll"></div>
   </section>
 
-  <!-- SHORTCUTS -->
+  <!-- RACCOURCIS -->
   <section class="section">
     <div class="section-head">
       <div class="section-title">Raccourcis</div>
     </div>
     <div class="shortcuts">
       <div class="shortcut">
-        <div class="shortcut-icon alarm">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3L2 6"/><path d="M22 6l-3-3"/></svg>
-        </div>
-        <div class="shortcut-label">Alarme</div>
+        <div class="shortcut-icon mail"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <div class="shortcut-label">Gmail</div>
       </div>
       <div class="shortcut">
-        <div class="shortcut-icon timer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/></svg>
-        </div>
-        <div class="shortcut-label">Minuteur</div>
+        <div class="shortcut-icon notion"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><path d="M5 7h14M5 12h14M5 17h8"/></svg></div>
+        <div class="shortcut-label">Notion</div>
       </div>
       <div class="shortcut">
-        <div class="shortcut-icon note">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-        </div>
+        <div class="shortcut-icon cal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <div class="shortcut-label">Agenda</div>
+      </div>
+      <div class="shortcut">
+        <div class="shortcut-icon pay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+        <div class="shortcut-label">Revolut</div>
+      </div>
+      <div class="shortcut">
+        <div class="shortcut-icon note"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></div>
         <div class="shortcut-label">Note</div>
       </div>
       <div class="shortcut">
-        <div class="shortcut-icon call">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        </div>
+        <div class="shortcut-icon call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 015.13 12.8 19.79 19.79 0 012.06 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></div>
         <div class="shortcut-label">Appeler</div>
-      </div>
-      <div class="shortcut">
-        <div class="shortcut-icon music">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-        </div>
-        <div class="shortcut-label">Musique</div>
-      </div>
-      <div class="shortcut">
-        <div class="shortcut-icon map">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
-        <div class="shortcut-label">Maps</div>
       </div>
     </div>
   </section>
 
-  <div class="footer">
-    <em>Elie v5</em> · Assistante personnelle
-  </div>
+  <div class="footer"><span class="dot"></span><em>Elie</em> · Assistante personnelle</div>
+
 </div>
 
-<!-- BOTTOM SHEET -->
+<!-- BOTTOM SHEET (Apprendre) -->
 <div class="backdrop" id="backdrop" onclick="closeSheet()"></div>
-<aside class="sheet" id="sheet" role="dialog" aria-modal="true">
+<aside class="sheet" id="sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-cat" id="sheetCat">Vocabulaire</div>
   <h2 class="sheet-term" id="sheetTerm">—</h2>
-  <div class="sheet-section">
-    <div class="sheet-label">Définition</div>
-    <div class="sheet-text" id="sheetDef">—</div>
-  </div>
-  <div class="sheet-section">
-    <div class="sheet-label">Image mentale</div>
-    <div class="sheet-text"><em id="sheetImg">—</em></div>
-  </div>
-  <div class="sheet-section">
-    <div class="sheet-label">Exemple concret</div>
-    <div class="sheet-text" id="sheetEx">—</div>
-  </div>
+  <div class="sheet-section"><div class="sheet-label">Définition</div><div class="sheet-text" id="sheetDef">—</div></div>
+  <div class="sheet-section"><div class="sheet-label">Image mentale</div><div class="sheet-text"><em id="sheetImg">—</em></div></div>
+  <div class="sheet-section"><div class="sheet-label">Exemple concret</div><div class="sheet-text" id="sheetEx">—</div></div>
   <div class="sheet-actions">
     <button class="btn btn-secondary" onclick="closeSheet()">À revoir</button>
-    <button class="btn btn-primary" onclick="closeSheet()">Je sais</button>
+    <button class="btn btn-primary" onclick="closeSheet()">Je sais ✓</button>
   </div>
 </aside>
 
+<!-- MODALE NOUVELLE TÂCHE -->
+<div class="modal-backdrop" id="taskModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouvelle tâche</div>
+    <input class="modal-input" id="taskInput" type="text" placeholder="Ex : Appeler le comptable…" maxlength="200" autocomplete="off">
+    <div class="modal-feedback" id="taskFeedback"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeTaskModal()">Annuler</button>
+      <button class="modal-submit" id="taskSubmit" onclick="submitTask()">Ajouter dans Notion</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ─── DATE ───
+  // ─── HORLOGE & DATE ───
   (function () {
-    const d = new Date();
-    const opts = { weekday: 'long', day: 'numeric', month: 'long' };
-    const s = d.toLocaleDateString('fr-FR', opts);
-    document.getElementById('topdate').textContent = s.charAt(0).toUpperCase() + s.slice(1);
-    const h = d.getHours();
-    let g = 'Bonjour';
-    if (h < 6) g = 'Bonne nuit';
-    else if (h < 12) g = 'Bonjour';
-    else if (h < 18) g = 'Bon après-midi';
-    else g = 'Bonsoir';
-    document.getElementById('greet').textContent = g;
+    function tick() {
+      const now = new Date();
+      document.getElementById('clock').textContent =
+        String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    }
+    tick();
+    setInterval(tick, 10000);
+
+    const now = new Date();
+    const s = now.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+    document.getElementById('dateBadge').textContent = s.charAt(0).toUpperCase() + s.slice(1);
   })();
 
-  // ─── REVIEW CARDS (placeholder data, later from Notion) ───
+  // ─── CARTES APPRENDRE ───
   const REVIEWS = [
-    {
-      term: 'PWA',
-      cat: 'Vocabulaire',
-      catClass: 'voc',
-      step: 'J+1',
-      def: "Progressive Web App. C'est un site web qui peut s'installer sur ton téléphone comme une vraie app, avec icône sur l'écran d'accueil et fonctionnement hors ligne.",
-      img: "Une sirène : moitié poisson, moitié humain. La PWA c'est moitié site, moitié app — les deux natures en un seul corps.",
-      ex: "Elie que tu utilises là est une PWA. Tu l'as installée sur ton iPhone sans passer par l'App Store."
-    },
-    {
-      term: 'Service Worker',
-      cat: 'Concept',
-      catClass: 'concept',
-      step: 'J+1',
-      def: "Script JavaScript qui tourne en arrière-plan, séparé de la page. Il intercepte les requêtes réseau et sert les fichiers depuis le cache — c'est lui qui rend une PWA utilisable hors connexion.",
-      img: "Un portier de club très pro : toute demande passe par lui. Il sait si le truc est déjà dans ses poches (cache) ou s'il doit appeler le bar au fond (réseau).",
-      ex: "Le fichier sw.js d'Elie met en cache la page d'accueil. Même en mode avion, tu la revois."
-    },
-    {
-      term: 'Repository',
-      cat: 'Outil',
-      catClass: 'outil',
-      step: 'J+1',
-      def: "« Dépôt » en français. Dossier de projet sur GitHub qui garde l'historique complet de chaque modification de code, versionné ligne par ligne.",
-      img: "Une bibliothèque avec un livre en 1000 éditions empilées : tu peux toujours revenir à l'édition de 2021 pour voir comment le chapitre 3 était écrit.",
-      ex: "Ton repo elie contient l'index.html, le sw.js, le manifest — plus chaque version successive depuis le premier upload."
-    },
-    {
-      term: "Variable d'environnement",
-      cat: 'Concept',
-      catClass: 'concept',
-      step: 'J+1',
-      def: "Valeur secrète (clé API, mot de passe) stockée séparément du code et lue au moment de l'exécution. N'apparaît jamais dans le repo public.",
-      img: "Un coffre-fort à la banque : le papier avec ta combinaison est chez toi, jamais dans la lettre. Le code dit « va chercher dans le coffre », pas « voici la combinaison ».",
-      ex: "Quand on branchera l'API Claude, ta clé sera stockée dans Vercel comme variable d'env — visible nulle part sur GitHub."
-    },
-    {
-      term: 'CDN',
-      cat: 'Architecture',
-      catClass: 'archi',
-      step: 'J+1',
-      def: "Content Delivery Network. Réseau mondial de serveurs qui copient ton site dans des dizaines de villes, pour que chaque visiteur télécharge depuis le plus proche.",
-      img: "Au lieu d'une seule pizzeria à Milan qui livre le monde entier, tu as une pizzeria par ville : livraison en 10 min partout.",
-      ex: "Vercel est un CDN. Ton elie.vercel.app est servi depuis Paris pour toi, depuis Tokyo pour un utilisateur japonais."
-    }
+    { term:'PWA', cat:'Vocabulaire', catClass:'voc', step:'J+1',
+      def:"Progressive Web App. Un site web qui s'installe sur ton téléphone comme une vraie app, avec icône sur l'écran d'accueil et mode hors-ligne.",
+      img:"Une sirène : moitié site, moitié app. Les deux natures en un seul corps.",
+      ex:"Elie est une PWA. Installée sur iPhone sans passer par l'App Store." },
+    { term:'Service Worker', cat:'Concept', catClass:'concept', step:'J+1',
+      def:"Script JS qui tourne en arrière-plan. Il intercepte les requêtes réseau et sert les fichiers depuis le cache.",
+      img:"Un portier de club : toute demande passe par lui. Il sait si c'est déjà dans ses poches ou s'il faut appeler le bar.",
+      ex:"sw.js d'Elie met en cache la page. En mode avion, tu la revois." },
+    { term:'Repository', cat:'Outil', catClass:'outil', step:'J+3',
+      def:"Dossier de projet sur GitHub avec l'historique complet de chaque modification, versionné ligne par ligne.",
+      img:"Une bibliothèque avec 1000 éditions empilées : tu peux revenir à n'importe quelle version.",
+      ex:"github.com/aberthe22/elie-app contient tout le code + chaque version." },
+    { term:"Variable d'env", cat:'Concept', catClass:'concept', step:'J+7',
+      def:"Valeur secrète (clé API) stockée séparément du code. N'apparaît jamais dans le repo public.",
+      img:"Un coffre-fort : le code dit 'va chercher dans le coffre', pas 'voici la combinaison'.",
+      ex:"NOTION_TOKEN sur Vercel → lu via process.env.NOTION_TOKEN dans l'API." },
+    { term:'CDN', cat:'Architecture', catClass:'archi', step:'J+14',
+      def:"Content Delivery Network. Réseau mondial de serveurs qui copient ton site pour livrer depuis le plus proche.",
+      img:"Une pizzeria par ville plutôt que d'une seule à Paris livrant le monde entier.",
+      ex:"Vercel Edge = CDN auto. ton app est servie depuis Paris pour toi." }
   ];
-
-  // ─── RENDER CARDS ───
   const scroll = document.getElementById('learnScroll');
-  REVIEWS.forEach((r) => {
-    const card = document.createElement('div');
-    card.className = 'learn-card';
-    card.innerHTML = `
+  REVIEWS.forEach(r => {
+    const c = document.createElement('div');
+    c.className = 'learn-card';
+    c.innerHTML = `
       <span class="learn-cat ${r.catClass}">${r.cat}</span>
       <div class="learn-term">${r.term}</div>
       <div class="learn-preview">${r.def}</div>
       <div class="learn-footer">
         <span class="learn-step">Révision · ${r.step}</span>
         <div class="learn-arrow">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
         </div>
-      </div>
-    `;
-    card.addEventListener('click', () => openSheet(r));
-    scroll.appendChild(card);
+      </div>`;
+    c.addEventListener('click', () => openSheet(r));
+    scroll.appendChild(c);
   });
 
-  // ─── SHEET ───
-  const sheet = document.getElementById('sheet');
-  const backdrop = document.getElementById('backdrop');
-
+  // ─── BOTTOM SHEET APPRENDRE ───
   function openSheet(r) {
     const catEl = document.getElementById('sheetCat');
     catEl.textContent = r.cat;
     catEl.className = `sheet-cat ${r.catClass}`;
     document.getElementById('sheetTerm').textContent = r.term;
-    document.getElementById('sheetDef').textContent = r.def;
-    document.getElementById('sheetImg').textContent = r.img;
-    document.getElementById('sheetEx').textContent = r.ex;
-    sheet.classList.add('open');
-    backdrop.classList.add('open');
+    document.getElementById('sheetDef').textContent  = r.def;
+    document.getElementById('sheetImg').textContent  = r.img;
+    document.getElementById('sheetEx').textContent   = r.ex;
+    document.getElementById('sheet').classList.add('open');
+    document.getElementById('backdrop').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
-
   function closeSheet() {
-    sheet.classList.remove('open');
-    backdrop.classList.remove('open');
+    document.getElementById('sheet').classList.remove('open');
+    document.getElementById('backdrop').classList.remove('open');
     document.body.style.overflow = '';
   }
 
-  // ─── TASKS — deux onglets : "Elie choisit" et "Aujourd'hui" ───
-
-  // TASKS_DATA : données brutes reçues de l'API
-  // COMPLETED  : IDs des tâches cochées dans cette session
+  // ─── SYSTÈME DE TÂCHES ───
   let TASKS_DATA = { suggested: [], today: [] };
   let COMPLETED  = new Set();
   let ACTIVE_TAB = 'suggested';
 
-  // switchTab : bascule entre les deux vues
   function switchTab(tab) {
     ACTIVE_TAB = tab;
     document.getElementById('tabSuggested').classList.toggle('active', tab === 'suggested');
@@ -1167,9 +980,8 @@
   }
 
   function renderCurrentTab() {
-    const raw    = ACTIVE_TAB === 'suggested' ? TASKS_DATA.suggested : TASKS_DATA.today;
-    const tasks  = raw.filter(t => !COMPLETED.has(t.id));
-    // "Elie choisit" : 5 affichés max, le reste est en réserve silencieuse
+    const raw     = ACTIVE_TAB === 'suggested' ? TASKS_DATA.suggested : TASKS_DATA.today;
+    const tasks   = raw.filter(t => !COMPLETED.has(t.id));
     const visible = ACTIVE_TAB === 'suggested' ? tasks.slice(0, 5) : tasks;
     renderTaskList(visible, ACTIVE_TAB);
   }
@@ -1189,7 +1001,7 @@
   function taskHTML(t) {
     return `
       <div class="task" data-id="${t.id}">
-        <div class="task-check" onclick="completeTask(this, '${t.id}')"></div>
+        <div class="task-check" onclick="completeTask(this,'${t.id}')"></div>
         <div class="task-body">
           <div class="task-title">${escHtml(t.title)}</div>
           <div class="task-meta">
@@ -1200,29 +1012,22 @@
       </div>`;
   }
 
-  // completeTask : coche + appel API + disparition + remplacement
   async function completeTask(checkEl, taskId) {
     const taskEl = checkEl.closest('.task');
     if (!taskEl || taskEl.classList.contains('completing')) return;
-
-    // Feedback visuel immédiat — on n'attend pas la réponse Notion
     checkEl.classList.add('done');
     taskEl.classList.add('completing');
-
-    // Appel API + délai animation en parallèle
     await Promise.all([
       fetch('/api/complete-task', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ taskId })
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ taskId })
       }).catch(e => console.warn('[completeTask]', e)),
       new Promise(r => setTimeout(r, 350))
     ]);
-
-    // Retire la tâche du pool local et re-render (le suivant arrive)
     COMPLETED.add(taskId);
     updateBadges();
     renderCurrentTab();
+    updateUrgences();
   }
 
   function updateBadges() {
@@ -1232,10 +1037,52 @@
     document.getElementById('badgeToday').textContent     = tod.length;
   }
 
+  // ─── WIDGET URGENCES ───
+  function updateUrgences() {
+    const urgent = TASKS_DATA.suggested
+      .filter(t => !COMPLETED.has(t.id) && (t.tagClass === 'urgent'));
+
+    const list  = document.getElementById('urgencesList');
+    const count = document.getElementById('urgencesCount');
+
+    if (urgent.length === 0) {
+      count.textContent = '0 urgence';
+      list.innerHTML = `<div class="urgences-empty">✓ Aucune urgence en ce moment</div>`;
+      return;
+    }
+
+    count.textContent = urgent.length === 1 ? '1 urgence' : `${urgent.length} urgences`;
+    list.innerHTML = urgent.slice(0, 3).map(t => `
+      <div class="urgences-task" data-urg-id="${t.id}">
+        <div class="urg-check" onclick="completeUrgent(this,'${t.id}')"></div>
+        <div class="urg-text">${escHtml(t.title)}</div>
+        <span class="urg-label">${escHtml(t.tag || 'Urgent')}</span>
+      </div>`).join('');
+  }
+
+  async function completeUrgent(el, taskId) {
+    const row = el.closest('.urgences-task');
+    if (!row || row.classList.contains('completing')) return;
+    el.classList.add('done');
+    row.style.opacity = '.4';
+    row.style.pointerEvents = 'none';
+    await Promise.all([
+      fetch('/api/complete-task', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ taskId })
+      }).catch(e => console.warn('[completeUrgent]', e)),
+      new Promise(r => setTimeout(r, 350))
+    ]);
+    COMPLETED.add(taskId);
+    updateBadges();
+    renderCurrentTab();
+    updateUrgences();
+  }
+
   function escHtml(str) {
     return String(str)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   async function fetchTasks() {
@@ -1243,78 +1090,60 @@
       const res = await fetch('/api/tasks');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-
       TASKS_DATA = { suggested: data.suggested ?? [], today: data.today ?? [] };
       document.getElementById('tasksMeta').textContent =
         `Notion · ${data.meta?.totalActive ?? '?'} actives`;
       updateBadges();
       renderCurrentTab();
-
+      updateUrgences();
     } catch (err) {
-      console.warn('[Elie] Tâches indisponibles:', err.message);
-      document.getElementById('tasksCard').innerHTML = `
-        <div class="tasks-empty">
-          <strong>Connexion Notion impossible</strong>
-          Vérifie ta connexion ou les variables Vercel.
-        </div>`;
+      console.warn('[Elie] Tâches:', err.message);
+      document.getElementById('tasksCard').innerHTML =
+        `<div class="tasks-empty"><strong>Connexion Notion impossible</strong>Vérifie ta connexion ou les variables Vercel.</div>`;
       document.getElementById('tasksMeta').textContent = 'Notion · erreur';
+      document.getElementById('urgencesCount').textContent = '—';
+      document.getElementById('urgencesList').innerHTML =
+        `<div class="urgences-empty" style="color:var(--ink-3)">Connexion impossible</div>`;
     }
   }
-
   fetchTasks();
 
   // ─── MODALE NOUVELLE TÂCHE ───
   function openTaskModal() {
-    const backdrop = document.getElementById('taskModal');
-    const input    = document.getElementById('taskInput');
-    backdrop.classList.add('open');
+    document.getElementById('taskModal').classList.add('open');
     document.getElementById('taskFeedback').textContent = '';
     document.getElementById('taskFeedback').className = 'modal-feedback';
     document.getElementById('taskSubmit').disabled = false;
     document.getElementById('taskSubmit').textContent = 'Ajouter dans Notion';
-    setTimeout(() => input.focus(), 200);
+    setTimeout(() => document.getElementById('taskInput').focus(), 200);
   }
-
   function closeTaskModal() {
-    const backdrop = document.getElementById('taskModal');
-    backdrop.classList.remove('open');
+    document.getElementById('taskModal').classList.remove('open');
     document.getElementById('taskInput').value = '';
   }
-
   async function submitTask() {
     const input  = document.getElementById('taskInput');
     const submit = document.getElementById('taskSubmit');
     const fb     = document.getElementById('taskFeedback');
     const title  = input.value.trim();
-
     if (!title) { input.focus(); return; }
-
     submit.disabled = true;
     submit.textContent = 'Ajout en cours…';
     fb.textContent = '';
-    fb.className = 'modal-feedback';
-
     try {
-      const res = await fetch('/api/create-task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res  = await fetch('/api/create-task', {
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ title })
       });
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-
       fb.textContent = '✓ Tâche ajoutée dans ton Inbox Notion';
       fb.className = 'modal-feedback';
       input.value = '';
-      submit.textContent = 'Ajouter dans Notion';
       submit.disabled = false;
-
-      // Refresh silencieux des tâches après 800ms
+      submit.textContent = 'Ajouter dans Notion';
       setTimeout(() => fetchTasks(), 800);
-      // Ferme la modale après 1.5s
       setTimeout(() => closeTaskModal(), 1500);
-
     } catch (err) {
       fb.textContent = 'Erreur : ' + err.message;
       fb.className = 'modal-feedback error';
@@ -1322,46 +1151,18 @@
       submit.textContent = 'Ajouter dans Notion';
     }
   }
-
-  // Ferme la modale si on clique sur le backdrop
   document.getElementById('taskModal').addEventListener('click', function(e) {
     if (e.target === this) closeTaskModal();
   });
-
-  // Valider avec Enter
-  document.getElementById('taskInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') submitTask();
+  document.getElementById('taskInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter')  submitTask();
     if (e.key === 'Escape') closeTaskModal();
   });
 
   // ─── SERVICE WORKER ───
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
-    });
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
 </script>
-
-<!-- MODALE NOUVELLE TÂCHE -->
-<div class="modal-backdrop" id="taskModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Nouvelle tâche</div>
-    <input
-      class="modal-input"
-      id="taskInput"
-      type="text"
-      placeholder="Ex : Appeler le comptable…"
-      maxlength="200"
-      autocomplete="off"
-    >
-    <div class="modal-feedback" id="taskFeedback"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeTaskModal()">Annuler</button>
-      <button class="modal-submit" id="taskSubmit" onclick="submitTask()">Ajouter dans Notion</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
