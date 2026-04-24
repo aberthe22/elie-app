@@ -49,6 +49,9 @@ export default async function handler(req, res) {
           },
           'État': {
             status: { name: 'Pas commencé' }
+          },
+          'Domaine': {
+            select: { name: 'Inbox' }
           }
         }
       })

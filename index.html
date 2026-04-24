@@ -128,7 +128,7 @@
   }
   .section-head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     padding: 0 4px 12px;
   }
@@ -875,10 +875,10 @@
   <section class="section">
     <div class="section-head">
       <div class="section-title">Tâches</div>
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;line-height:1;">
         <div class="section-meta" id="tasksMeta">Notion · chargement…</div>
-        <button class="add-task-btn" id="addTaskBtn" onclick="openTaskModal()" title="Nouvelle tâche">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <button class="add-task-btn" id="addTaskBtn" onclick="openTaskModal()" title="Nouvelle tâche" style="flex-shrink:0;vertical-align:middle;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
             <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </button>
