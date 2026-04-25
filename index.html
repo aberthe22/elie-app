@@ -893,7 +893,7 @@ body {
   <section class="section">
     <div class="section-head">
       <div class="section-title">Apprendre</div>
-      <div class="section-meta">5 cartes · aujourd'hui</div>
+      <div class="section-meta" id="learnMeta">chargement…</div>
     </div>
     <div class="learn-scroll" id="learnScroll"></div>
   </section>
@@ -945,8 +945,8 @@ body {
   <div class="sheet-section"><div class="sheet-label">Image mentale</div><div class="sheet-text"><em id="sheetImg">—</em></div></div>
   <div class="sheet-section"><div class="sheet-label">Exemple concret</div><div class="sheet-text" id="sheetEx">—</div></div>
   <div class="sheet-actions">
-    <button class="btn btn-secondary" onclick="closeSheet()">À revoir</button>
-    <button class="btn btn-primary" onclick="closeSheet()">Je sais ✓</button>
+    <button class="btn btn-secondary" id="sheetReviewBtn" onclick="reviewCard('review')">À revoir</button>
+    <button class="btn btn-primary" id="sheetKnowBtn" onclick="reviewCard('know')">Je sais ✓</button>
   </div>
 </aside>
 
@@ -998,65 +998,128 @@ body {
     document.getElementById('dateBadge').textContent = s.charAt(0).toUpperCase() + s.slice(1);
   })();
 
-  // ─── CARTES APPRENDRE ───
-  const REVIEWS = [
-    { term:'PWA', cat:'Vocabulaire', catClass:'voc', step:'J+1',
-      def:"Progressive Web App. Un site web qui s'installe sur ton téléphone comme une vraie app, avec icône sur l'écran d'accueil et mode hors-ligne.",
-      img:"Une sirène : moitié site, moitié app. Les deux natures en un seul corps.",
-      ex:"Elie est une PWA. Installée sur iPhone sans passer par l'App Store." },
-    { term:'Service Worker', cat:'Concept', catClass:'concept', step:'J+1',
-      def:"Script JS qui tourne en arrière-plan. Il intercepte les requêtes réseau et sert les fichiers depuis le cache.",
-      img:"Un portier de club : toute demande passe par lui. Il sait si c'est déjà dans ses poches ou s'il faut appeler le bar.",
-      ex:"sw.js d'Elie met en cache la page. En mode avion, tu la revois." },
-    { term:'Repository', cat:'Outil', catClass:'outil', step:'J+3',
-      def:"Dossier de projet sur GitHub avec l'historique complet de chaque modification, versionné ligne par ligne.",
-      img:"Une bibliothèque avec 1000 éditions empilées : tu peux revenir à n'importe quelle version.",
-      ex:"github.com/aberthe22/elie-app contient tout le code + chaque version." },
-    { term:"Variable d'env", cat:'Concept', catClass:'concept', step:'J+7',
-      def:"Valeur secrète (clé API) stockée séparément du code. N'apparaît jamais dans le repo public.",
-      img:"Un coffre-fort : le code dit 'va chercher dans le coffre', pas 'voici la combinaison'.",
-      ex:"NOTION_TOKEN sur Vercel → lu via process.env.NOTION_TOKEN dans l'API." },
-    { term:'CDN', cat:'Architecture', catClass:'archi', step:'J+14',
-      def:"Content Delivery Network. Réseau mondial de serveurs qui copient ton site pour livrer depuis le plus proche.",
-      img:"Une pizzeria par ville plutôt que d'une seule à Paris livrant le monde entier.",
-      ex:"Vercel Edge = CDN auto. ton app est servie depuis Paris pour toi." }
-  ];
-  const scroll = document.getElementById('learnScroll');
-  REVIEWS.forEach(r => {
-    const c = document.createElement('div');
-    c.className = 'learn-card';
-    c.innerHTML = `
-      <span class="learn-cat ${r.catClass}">${r.cat}</span>
-      <div class="learn-term">${r.term}</div>
-      <div class="learn-preview">${r.def}</div>
-      <div class="learn-footer">
-        <span class="learn-step">Révision · ${r.step}</span>
-        <div class="learn-arrow">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+  // ─── CARTES APPRENDRE (Notion) ───
+  const CAT_CLASS = {
+    'Vocabulaire': 'voc', 'Concept': 'concept', 'Outil': 'outil',
+    'Commande': 'outil', 'Framework': 'concept', 'Architecture': 'archi', 'Business': 'archi'
+  };
+  let CURRENT_CARD = null; // carte ouverte dans le sheet
+
+  function learnCardHTML(card) {
+    const cc = CAT_CLASS[card.category] ?? 'voc';
+    return `
+      <div class="learn-card" onclick="openSheet('${card.id}')">
+        <span class="learn-cat ${cc}">${escHtml(card.category)}</span>
+        <div class="learn-term">${escHtml(card.term)}</div>
+        <div class="learn-preview">${escHtml(card.def)}</div>
+        <div class="learn-footer">
+          <span class="learn-step">Révision · ${escHtml(card.palier)}</span>
+          <div class="learn-arrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </div>
         </div>
       </div>`;
-    c.addEventListener('click', () => openSheet(r));
-    scroll.appendChild(c);
-  });
+  }
+
+  async function fetchLearnCards() {
+    const scroll = document.getElementById('learnScroll');
+    try {
+      const res = await fetch('/api/learn');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { cards, total } = await res.json();
+
+      // Met à jour le meta
+      document.getElementById('learnMeta').textContent =
+        total > 0 ? `${total} carte${total > 1 ? 's' : ''} à réviser` : 'À jour ✓';
+
+      // Stocke les cartes pour le sheet
+      window.LEARN_CARDS = Object.fromEntries(cards.map(c => [c.id, c]));
+
+      if (cards.length === 0) {
+        scroll.innerHTML = `
+          <div class="learn-card" style="opacity:.6;pointer-events:none">
+            <span class="learn-cat voc">Tout bon</span>
+            <div class="learn-term">À jour ✓</div>
+            <div class="learn-preview">Aucune carte à réviser aujourd'hui. Demande-moi d'en créer de nouvelles !</div>
+            <div class="learn-footer"><span class="learn-step">Prochain cycle demain</span></div>
+          </div>`;
+        return;
+      }
+
+      scroll.innerHTML = cards.map(learnCardHTML).join('');
+    } catch (err) {
+      console.warn('[Elie] Apprendre:', err.message);
+      document.getElementById('learnMeta').textContent = 'Notion · erreur';
+      scroll.innerHTML = `
+        <div class="learn-card" style="opacity:.6;pointer-events:none">
+          <span class="learn-cat voc">Erreur</span>
+          <div class="learn-term">Non connecté</div>
+          <div class="learn-preview">Ajoute NOTION_LEARN_DB_ID dans Vercel.</div>
+        </div>`;
+    }
+  }
 
   // ─── BOTTOM SHEET APPRENDRE ───
-  function openSheet(r) {
+  function openSheet(cardId) {
+    const card = (window.LEARN_CARDS ?? {})[cardId];
+    if (!card) return;
+    CURRENT_CARD = card;
+    const cc = CAT_CLASS[card.category] ?? 'voc';
     const catEl = document.getElementById('sheetCat');
-    catEl.textContent = r.cat;
-    catEl.className = `sheet-cat ${r.catClass}`;
-    document.getElementById('sheetTerm').textContent = r.term;
-    document.getElementById('sheetDef').textContent  = r.def;
-    document.getElementById('sheetImg').textContent  = r.img;
-    document.getElementById('sheetEx').textContent   = r.ex;
+    catEl.textContent = card.category;
+    catEl.className   = `sheet-cat ${cc}`;
+    document.getElementById('sheetTerm').textContent = card.term;
+    document.getElementById('sheetDef').textContent  = card.def;
+    document.getElementById('sheetImg').textContent  = card.image;
+    document.getElementById('sheetEx').textContent   = card.example;
+    // Reset boutons
+    document.getElementById('sheetKnowBtn').disabled   = false;
+    document.getElementById('sheetKnowBtn').textContent = 'Je sais ✓';
+    document.getElementById('sheetReviewBtn').disabled  = false;
+    document.getElementById('sheetReviewBtn').textContent = 'À revoir';
     document.getElementById('sheet').classList.add('open');
     document.getElementById('backdrop').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
+
   function closeSheet() {
     document.getElementById('sheet').classList.remove('open');
     document.getElementById('backdrop').classList.remove('open');
     document.body.style.overflow = '';
+    CURRENT_CARD = null;
   }
+
+  async function reviewCard(action) {
+    if (!CURRENT_CARD) return;
+    const knowBtn   = document.getElementById('sheetKnowBtn');
+    const reviewBtn = document.getElementById('sheetReviewBtn');
+    knowBtn.disabled = reviewBtn.disabled = true;
+    knowBtn.textContent = reviewBtn.textContent = '…';
+
+    try {
+      await fetch('/api/learn-review', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: CURRENT_CARD.id, action, currentPalier: CURRENT_CARD.palier })
+      });
+      // Retire la carte de l'affichage
+      const el = document.querySelector(`.learn-card[onclick*="${CURRENT_CARD.id}"]`);
+      if (el) el.style.display = 'none';
+      delete (window.LEARN_CARDS ?? {})[CURRENT_CARD.id];
+
+      const remaining = Object.keys(window.LEARN_CARDS ?? {}).length;
+      document.getElementById('learnMeta').textContent =
+        remaining > 0 ? `${remaining} carte${remaining > 1 ? 's' : ''} à réviser` : 'À jour ✓';
+
+      setTimeout(() => closeSheet(), 300);
+    } catch (err) {
+      knowBtn.disabled = reviewBtn.disabled = false;
+      knowBtn.textContent = 'Je sais ✓';
+      reviewBtn.textContent = 'À revoir';
+      console.warn('[reviewCard]', err);
+    }
+  }
+
+  fetchLearnCards();
 
   // ─── SYSTÈME DE TÂCHES ───
   let TASKS_DATA = { suggested: [], today: [] };
