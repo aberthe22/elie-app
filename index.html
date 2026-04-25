@@ -265,70 +265,102 @@ body {
 }
 .mail-skeleton:last-child { border-bottom: none; }
 
-.mail-synthesis {
-  display: flex; gap: 10px; align-items: flex-start;
-  background: var(--navy-bg);
-  border: 1px solid #c8d8ef;
-  border-radius: var(--r);
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  box-shadow: var(--shadow-sm);
+.mail-cat-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--ink-3);
+  padding: 0 2px 6px; margin-top: 18px;
 }
-.mail-synth-icon { font-size: 14px; color: var(--navy); flex-shrink: 0; margin-top: 1px; }
-.mail-synth-text { font-size: 13px; color: var(--navy); line-height: 1.5; }
+.mail-cat-label:first-child { margin-top: 0; }
 
-.mail {
+.mail-row {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 14px 10px 16px;
   border-bottom: 1px solid var(--line-2);
-  transition: opacity .25s;
+  overflow: hidden; transition: opacity .25s, max-height .3s ease;
 }
-.mail:last-child { border-bottom: none; }
-.mail.deleting { pointer-events: none; opacity: .35; }
-.mail.mail-to-delete { background: #fdf9f8; }
-.mail.mail-to-delete .mail-from { color: var(--ink-3); }
+.mail-row:last-child { border-bottom: none; }
+.mail-row.removing { opacity: 0; max-height: 0 !important; padding: 0; }
+
 .mail-av {
   width: 34px; height: 34px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #fff;
-  flex-shrink: 0;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
-.mail-body { flex: 1; min-width: 0; }
-.mail-from { font-size: 13px; font-weight: 600; margin-bottom: 1px; }
-.mail-subj { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-meta { text-align: right; flex-shrink: 0; }
-.mail-time { font-size: 11px; color: var(--ink-3); }
-.unread { width: 7px; height: 7px; border-radius: 50%; background: var(--navy); margin: 3px 0 0 auto; }
-.mail-del-btn {
-  width: 28px; height: 28px; border-radius: 7px;
-  border: 1px solid var(--line); background: var(--surface-2);
+.mail-row-body { flex: 1; min-width: 0; }
+.mail-row-from { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.mail-row-subj {
+  font-size: 12px; color: var(--ink-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mail-row-reason { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+.mail-row-time { font-size: 11px; color: var(--ink-4); flex-shrink: 0; margin-right: 6px; }
+
+/* Boutons d'action */
+.mail-btn {
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0; color: var(--ink-3);
+  cursor: pointer; flex-shrink: 0;
   transition: background .15s, color .15s, border-color .15s;
 }
-.mail-del-btn:hover { background: var(--urgent-bg); color: var(--urgent); border-color: #e8bfb5; }
+.mail-btn-del { background: var(--surface-2); color: var(--ink-3); }
+.mail-btn-del:hover { background: var(--urgent-bg); color: var(--urgent); border-color: #e8bfb5; }
+.mail-btn-reply { background: var(--navy-bg); color: var(--navy); border-color: #c8d8ef; }
+.mail-btn-reply:hover { background: var(--navy); color: #fff; }
 
-.mail-tasks { margin-top: 10px; }
-.mail-tasks-label {
-  font-size: 11px; font-weight: 600; letter-spacing: .03em;
-  color: var(--ink-3); padding: 0 2px 7px;
+/* État vide */
+.mail-empty {
+  padding: 20px 16px;
+  font-size: 13px; color: var(--done);
+  display: flex; align-items: center; gap: 8px;
 }
-.mail-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+/* Chips tâches */
+.mail-task-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 4px 0; }
 .mail-task-chip {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 12px; border-radius: 20px;
+  padding: 7px 13px; border-radius: 20px;
   border: 1.5px solid var(--line); background: var(--surface);
   font-family: var(--font-ui); font-size: 12px; font-weight: 500;
-  color: var(--ink-2); cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  color: var(--ink-2); cursor: pointer; box-shadow: var(--shadow-sm);
   transition: border-color .15s, background .15s, color .15s;
 }
 .mail-task-chip:hover { border-color: var(--navy); color: var(--navy); background: var(--navy-bg); }
 .mail-task-chip.adding { opacity: .5; pointer-events: none; }
-.mail-task-chip.added {
-  border-color: var(--done); background: var(--done-bg);
-  color: var(--done); pointer-events: none;
+.mail-task-chip.added { border-color: var(--done); background: var(--done-bg); color: var(--done); pointer-events: none; }
+
+/* ── Bottom sheet Réponse ── */
+.reply-sheet-from { font-size: 13px; color: var(--ink-3); margin-bottom: 2px; }
+.reply-sheet-subj { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 16px; line-height: 1.3; }
+.reply-draft-label { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+.reply-draft-area {
+  width: 100%; min-height: 130px; max-height: 240px;
+  padding: 12px 14px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--line); background: var(--surface-2);
+  font-family: var(--font-ui); font-size: 14px; color: var(--ink);
+  line-height: 1.55; resize: vertical; outline: none;
+  transition: border-color .15s;
 }
+.reply-draft-area:focus { border-color: var(--navy); }
+.reply-actions { display: flex; gap: 10px; margin-top: 14px; }
+.reply-cancel {
+  flex: 1; padding: 12px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--line); background: transparent;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 500;
+  color: var(--ink-3); cursor: pointer; transition: background .15s;
+}
+.reply-cancel:hover { background: var(--surface-2); }
+.reply-send {
+  flex: 2; padding: 12px; border-radius: var(--r-sm);
+  border: none; background: var(--navy);
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+  color: #fff; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(30,61,110,.25);
+  transition: opacity .15s;
+}
+.reply-send:hover { opacity: .88; }
+.reply-send:disabled { opacity: .4; cursor: not-allowed; }
+.reply-feedback { font-size: 12px; margin-top: 8px; min-height: 16px; color: var(--done); }
+.reply-feedback.error { color: var(--urgent); }
 
 /* ═══ TÂCHES ═══ */
 
@@ -762,28 +794,18 @@ body {
       <div class="section-meta" id="mailsMeta">Gmail · chargement…</div>
     </div>
     <div id="mailsContainer">
-      <!-- Skeleton loader -->
       <div class="card">
         <div class="mail-skeleton">
           <div class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></div>
-          <div style="flex:1">
-            <div class="skeleton" style="height:12px;width:55%;margin-bottom:6px;border-radius:4px"></div>
-            <div class="skeleton" style="height:11px;width:80%;border-radius:4px"></div>
-          </div>
+          <div style="flex:1"><div class="skeleton" style="height:12px;width:55%;margin-bottom:6px;border-radius:4px"></div><div class="skeleton" style="height:11px;width:80%;border-radius:4px"></div></div>
         </div>
         <div class="mail-skeleton">
           <div class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></div>
-          <div style="flex:1">
-            <div class="skeleton" style="height:12px;width:40%;margin-bottom:6px;border-radius:4px"></div>
-            <div class="skeleton" style="height:11px;width:70%;border-radius:4px"></div>
-          </div>
+          <div style="flex:1"><div class="skeleton" style="height:12px;width:40%;margin-bottom:6px;border-radius:4px"></div><div class="skeleton" style="height:11px;width:70%;border-radius:4px"></div></div>
         </div>
         <div class="mail-skeleton">
           <div class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></div>
-          <div style="flex:1">
-            <div class="skeleton" style="height:12px;width:60%;margin-bottom:6px;border-radius:4px"></div>
-            <div class="skeleton" style="height:11px;width:75%;border-radius:4px"></div>
-          </div>
+          <div style="flex:1"><div class="skeleton" style="height:12px;width:60%;margin-bottom:6px;border-radius:4px"></div><div class="skeleton" style="height:11px;width:75%;border-radius:4px"></div></div>
         </div>
       </div>
     </div>
@@ -925,6 +947,24 @@ body {
   <div class="sheet-actions">
     <button class="btn btn-secondary" onclick="closeSheet()">À revoir</button>
     <button class="btn btn-primary" onclick="closeSheet()">Je sais ✓</button>
+  </div>
+</aside>
+
+<!-- BOTTOM SHEET RÉPONSE MAIL -->
+<div class="backdrop" id="replyBackdrop" onclick="closeReplySheet()"></div>
+<aside class="sheet" id="replySheet">
+  <div class="sheet-handle"></div>
+  <div class="reply-sheet-from" id="replySheetFrom">—</div>
+  <div class="reply-sheet-subj" id="replySheetSubj">—</div>
+  <div class="reply-draft-label">Brouillon d'Elie — modifie si besoin</div>
+  <textarea class="reply-draft-area" id="replyDraftArea" rows="5"></textarea>
+  <div class="reply-feedback" id="replyFeedback"></div>
+  <div class="reply-actions">
+    <button class="reply-cancel" onclick="closeReplySheet()">Annuler</button>
+    <button class="reply-send" id="replySendBtn" onclick="sendReply()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+      Envoyer
+    </button>
   </div>
 </aside>
 
@@ -1211,77 +1251,104 @@ body {
   });
 
   // ─── MAILS GMAIL ───
-  const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ef4444','#f97316','#10b981','#06b6d4','#e11d48','#7c3aed'];
+  const MAIL_COLORS = ['#3b82f6','#8b5cf6','#ef4444','#f97316','#10b981','#06b6d4','#e11d48','#7c3aed'];
+  let CURRENT_REPLY = null; // mail en cours de réponse
 
-  function mailAvatarColor(str) {
-    return AVATAR_COLORS[(str || '?').charCodeAt(0) % AVATAR_COLORS.length];
+  function mailAvatar(str) {
+    return MAIL_COLORS[(str || '?').charCodeAt(0) % MAIL_COLORS.length];
   }
 
-  function mailHTML(email, suggestedDelete) {
-    const initials = (email.from || email.email || '?').charAt(0).toUpperCase();
-    const color    = mailAvatarColor(initials);
-    return `
-      <div class="mail${suggestedDelete ? ' mail-to-delete' : ''}" data-mail-id="${email.id}">
-        <div class="mail-av" style="background:${color}">${initials}</div>
-        <div class="mail-body">
-          <div class="mail-from">${escHtml(email.from || email.email)}</div>
-          <div class="mail-subj">${escHtml(email.subject)}</div>
-        </div>
-        <div class="mail-meta">
-          <div class="mail-time">${escHtml(email.date)}</div>
-          ${email.unread ? '<div class="unread"></div>' : ''}
-        </div>
-        <button class="mail-del-btn" onclick="deleteMail('${email.id}',this)" title="Supprimer">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
-        </button>
-      </div>`;
+  function mailRowHTML(mail, type) {
+    const init  = (mail.from || mail.email || '?').charAt(0).toUpperCase();
+    const color = mailAvatar(init);
+
+    if (type === 'delete') {
+      return `
+        <div class="mail-row" data-id="${mail.id}" style="max-height:80px">
+          <div class="mail-av" style="background:${color}">${init}</div>
+          <div class="mail-row-body">
+            <div class="mail-row-from">${escHtml(mail.from || mail.email)}</div>
+            <div class="mail-row-subj">${escHtml(mail.subject)}</div>
+            ${mail.reason ? `<div class="mail-row-reason">${escHtml(mail.reason)}</div>` : ''}
+          </div>
+          <div class="mail-row-time">${escHtml(mail.date)}</div>
+          <button class="mail-btn mail-btn-del" onclick="deleteMailRow('${mail.id}',this)" title="Supprimer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+          </button>
+        </div>`;
+    }
+
+    if (type === 'reply') {
+      const data = JSON.stringify({ id: mail.id, from: mail.from, email: mail.email, subject: mail.subject, draftReply: mail.draftReply, threadId: mail.threadId, messageId: mail.messageId }).replace(/'/g, '&#39;');
+      return `
+        <div class="mail-row" data-id="${mail.id}" style="max-height:80px">
+          <div class="mail-av" style="background:${color}">${init}</div>
+          <div class="mail-row-body">
+            <div class="mail-row-from">${escHtml(mail.from || mail.email)}</div>
+            <div class="mail-row-subj">${escHtml(mail.subject)}</div>
+          </div>
+          <div class="mail-row-time">${escHtml(mail.date)}</div>
+          <button class="mail-btn mail-btn-reply" onclick="openReplySheet('${mail.id}')" title="Voir le brouillon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+          </button>
+        </div>`;
+    }
+
+    return '';
   }
+
+  // Stocke les mails toReply pour y accéder depuis le sheet
+  let REPLY_MAILS = {};
 
   async function fetchMails() {
     try {
       const res = await fetch('/api/gmail');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { emails, analysis } = await res.json();
+      const { toDelete, toReply, toTask, unreadCount } = await res.json();
 
-      // Meta : nombre de non-lus
-      const unread = emails.filter(e => e.unread).length;
       document.getElementById('mailsMeta').textContent =
-        `Gmail · ${unread} non lu${unread !== 1 ? 's' : ''}`;
+        `Gmail · ${unreadCount ?? 0} non lu${unreadCount !== 1 ? 's' : ''}`;
 
-      const toDeleteIds = new Set((analysis?.toDelete ?? []).map(d => d.id));
-      const taskSuggs   = analysis?.taskSuggestions ?? [];
+      // Indexer les mails toReply pour les retrouver au clic
+      REPLY_MAILS = {};
+      (toReply ?? []).forEach(m => { REPLY_MAILS[m.id] = m; });
+
+      const total = (toDelete?.length ?? 0) + (toReply?.length ?? 0) + (toTask?.length ?? 0);
+
+      if (total === 0) {
+        document.getElementById('mailsContainer').innerHTML =
+          `<div class="card"><div class="mail-empty">✓ Boîte vide — tout est traité</div></div>`;
+        return;
+      }
 
       let html = '';
 
-      // Carte synthèse IA
-      if (analysis?.synthesis) {
-        html += `<div class="mail-synthesis">
-          <div class="mail-synth-icon">✦</div>
-          <div class="mail-synth-text">${escHtml(analysis.synthesis)}</div>
-        </div>`;
-      }
-
-      // Liste des emails
-      if (emails.length > 0) {
+      // ── À SUPPRIMER
+      if (toDelete?.length) {
+        html += `<div class="mail-cat-label">À supprimer (${toDelete.length})</div>`;
         html += '<div class="card">';
-        html += emails.slice(0, 10).map(e => mailHTML(e, toDeleteIds.has(e.id))).join('');
+        html += toDelete.map(m => mailRowHTML(m, 'delete')).join('');
         html += '</div>';
-      } else {
-        html += '<div class="card"><div class="tasks-empty"><strong>Boîte vide ✓</strong>Aucun mail récent.</div></div>';
       }
 
-      // Suggestions de tâches
-      if (taskSuggs.length > 0) {
-        html += `<div class="mail-tasks">
-          <div class="mail-tasks-label">Tâches suggérées par Elie</div>
-          <div class="mail-chips">
-            ${taskSuggs.map(t => `
-              <button class="mail-task-chip" onclick="addMailTask(${JSON.stringify(t.title)},this)" title="${escHtml(t.reason ?? '')}">
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                ${escHtml(t.title)}
-              </button>`).join('')}
-          </div>
-        </div>`;
+      // ── À RÉPONDRE
+      if (toReply?.length) {
+        html += `<div class="mail-cat-label">À répondre (${toReply.length})</div>`;
+        html += '<div class="card">';
+        html += toReply.map(m => mailRowHTML(m, 'reply')).join('');
+        html += '</div>';
+      }
+
+      // ── À TASKER
+      if (toTask?.length) {
+        html += `<div class="mail-cat-label">À ajouter en tâche (${toTask.length})</div>`;
+        html += '<div class="mail-task-chips">';
+        html += toTask.map(m => `
+          <button class="mail-task-chip" onclick="addMailTask(${JSON.stringify(m.taskTitle)},this)">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            ${escHtml(m.taskTitle)}
+          </button>`).join('');
+        html += '</div>';
       }
 
       document.getElementById('mailsContainer').innerHTML = html;
@@ -1294,62 +1361,116 @@ body {
     }
   }
 
-  async function deleteMail(mailId, btn) {
-    const mailEl = btn.closest('.mail');
-    if (!mailEl || mailEl.classList.contains('deleting')) return;
-    mailEl.classList.add('deleting');
+  // ── SUPPRIMER ───────────────────────────────────────────
+  async function deleteMailRow(mailId, btn) {
+    const row = btn.closest('.mail-row');
+    if (!row || row.classList.contains('removing')) return;
     try {
       await fetch('/api/gmail-action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', ids: [mailId] })
       });
-      // Animation de suppression
-      mailEl.style.maxHeight = mailEl.offsetHeight + 'px';
-      mailEl.style.overflow  = 'hidden';
-      requestAnimationFrame(() => {
-        mailEl.style.transition = 'max-height .28s ease, opacity .28s ease, padding .28s ease';
-        mailEl.style.maxHeight  = '0';
-        mailEl.style.opacity    = '0';
-        mailEl.style.padding    = '0';
-      });
-      setTimeout(() => {
-        mailEl.remove();
-        // Mettre à jour le compteur de non-lus si besoin
-        const wasUnread = mailEl.querySelector('.unread');
-        if (wasUnread) {
-          const meta = document.getElementById('mailsMeta');
-          const m    = meta.textContent.match(/(\d+)/);
-          const n    = m ? Math.max(0, parseInt(m[1]) - 1) : 0;
-          meta.textContent = `Gmail · ${n} non lu${n !== 1 ? 's' : ''}`;
-        }
-      }, 300);
+      row.style.maxHeight = row.offsetHeight + 'px';
+      requestAnimationFrame(() => { row.classList.add('removing'); });
+      setTimeout(() => row.remove(), 320);
     } catch (err) {
-      mailEl.classList.remove('deleting');
-      mailEl.style.opacity = '1';
-      console.warn('[deleteMail]', err);
+      console.warn('[deleteMailRow]', err);
     }
   }
 
+  // ── BOTTOM SHEET RÉPONSE ────────────────────────────────
+  function openReplySheet(mailId) {
+    const mail = REPLY_MAILS[mailId];
+    if (!mail) return;
+    CURRENT_REPLY = mail;
+    document.getElementById('replySheetFrom').textContent  = mail.from || mail.email;
+    document.getElementById('replySheetSubj').textContent  = mail.subject;
+    document.getElementById('replyDraftArea').value        = mail.draftReply || '';
+    document.getElementById('replyFeedback').textContent   = '';
+    document.getElementById('replyFeedback').className     = 'reply-feedback';
+    document.getElementById('replySendBtn').disabled       = false;
+    document.getElementById('replySendBtn').innerHTML      = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg> Envoyer`;
+    document.getElementById('replySheet').classList.add('open');
+    document.getElementById('replyBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeReplySheet() {
+    document.getElementById('replySheet').classList.remove('open');
+    document.getElementById('replyBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+    CURRENT_REPLY = null;
+  }
+
+  async function sendReply() {
+    if (!CURRENT_REPLY) return;
+    const body    = document.getElementById('replyDraftArea').value.trim();
+    const sendBtn = document.getElementById('replySendBtn');
+    const fb      = document.getElementById('replyFeedback');
+    if (!body) return;
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Envoi…';
+    fb.textContent = '';
+
+    try {
+      const subject = CURRENT_REPLY.subject.startsWith('Re:')
+        ? CURRENT_REPLY.subject
+        : `Re: ${CURRENT_REPLY.subject}`;
+
+      const res = await fetch('/api/gmail-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action:     'send',
+          replyTo:    CURRENT_REPLY.email,
+          subject,
+          body,
+          threadId:   CURRENT_REPLY.threadId,
+          inReplyTo:  CURRENT_REPLY.messageId,
+        })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      fb.textContent  = '✓ Envoyé !';
+      sendBtn.textContent = '✓ Envoyé';
+
+      // Retire la ligne du mail depuis le sheet
+      const row = document.querySelector(`.mail-row[data-id="${CURRENT_REPLY.id}"]`);
+      if (row) {
+        row.style.maxHeight = row.offsetHeight + 'px';
+        requestAnimationFrame(() => { row.classList.add('removing'); });
+        setTimeout(() => row.remove(), 320);
+      }
+      delete REPLY_MAILS[CURRENT_REPLY.id];
+
+      setTimeout(() => closeReplySheet(), 900);
+    } catch (err) {
+      fb.textContent  = 'Erreur : ' + err.message;
+      fb.className    = 'reply-feedback error';
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg> Envoyer`;
+      console.warn('[sendReply]', err);
+    }
+  }
+
+  // ── AJOUTER TÂCHE DEPUIS MAIL ───────────────────────────
   async function addMailTask(title, btn) {
     if (btn.classList.contains('added') || btn.classList.contains('adding')) return;
     btn.classList.add('adding');
-    const originalHTML = btn.innerHTML;
+    const orig = btn.innerHTML;
     btn.innerHTML = '…';
     try {
       const res = await fetch('/api/create-task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title })
       });
-      if (!res.ok) throw new Error('erreur API');
-      btn.className  = 'mail-task-chip added';
-      btn.innerHTML  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg> ${escHtml(title)}`;
+      if (!res.ok) throw new Error();
+      btn.className = 'mail-task-chip added';
+      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg> ${escHtml(title)}`;
       setTimeout(() => fetchTasks(), 900);
-    } catch (err) {
+    } catch {
       btn.classList.remove('adding');
-      btn.innerHTML = originalHTML;
-      console.warn('[addMailTask]', err);
+      btn.innerHTML = orig;
     }
   }
 
