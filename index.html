@@ -756,35 +756,35 @@ body {
   </section>
 
   <!-- MAILS -->
-  <section class="section">
+  <section class="section" id="mailsSection">
     <div class="section-head">
       <div class="section-title">Mails</div>
-      <div class="section-meta">Gmail · 3 non lus</div>
+      <div class="section-meta" id="mailsMeta">Gmail · chargement…</div>
     </div>
-    <div class="card">
-      <div class="mail">
-        <div class="mail-av" style="background:#3b82f6">A</div>
-        <div class="mail-body">
-          <div class="mail-from">Antoine Durand</div>
-          <div class="mail-subj">Contrat signé — voir pièce jointe</div>
+    <div id="mailsContainer">
+      <!-- Skeleton loader -->
+      <div class="card">
+        <div class="mail-skeleton">
+          <div class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton" style="height:12px;width:55%;margin-bottom:6px;border-radius:4px"></div>
+            <div class="skeleton" style="height:11px;width:80%;border-radius:4px"></div>
+          </div>
         </div>
-        <div class="mail-meta"><div class="mail-time">09:14</div><div class="unread"></div></div>
-      </div>
-      <div class="mail">
-        <div class="mail-av" style="background:#8b5cf6">N</div>
-        <div class="mail-body">
-          <div class="mail-from">Notion</div>
-          <div class="mail-subj">Rappel : 3 tâches en retard</div>
+        <div class="mail-skeleton">
+          <div class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton" style="height:12px;width:40%;margin-bottom:6px;border-radius:4px"></div>
+            <div class="skeleton" style="height:11px;width:70%;border-radius:4px"></div>
+          </div>
         </div>
-        <div class="mail-meta"><div class="mail-time">08:30</div><div class="unread"></div></div>
-      </div>
-      <div class="mail">
-        <div class="mail-av" style="background:#ef4444">L</div>
-        <div class="mail-body">
-          <div class="mail-from">Laure Martin</div>
-          <div class="mail-subj">Disponible jeudi matin ?</div>
+        <div class="mail-skeleton">
+          <div class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton" style="height:12px;width:60%;margin-bottom:6px;border-radius:4px"></div>
+            <div class="skeleton" style="height:11px;width:75%;border-radius:4px"></div>
+          </div>
         </div>
-        <div class="mail-meta"><div class="mail-time">Hier</div></div>
       </div>
     </div>
   </section>
@@ -1209,6 +1209,151 @@ body {
     if (e.key === 'Enter')  submitTask();
     if (e.key === 'Escape') closeTaskModal();
   });
+
+  // ─── MAILS GMAIL ───
+  const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ef4444','#f97316','#10b981','#06b6d4','#e11d48','#7c3aed'];
+
+  function mailAvatarColor(str) {
+    return AVATAR_COLORS[(str || '?').charCodeAt(0) % AVATAR_COLORS.length];
+  }
+
+  function mailHTML(email, suggestedDelete) {
+    const initials = (email.from || email.email || '?').charAt(0).toUpperCase();
+    const color    = mailAvatarColor(initials);
+    return `
+      <div class="mail${suggestedDelete ? ' mail-to-delete' : ''}" data-mail-id="${email.id}">
+        <div class="mail-av" style="background:${color}">${initials}</div>
+        <div class="mail-body">
+          <div class="mail-from">${escHtml(email.from || email.email)}</div>
+          <div class="mail-subj">${escHtml(email.subject)}</div>
+        </div>
+        <div class="mail-meta">
+          <div class="mail-time">${escHtml(email.date)}</div>
+          ${email.unread ? '<div class="unread"></div>' : ''}
+        </div>
+        <button class="mail-del-btn" onclick="deleteMail('${email.id}',this)" title="Supprimer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+        </button>
+      </div>`;
+  }
+
+  async function fetchMails() {
+    try {
+      const res = await fetch('/api/gmail');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { emails, analysis } = await res.json();
+
+      // Meta : nombre de non-lus
+      const unread = emails.filter(e => e.unread).length;
+      document.getElementById('mailsMeta').textContent =
+        `Gmail · ${unread} non lu${unread !== 1 ? 's' : ''}`;
+
+      const toDeleteIds = new Set((analysis?.toDelete ?? []).map(d => d.id));
+      const taskSuggs   = analysis?.taskSuggestions ?? [];
+
+      let html = '';
+
+      // Carte synthèse IA
+      if (analysis?.synthesis) {
+        html += `<div class="mail-synthesis">
+          <div class="mail-synth-icon">✦</div>
+          <div class="mail-synth-text">${escHtml(analysis.synthesis)}</div>
+        </div>`;
+      }
+
+      // Liste des emails
+      if (emails.length > 0) {
+        html += '<div class="card">';
+        html += emails.slice(0, 10).map(e => mailHTML(e, toDeleteIds.has(e.id))).join('');
+        html += '</div>';
+      } else {
+        html += '<div class="card"><div class="tasks-empty"><strong>Boîte vide ✓</strong>Aucun mail récent.</div></div>';
+      }
+
+      // Suggestions de tâches
+      if (taskSuggs.length > 0) {
+        html += `<div class="mail-tasks">
+          <div class="mail-tasks-label">Tâches suggérées par Elie</div>
+          <div class="mail-chips">
+            ${taskSuggs.map(t => `
+              <button class="mail-task-chip" onclick="addMailTask(${JSON.stringify(t.title)},this)" title="${escHtml(t.reason ?? '')}">
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                ${escHtml(t.title)}
+              </button>`).join('')}
+          </div>
+        </div>`;
+      }
+
+      document.getElementById('mailsContainer').innerHTML = html;
+
+    } catch (err) {
+      console.warn('[Elie] Mails:', err.message);
+      document.getElementById('mailsMeta').textContent = 'Gmail · non connecté';
+      document.getElementById('mailsContainer').innerHTML =
+        `<div class="card"><div class="tasks-empty"><strong>Gmail non connecté</strong>Configure GOOGLE_REFRESH_TOKEN dans Vercel pour activer cette section.</div></div>`;
+    }
+  }
+
+  async function deleteMail(mailId, btn) {
+    const mailEl = btn.closest('.mail');
+    if (!mailEl || mailEl.classList.contains('deleting')) return;
+    mailEl.classList.add('deleting');
+    try {
+      await fetch('/api/gmail-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', ids: [mailId] })
+      });
+      // Animation de suppression
+      mailEl.style.maxHeight = mailEl.offsetHeight + 'px';
+      mailEl.style.overflow  = 'hidden';
+      requestAnimationFrame(() => {
+        mailEl.style.transition = 'max-height .28s ease, opacity .28s ease, padding .28s ease';
+        mailEl.style.maxHeight  = '0';
+        mailEl.style.opacity    = '0';
+        mailEl.style.padding    = '0';
+      });
+      setTimeout(() => {
+        mailEl.remove();
+        // Mettre à jour le compteur de non-lus si besoin
+        const wasUnread = mailEl.querySelector('.unread');
+        if (wasUnread) {
+          const meta = document.getElementById('mailsMeta');
+          const m    = meta.textContent.match(/(\d+)/);
+          const n    = m ? Math.max(0, parseInt(m[1]) - 1) : 0;
+          meta.textContent = `Gmail · ${n} non lu${n !== 1 ? 's' : ''}`;
+        }
+      }, 300);
+    } catch (err) {
+      mailEl.classList.remove('deleting');
+      mailEl.style.opacity = '1';
+      console.warn('[deleteMail]', err);
+    }
+  }
+
+  async function addMailTask(title, btn) {
+    if (btn.classList.contains('added') || btn.classList.contains('adding')) return;
+    btn.classList.add('adding');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '…';
+    try {
+      const res = await fetch('/api/create-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      });
+      if (!res.ok) throw new Error('erreur API');
+      btn.className  = 'mail-task-chip added';
+      btn.innerHTML  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg> ${escHtml(title)}`;
+      setTimeout(() => fetchTasks(), 900);
+    } catch (err) {
+      btn.classList.remove('adding');
+      btn.innerHTML = originalHTML;
+      console.warn('[addMailTask]', err);
+    }
+  }
+
+  fetchMails();
 
   // ─── SERVICE WORKER ───
   if ('serviceWorker' in navigator) {
