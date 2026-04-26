@@ -438,16 +438,19 @@ body {
 
 /* Cartes tâches */
 .mail-task-chips { display: flex; flex-direction: column; gap: 0; }
+.mail-task-item {
+  position: relative; border-bottom: 1px solid var(--line-2);
+}
+.mail-task-item:first-child { border-radius: var(--r-sm) var(--r-sm) 0 0; overflow: hidden; }
+.mail-task-item:last-child  { border-bottom: none; border-radius: 0 0 var(--r-sm) var(--r-sm); overflow: hidden; }
+.mail-task-item:only-child  { border-radius: var(--r-sm); border-bottom: none; overflow: hidden; }
 .mail-task-chip {
   display: flex; align-items: flex-start; gap: 10px; width: 100%;
-  padding: 12px 16px; border-radius: 0; border: none; border-bottom: 1px solid var(--line-2);
+  padding: 12px 44px 12px 16px; border: none;
   background: var(--surface); font-family: var(--font-ui);
   color: var(--ink); cursor: pointer; text-align: left;
   transition: background .15s;
 }
-.mail-task-chip:first-child { border-radius: var(--r-sm) var(--r-sm) 0 0; }
-.mail-task-chip:last-child  { border-bottom: none; border-radius: 0 0 var(--r-sm) var(--r-sm); }
-.mail-task-chip:only-child  { border-radius: var(--r-sm); border-bottom: none; }
 .mail-task-chip:hover { background: var(--surface-2); }
 .mail-task-chip.adding { opacity: .5; pointer-events: none; }
 .mail-task-chip.added  { background: var(--done-bg); pointer-events: none; }
@@ -458,6 +461,67 @@ body {
 .mail-task-chip.added .mail-task-chip-title { color: var(--done); }
 .mail-task-chip-meta  { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
 .mail-task-chip-snippet { font-size: 11px; color: var(--ink-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Bouton correction sur les tâches (coin haut-droit) */
+.mail-task-correct-btn {
+  position: absolute; top: 10px; right: 10px;
+  width: 24px; height: 24px; border-radius: 6px; border: none;
+  background: transparent; color: var(--ink-4); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .15s, background .15s; z-index: 2;
+}
+.mail-task-correct-btn:hover { background: var(--surface-2); color: var(--ink-2); }
+/* Picker correction sous l'item tâche */
+.mail-task-item .mail-correct-picker { padding-left: 42px; }
+
+/* ── Follow-up panel (après ajout tâche) ── */
+.mail-task-followup {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 16px 12px;
+  background: var(--done-bg);
+  border-top: 1px solid rgba(33,107,68,.12);
+  animation: fadeSlideIn .2s ease;
+}
+.mail-task-followup-label {
+  font-size: 11px; font-weight: 600; color: var(--done);
+  flex: 0 0 auto; margin-right: 4px;
+}
+.mail-task-followup-sep {
+  font-size: 11px; color: var(--ink-4); flex: 0 0 auto;
+}
+.mail-task-followup-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500; padding: 5px 11px;
+  border-radius: 20px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink-2);
+  cursor: pointer; white-space: nowrap; transition: background .12s;
+}
+.mail-task-followup-btn:hover { background: var(--surface-2); }
+.mail-task-followup-btn.reply { border-color: var(--navy); color: var(--navy); }
+.mail-task-followup-archive-wrap {
+  display: inline-flex; align-items: center; gap: 0;
+  border-radius: 20px; border: 1px solid var(--line);
+  background: var(--surface); overflow: hidden;
+}
+.mail-task-followup-archive-wrap span {
+  font-size: 12px; font-weight: 500; padding: 5px 0 5px 11px;
+  color: var(--ink-2); white-space: nowrap;
+}
+.mail-task-followup-archive-wrap select {
+  font-size: 12px; padding: 5px 10px 5px 6px;
+  border: none; background: transparent;
+  color: var(--ink-2); cursor: pointer; outline: none;
+  font-family: var(--font-ui);
+}
+.mail-task-followup-ignore {
+  font-size: 11px; color: var(--ink-4); background: none; border: none;
+  cursor: pointer; padding: 5px; margin-left: auto;
+  transition: color .12s;
+}
+.mail-task-followup-ignore:hover { color: var(--ink-3); }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ── Bottom sheet Réponse ── */
 .reply-sheet-from { font-size: 13px; color: var(--ink-3); margin-bottom: 2px; }
@@ -1773,8 +1837,9 @@ body {
     return '';
   }
 
-  // Stocke les mails toReply pour y accéder depuis le sheet
+  // Stocke les mails toReply / toTask pour y accéder depuis le sheet et le follow-up
   let REPLY_MAILS = {};
+  let TASK_MAILS  = {};
 
   // Accumulation globale des mails analysés
   let MAIL_ALL_DELETE  = [];
@@ -1860,9 +1925,11 @@ body {
     // Ajouter à la cible
     srcMap[toCat].push(mail);
 
-    // Sync REPLY_MAILS
+    // Sync REPLY_MAILS / TASK_MAILS
     if (toCat === 'reply')   REPLY_MAILS[mail.id] = mail;
     if (fromCat === 'reply') delete REPLY_MAILS[mail.id];
+    if (toCat === 'task')    TASK_MAILS[mail.id]  = mail;
+    if (fromCat === 'task')  delete TASK_MAILS[mail.id];
 
     // Sauvegarder la correction pour l'apprentissage
     saveCorrection(mail, fromCat, toCat);
@@ -1983,16 +2050,20 @@ body {
     } else if (tab === 'task') {
       html += '<div class="card mail-task-chips" id="taskMailsChips">';
       html += displayed.map(m => `
-        <button class="mail-task-chip" data-title="${escHtml(m.taskTitle)}" data-id="${m.id}" onclick="addMailTask(this.dataset.title,this)">
-          <span class="mail-task-chip-icon">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          </span>
-          <span class="mail-task-chip-body">
-            <span class="mail-task-chip-title">${escHtml(m.taskTitle)}</span>
-            <span class="mail-task-chip-meta">${escHtml(m.from)} · ${escHtml(m.subject)}</span>
-            ${m.snippet ? `<span class="mail-task-chip-snippet">${escHtml(m.snippet)}</span>` : ''}
-          </span>
-        </button>`).join('');
+        <div class="mail-task-item">
+          <button class="mail-task-chip" data-title="${escHtml(m.taskTitle)}" data-id="${m.id}" onclick="addMailTask(this.dataset.title,this)">
+            <span class="mail-task-chip-icon">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            </span>
+            <span class="mail-task-chip-body">
+              <span class="mail-task-chip-title">${escHtml(m.taskTitle)}</span>
+              <span class="mail-task-chip-meta">${escHtml(m.from)} · ${escHtml(m.subject)}</span>
+              ${m.snippet ? `<span class="mail-task-chip-snippet">${escHtml(m.snippet)}</span>` : ''}
+            </span>
+          </button>
+          <button class="mail-task-correct-btn" onclick="toggleCorrectPicker('${m.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
+          ${correctPickerHTML(m, 'task')}
+        </div>`).join('');
       html += '</div>';
     } else if (tab === 'archive') {
       html += '<div class="card" id="archiveMailsCard">';
@@ -2197,6 +2268,7 @@ body {
         MAIL_ALL_TASK    = cache.toTask;
         MAIL_ALL_ARCHIVE = cache.toArchive ?? [];
         cache.toReply.forEach(m => { REPLY_MAILS[m.id] = m; });
+        (cache.toTask ?? []).forEach(m => { TASK_MAILS[m.id] = m; });
         document.getElementById('mailsMeta').textContent =
           `Gmail · ${cache.processed} non lus · ${cache.ageLabel}`;
         document.getElementById('mailRefreshBtn').style.display = '';
@@ -2248,6 +2320,7 @@ body {
         MAIL_ALL_TASK.push(...(data.toTask     ?? []));
         MAIL_ALL_ARCHIVE.push(...(data.toArchive ?? []));
         (data.toReply ?? []).forEach(m => { REPLY_MAILS[m.id] = m; });
+        (data.toTask  ?? []).forEach(m => { TASK_MAILS[m.id]  = m; });
 
         processed      += data.batchSize ?? 0;
         MAIL_PROCESSED  = processed;
@@ -2410,11 +2483,93 @@ body {
       btn.classList.remove('adding');
       btn.classList.add('added');
       if (iconEl) iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>';
-      markMailRead(mailId); // marquer le mail comme lu dans Gmail
+      markMailRead(mailId);
       setTimeout(() => fetchTasks(), 900);
+
+      // Afficher le panel "Et ce mail ?"
+      const item = btn.closest('.mail-task-item');
+      if (item && !item.querySelector('.mail-task-followup')) {
+        const mail = TASK_MAILS[mailId] || {};
+        const labelOpts = ARCHIVE_LABELS.map(l =>
+          `<option value="${escHtml(l)}">${escHtml(l)}</option>`
+        ).join('');
+        const followup = document.createElement('div');
+        followup.className = 'mail-task-followup';
+        followup.id = 'followup-' + mailId;
+        followup.innerHTML = `
+          <span class="mail-task-followup-label">✓ Tâche ajoutée</span>
+          <span class="mail-task-followup-sep">—</span>
+          <button class="mail-task-followup-btn reply" onclick="taskFollowReply('${mailId}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+            Répondre
+          </button>
+          <div class="mail-task-followup-archive-wrap">
+            <span>📥 Archiver dans</span>
+            <select onchange="taskFollowArchive('${mailId}', this.value)" title="Choisir un label">
+              <option value="">— choisir —</option>
+              ${labelOpts}
+            </select>
+          </div>
+          <button class="mail-task-followup-ignore" onclick="taskFollowIgnore('${mailId}')" title="Ne rien faire">Ignorer ×</button>
+        `;
+        item.appendChild(followup);
+        // Masquer le bouton correction tant que le follow-up est visible
+        const correctBtn = item.querySelector('.mail-task-correct-btn');
+        if (correctBtn) correctBtn.style.display = 'none';
+      }
     } catch {
       btn.classList.remove('adding');
       if (iconEl) iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+    }
+  }
+
+  // ── FOLLOW-UP TÂCHE : Répondre ──────────────────────────
+  function taskFollowReply(mailId) {
+    const mail = TASK_MAILS[mailId] || {};
+    // Préparer un draft simple à partir du sujet
+    const subj = mail.subject || '';
+    const draft = `Bonjour,\n\nMerci pour votre message${subj ? ` concernant « ${subj} »` : ''}.\n\n\n\nCordialement,\nAlexis`;
+    // Injecter dans REPLY_MAILS pour réutiliser le bottom sheet existant
+    REPLY_MAILS[mailId] = { ...mail, draftReply: draft };
+    openReplySheet(mailId);
+    // Retirer le follow-up panel
+    document.getElementById('followup-' + mailId)?.remove();
+  }
+
+  // ── FOLLOW-UP TÂCHE : Archiver ──────────────────────────
+  async function taskFollowArchive(mailId, label) {
+    if (!label) return;
+    const item = document.getElementById('followup-' + mailId)?.closest('.mail-task-item');
+    try {
+      await fetch('/api/gmail-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'archive', ids: [mailId], label }),
+      });
+      // Retirer l'item de la liste et du cache
+      const idx = MAIL_ALL_TASK.findIndex(m => m.id === mailId);
+      if (idx !== -1) MAIL_ALL_TASK.splice(idx, 1);
+      delete TASK_MAILS[mailId];
+      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+      if (item) {
+        item.style.maxHeight = item.offsetHeight + 'px';
+        requestAnimationFrame(() => item.classList.add('removing'));
+        setTimeout(() => { item.remove(); if (MAIL_ALL_TASK.length === 0) showMailResults(); }, 320);
+      }
+    } catch (e) { console.warn('[taskFollowArchive]', e.message); }
+  }
+
+  // ── FOLLOW-UP TÂCHE : Ignorer ───────────────────────────
+  function taskFollowIgnore(mailId) {
+    const followup = document.getElementById('followup-' + mailId);
+    if (followup) {
+      followup.style.opacity = '0';
+      setTimeout(() => {
+        followup.remove();
+        // Réafficher le bouton correction
+        const item = document.querySelector(`.mail-task-item button[data-id="${mailId}"]`)?.closest('.mail-task-item');
+        const correctBtn = item?.querySelector('.mail-task-correct-btn');
+        if (correctBtn) correctBtn.style.display = '';
+      }, 200);
     }
   }
 

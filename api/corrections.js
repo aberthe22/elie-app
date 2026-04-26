@@ -14,12 +14,18 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const token = process.env.NOTION_TOKEN;
-  const dbId  = process.env.NOTION_CORRECTIONS_DB_ID;
+  const token  = process.env.NOTION_TOKEN;
+  const rawId  = process.env.NOTION_CORRECTIONS_DB_ID;
 
-  if (!token || !dbId) {
+  if (!token || !rawId) {
     return res.status(500).json({ error: 'NOTION_TOKEN ou NOTION_CORRECTIONS_DB_ID manquant' });
   }
+
+  // Normalise l'ID en UUID valide (avec ou sans tirets, quelle que soit la colle)
+  const stripped = rawId.replace(/-/g, '');
+  const dbId = stripped.length === 32
+    ? `${stripped.slice(0,8)}-${stripped.slice(8,12)}-${stripped.slice(12,16)}-${stripped.slice(16,20)}-${stripped.slice(20)}`
+    : rawId;
 
   const headers = {
     'Authorization':  `Bearer ${token}`,
