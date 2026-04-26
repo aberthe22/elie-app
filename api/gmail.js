@@ -119,8 +119,12 @@ export default async function handler(req, res) {
       .map(item => ({ ...emailMap[item.id], taskTitle: item.taskTitle }))
       .filter(e => e?.id);
 
+    const toArchive = (analysis.toArchive ?? [])
+      .map(item => ({ ...emailMap[item.id], summary: item.summary, label: item.label }))
+      .filter(e => e?.id);
+
     return res.status(200).json({
-      toDelete, toReply, toTask,
+      toDelete, toReply, toTask, toArchive,
       batchSize:     emails.length,
       totalEstimate,
       nextPageToken,
@@ -178,7 +182,7 @@ async function analyzeWithHaiku(emails, apiKey, corrections = []) {
     `${i + 1}. [ID:${e.id}]\n   De: ${e.from} <${e.email}>\n   Sujet: ${e.subject}\n   Date: ${e.date}\n   Aperçu: ${e.snippet}`
   ).join('\n\n');
 
-  const catLabel = c => ({ delete: 'toDelete', reply: 'toReply', task: 'toTask' })[c] || c;
+  const catLabel = c => ({ delete: 'toDelete', reply: 'toReply', task: 'toTask', archive: 'toArchive' })[c] || c;
   const correctionsBlock = corrections.length > 0
     ? `\nCORRECTIONS PASSÉES D'ALEXIS (exemples réels, à respecter absolument) :
 ${corrections.map(c =>
@@ -193,19 +197,19 @@ ${emailsText}
 
 JSON attendu :
 {
-  "toDelete": [{ "id": "...", "reason": "raison courte" }],
-  "toReply":  [{ "id": "...", "draftReply": "Corps du mail, 2-3 phrases, signé Alexis." }],
-  "toTask":   [{ "id": "...", "taskTitle": "Action concrète à faire" }]
+  "toDelete":  [{ "id": "...", "reason": "raison courte" }],
+  "toReply":   [{ "id": "...", "draftReply": "Corps du mail, 2-3 phrases, signé Alexis." }],
+  "toTask":    [{ "id": "...", "taskTitle": "Action concrète à faire" }],
+  "toArchive": [{ "id": "...", "summary": "Reçu Anthropic · 9,00€", "label": "Factures" }]
 }
 
 ${correctionsBlock}RÈGLES — lis attentivement avant de classer :
 
 toDelete (emails à supprimer) — SEULEMENT si c'est clairement :
-- Newsletter / email marketing / promotion commerciale
-- Notification automatique d'un service (GitHub, LinkedIn, réseaux sociaux, app, banque)
-- Confirmation de commande / livraison / réservation sans action requise
-- Email envoyé à une liste (pas adressé personnellement à Alexis)
-NE PAS mettre en toDelete : un email d'une vraie personne, même court.
+- Newsletter / email marketing / promotion commerciale sans valeur informative
+- Notification automatique sans intérêt (réseaux sociaux, alertes vides)
+- Spam ou email non sollicité
+NE PAS mettre en toDelete : un email d'une vraie personne, un reçu/facture, une confirmation utile.
 
 toReply (emails qui nécessitent une réponse) — SEULEMENT si :
 - Envoyé par une vraie personne (pas un service automatique)
@@ -214,13 +218,21 @@ toReply (emails qui nécessitent une réponse) — SEULEMENT si :
 Le draftReply = corps du mail uniquement, naturel, 2-3 phrases max, signé "Alexis".
 
 toTask (emails qui impliquent une action sans réponse) — SEULEMENT si :
-- Facture / paiement à effectuer
-- Document à signer ou à lire
+- Document à signer ou à lire impérativement
 - Rendez-vous à confirmer
-- Deadline ou engagement concret à honorer
+- Deadline ou engagement concret à honorer dans les prochains jours
+
+toArchive (emails à garder mais sans action) — si c'est :
+- Reçu de paiement / facture déjà réglée
+- Confirmation de commande / réservation (pour référence)
+- Rapport ou relevé périodique (banque, GitHub, analytics)
+- Mise à jour de service utile à conserver
+- FYI envoyé sans réponse attendue
+Pour chaque mail : "summary" ultra-court (ex: "Reçu Anthropic · 9,00€", "Rapport hebdo GitHub"),
+"label" choisi parmi : Factures, GitHub, Services, Banque, Shopping, Pro, Newsletters, Abonnements, Légal, Autres
 
 Emails qui ne rentrent dans AUCUNE catégorie → ne pas inclure dans le JSON.
-Maximum par batch : 12 toDelete, 3 toReply, 3 toTask.
+Maximum par batch : 10 toDelete, 3 toReply, 3 toTask, 8 toArchive.
 Réponds UNIQUEMENT avec le JSON.`;
 
   const controller = new AbortController();

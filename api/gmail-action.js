@@ -83,13 +83,19 @@ export default async function handler(req, res) {
     }
 
     // ── ACTIONS SUR IDs MULTIPLES ────────────────────────────
-    const { ids } = req.body;
+    const { ids, label } = req.body; // label optionnel pour archive avec sous-dossier
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'ids doit être un tableau non vide' });
     }
 
+    // Pré-résoudre le label Gmail une seule fois si besoin (évite N appels list)
+    let resolvedLabelId = null;
+    if (action === 'archive' && label) {
+      resolvedLabelId = await getOrCreateLabel(label, accessToken);
+    }
+
     const results = await Promise.allSettled(
-      ids.map(id => applyAction(id, action, accessToken))
+      ids.map(id => applyAction(id, action, accessToken, resolvedLabelId))
     );
 
     const succeeded = results
@@ -109,7 +115,7 @@ export default async function handler(req, res) {
 
 // ── Action sur un seul message ────────────────────────────
 
-async function applyAction(messageId, action, accessToken) {
+async function applyAction(messageId, action, accessToken, labelId = null) {
   const base    = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}`;
   const headers = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
 
@@ -119,9 +125,11 @@ async function applyAction(messageId, action, accessToken) {
     return;
   }
   if (action === 'archive') {
+    const body = { removeLabelIds: ['INBOX', 'UNREAD'] };
+    if (labelId) body.addLabelIds = [labelId];
     const res = await fetch(`${base}/modify`, {
       method: 'POST', headers,
-      body: JSON.stringify({ removeLabelIds: ['INBOX'] }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`archive ${messageId}: ${res.status}`);
     return;
@@ -134,6 +142,34 @@ async function applyAction(messageId, action, accessToken) {
     if (!res.ok) throw new Error(`read ${messageId}: ${res.status}`);
     return;
   }
+}
+
+// ── Créer ou retrouver un label Gmail ────────────────────
+async function getOrCreateLabel(name, accessToken) {
+  const headers = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
+  try {
+    // Liste les labels existants
+    const listRes  = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', { headers });
+    if (!listRes.ok) return null;
+    const listData = await listRes.json();
+    const existing = (listData.labels ?? []).find(
+      l => l.name.toLowerCase() === name.toLowerCase()
+    );
+    if (existing) return existing.id;
+
+    // Crée le label s'il n'existe pas
+    const createRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        name,
+        labelListVisibility:   'labelShow',
+        messageListVisibility: 'show',
+      }),
+    });
+    if (!createRes.ok) return null;
+    const created = await createRes.json();
+    return created.id;
+  } catch { return null; }
 }
 
 // ── Refresh token → access token ─────────────────────────

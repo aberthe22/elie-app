@@ -331,6 +331,18 @@ body {
 .mail-correct-opt-del:hover  { border-color: var(--urgent); color: var(--urgent); background: var(--urgent-bg); }
 .mail-correct-opt-rep:hover  { border-color: var(--navy); color: var(--navy); background: var(--navy-bg); }
 .mail-correct-opt-task:hover { border-color: var(--done); color: var(--done); background: var(--done-bg); }
+.mail-correct-opt-arch:hover { border-color: var(--soon); color: var(--soon); background: var(--soon-bg); }
+
+/* Badge label (sous-dossier Gmail) */
+.mail-label-badge {
+  font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 10px; flex-shrink: 0; white-space: nowrap;
+  background: var(--soon-bg); color: var(--soon);
+}
+
+/* Bouton archive */
+.mail-btn-archive { background: var(--soon-bg); color: var(--soon); border-color: #e8d5a0; }
+.mail-btn-archive:hover { background: var(--soon); color: #fff; }
 
 /* État vide */
 .mail-empty {
@@ -352,9 +364,10 @@ body {
 }
 .mail-bulk-btn:disabled { opacity: .5; cursor: default; }
 .mail-bulk-btn:active:not(:disabled) { transform: scale(.97); }
-.mail-bulk-delete { background: var(--urgent-bg); color: var(--urgent); }
-.mail-bulk-reply  { background: var(--navy-bg);   color: var(--navy); }
-.mail-bulk-task   { background: var(--done-bg);   color: var(--done); }
+.mail-bulk-delete  { background: var(--urgent-bg); color: var(--urgent); }
+.mail-bulk-reply   { background: var(--navy-bg);   color: var(--navy); }
+.mail-bulk-task    { background: var(--done-bg);   color: var(--done); }
+.mail-bulk-archive { background: var(--soon-bg);   color: var(--soon); }
 
 /* Barre de progression batching */
 .mail-progress-wrap {
@@ -1627,15 +1640,40 @@ body {
   // Génère le picker de recorrection pour une row
   function correctPickerHTML(mail, currentType) {
     const opts = {
-      delete: `<button class="mail-correct-opt mail-correct-opt-del" data-id="${mail.id}" data-from="${currentType}" data-to="delete" onclick="correctMail(this)">
+      delete:  `<button class="mail-correct-opt mail-correct-opt-del" data-id="${mail.id}" data-from="${currentType}" data-to="delete" onclick="correctMail(this)">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6"/></svg> Supprimer</button>`,
-      reply:  `<button class="mail-correct-opt mail-correct-opt-rep" data-id="${mail.id}" data-from="${currentType}" data-to="reply" onclick="correctMail(this)">
+      reply:   `<button class="mail-correct-opt mail-correct-opt-rep" data-id="${mail.id}" data-from="${currentType}" data-to="reply" onclick="correctMail(this)">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg> Répondre</button>`,
-      task:   `<button class="mail-correct-opt mail-correct-opt-task" data-id="${mail.id}" data-from="${currentType}" data-to="task" onclick="correctMail(this)">
+      task:    `<button class="mail-correct-opt mail-correct-opt-task" data-id="${mail.id}" data-from="${currentType}" data-to="task" onclick="correctMail(this)">
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Tâche</button>`,
+      archive: `<button class="mail-correct-opt mail-correct-opt-arch" data-id="${mail.id}" data-from="${currentType}" data-to="archive" onclick="correctMail(this)">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="21,8 21,21 3,21 3,8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Consulter</button>`,
     };
     const choices = Object.entries(opts).filter(([k]) => k !== currentType).map(([,v]) => v).join('');
     return `<div class="mail-correct-picker hidden" id="picker-${mail.id}">${choices}</div>`;
+  }
+
+  // Génère une row pour la section "À consulter"
+  function archiveRowHTML(mail) {
+    const init  = (mail.from || mail.email || '?').charAt(0).toUpperCase();
+    const color = mailAvatar(init);
+    return `
+      <div class="mail-row" data-id="${mail.id}" style="max-height:90px">
+        <div class="mail-av" style="background:${color}">${init}</div>
+        <div class="mail-row-body">
+          <div class="mail-row-from">${escHtml(mail.from || mail.email)}</div>
+          <div class="mail-row-subj">${escHtml(mail.summary || mail.subject)}</div>
+        </div>
+        ${mail.label ? `<span class="mail-label-badge">${escHtml(mail.label)}</span>` : ''}
+        <div class="mail-row-time">${escHtml(mail.date)}</div>
+        <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
+        <button class="mail-btn mail-btn-archive"
+          data-id="${mail.id}" data-label="${escHtml(mail.label || '')}"
+          onclick="archiveMailRow(this)" title="Archiver">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="21,8 21,21 3,21 3,8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        </button>
+      </div>
+      ${correctPickerHTML(mail, 'archive')}`;
   }
 
   // Icône "mal classé" (petit bouton discret)
@@ -1687,10 +1725,11 @@ body {
   let REPLY_MAILS = {};
 
   // Accumulation globale des mails analysés
-  let MAIL_ALL_DELETE = [];
-  let MAIL_ALL_REPLY  = [];
-  let MAIL_ALL_TASK   = [];
-  let MAIL_PROCESSED  = 0; // compte réel des mails traités
+  let MAIL_ALL_DELETE  = [];
+  let MAIL_ALL_REPLY   = [];
+  let MAIL_ALL_TASK    = [];
+  let MAIL_ALL_ARCHIVE = [];
+  let MAIL_PROCESSED   = 0; // compte réel des mails traités
 
   // ── Corrections utilisateur (apprentissage) ──────────────
   const CORRECTIONS_KEY = 'elie_corrections_v1';
@@ -1748,12 +1787,22 @@ body {
     const mailId  = btn.dataset.id;
     const fromCat = btn.dataset.from;
     const toCat   = btn.dataset.to;
-    const srcMap  = { delete: MAIL_ALL_DELETE, reply: MAIL_ALL_REPLY, task: MAIL_ALL_TASK };
+    const srcMap  = {
+      delete:  MAIL_ALL_DELETE,
+      reply:   MAIL_ALL_REPLY,
+      task:    MAIL_ALL_TASK,
+      archive: MAIL_ALL_ARCHIVE,
+    };
 
     const src = srcMap[fromCat];
     const idx = src.findIndex(m => m.id === mailId);
     if (idx === -1) return;
     const mail = src.splice(idx, 1)[0];
+
+    // Si déplacé vers "task" sans taskTitle, utiliser le summary ou subject
+    if (toCat === 'task' && !mail.taskTitle) {
+      mail.taskTitle = mail.summary || mail.subject || 'Tâche';
+    }
 
     // Ajouter à la cible
     srcMap[toCat].push(mail);
@@ -1766,7 +1815,7 @@ body {
     saveCorrection(mail, fromCat, toCat);
 
     // Mettre à jour le cache
-    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_PROCESSED);
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
 
     // Re-render la section mails
     showMailResults();
@@ -1776,10 +1825,10 @@ body {
   const MAIL_CACHE_KEY = 'elie_mail_v1';
   const MAIL_CACHE_TTL = 2 * 60 * 60 * 1000; // 2 heures
 
-  function saveMailCache(toDelete, toReply, toTask, processed) {
+  function saveMailCache(toDelete, toReply, toTask, toArchive, processed) {
     try {
       localStorage.setItem(MAIL_CACHE_KEY, JSON.stringify({
-        toDelete, toReply, toTask, processed, ts: Date.now()
+        toDelete, toReply, toTask, toArchive, processed, ts: Date.now()
       }));
     } catch(e) {}
   }
@@ -1792,6 +1841,7 @@ body {
       if (Date.now() - c.ts > MAIL_CACHE_TTL) return null;
       const age = Math.round((Date.now() - c.ts) / 60000);
       c.ageLabel = age < 1 ? 'à l\'instant' : `il y a ${age} min`;
+      c.toArchive = c.toArchive ?? [];
       return c;
     } catch(e) { return null; }
   }
@@ -1809,8 +1859,8 @@ body {
 
   // ── Affichage final des résultats ────────────────────────
   function showMailResults() {
-    const d = MAIL_ALL_DELETE, r = MAIL_ALL_REPLY, t = MAIL_ALL_TASK;
-    const total = d.length + r.length + t.length;
+    const d = MAIL_ALL_DELETE, r = MAIL_ALL_REPLY, t = MAIL_ALL_TASK, a = MAIL_ALL_ARCHIVE;
+    const total = d.length + r.length + t.length + a.length;
 
     if (total === 0) {
       document.getElementById('mailsContainer').innerHTML =
@@ -1866,6 +1916,18 @@ body {
         </button>`).join('');
       html += '</div>';
     }
+    if (a.length) {
+      html += `
+        <div class="mail-cat-row">
+          <div class="mail-cat-label">À consulter (${a.length})</div>
+          <button class="mail-bulk-btn mail-bulk-archive" id="bulkArchiveBtn" onclick="archiveAllMails()">
+            Tout archiver
+          </button>
+        </div>`;
+      html += '<div class="card" id="archiveMailsCard">';
+      html += a.map(m => archiveRowHTML(m)).join('');
+      html += '</div>';
+    }
 
     document.getElementById('mailsContainer').innerHTML = html;
   }
@@ -1884,8 +1946,7 @@ body {
         body: JSON.stringify({ action: 'delete', ids }),
       });
       MAIL_ALL_DELETE = [];
-      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK,
-        MAIL_ALL_REPLY.length + MAIL_ALL_TASK.length);
+      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
       if (card) { card.style.opacity = '0'; card.style.transition = 'opacity .3s'; }
       setTimeout(() => showMailResults(), 350);
     } catch { btn.disabled = false; btn.textContent = 'Tout supprimer'; }
@@ -1916,8 +1977,7 @@ body {
       done++;
     }
     MAIL_ALL_REPLY = [];
-    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK,
-      MAIL_ALL_DELETE.length + MAIL_ALL_TASK.length);
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
     btn.textContent = `${done} envoyé${done > 1 ? 's' : ''} ✓`;
     setTimeout(() => showMailResults(), 800);
   }
@@ -1943,25 +2003,92 @@ body {
     // Marquer tous ces mails comme lus dans Gmail en une seule fois
     markMailRead(taskMails.map(m => m.id));
     MAIL_ALL_TASK = [];
-    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_PROCESSED);
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
     btn.textContent = `${done} tâche${done > 1 ? 's' : ''} créée${done > 1 ? 's' : ''} ✓`;
     setTimeout(() => { showMailResults(); fetchTasks(); }, 800);
   }
 
+  // ── Archiver un mail individuel ─────────────────────────
+  async function archiveMailRow(btn) {
+    const mailId = btn.dataset.id;
+    const label  = btn.dataset.label || null;
+    const row    = btn.closest('.mail-row');
+    if (!row || row.classList.contains('removing')) return;
+    btn.disabled = true;
+    try {
+      await fetch('/api/gmail-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'archive', ids: [mailId], ...(label ? { label } : {}) }),
+      });
+      const idx = MAIL_ALL_ARCHIVE.findIndex(m => m.id === mailId);
+      if (idx !== -1) MAIL_ALL_ARCHIVE.splice(idx, 1);
+      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+      // Animation de sortie
+      row.style.maxHeight = row.offsetHeight + 'px';
+      const picker = document.getElementById('picker-' + mailId);
+      requestAnimationFrame(() => {
+        row.classList.add('removing');
+        if (picker) picker.classList.add('removing');
+      });
+      setTimeout(() => {
+        row.remove();
+        if (picker) picker.remove();
+        if (MAIL_ALL_ARCHIVE.length === 0) showMailResults();
+      }, 320);
+    } catch { btn.disabled = false; }
+  }
+
+  // ── Archiver tous les mails "À consulter" ────────────────
+  async function archiveAllMails() {
+    const btn  = document.getElementById('bulkArchiveBtn');
+    const card = document.getElementById('archiveMailsCard');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    const archiveMails = [...MAIL_ALL_ARCHIVE];
+    const total = archiveMails.length;
+    let done = 0;
+
+    // Grouper par label pour minimiser les appels API
+    const byLabel = {};
+    archiveMails.forEach(m => {
+      const k = m.label || '';
+      (byLabel[k] = byLabel[k] || []).push(m.id);
+    });
+
+    for (const [label, ids] of Object.entries(byLabel)) {
+      btn.textContent = `Archivage ${done + 1}–${done + ids.length}/${total}…`;
+      try {
+        await fetch('/api/gmail-action', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'archive', ids, ...(label ? { label } : {}) }),
+        });
+      } catch { /* continue */ }
+      done += ids.length;
+    }
+
+    MAIL_ALL_ARCHIVE = [];
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+    if (card) { card.style.opacity = '0'; card.style.transition = 'opacity .3s'; }
+    btn.textContent = `${done} archivé${done > 1 ? 's' : ''} ✓`;
+    setTimeout(() => showMailResults(), 350);
+  }
+
   // ── Boucle de batching automatique ───────────────────────
   async function fetchMails(forceRefresh = false) {
-    MAIL_ALL_DELETE = [];
-    MAIL_ALL_REPLY  = [];
-    MAIL_ALL_TASK   = [];
-    REPLY_MAILS     = {};
+    MAIL_ALL_DELETE  = [];
+    MAIL_ALL_REPLY   = [];
+    MAIL_ALL_TASK    = [];
+    MAIL_ALL_ARCHIVE = [];
+    REPLY_MAILS      = {};
 
     // ── Vérifier le cache d'abord (sauf si rafraîchissement forcé)
     if (!forceRefresh) {
       const cache = loadMailCache();
       if (cache) {
-        MAIL_ALL_DELETE = cache.toDelete;
-        MAIL_ALL_REPLY  = cache.toReply;
-        MAIL_ALL_TASK   = cache.toTask;
+        MAIL_ALL_DELETE  = cache.toDelete;
+        MAIL_ALL_REPLY   = cache.toReply;
+        MAIL_ALL_TASK    = cache.toTask;
+        MAIL_ALL_ARCHIVE = cache.toArchive ?? [];
         cache.toReply.forEach(m => { REPLY_MAILS[m.id] = m; });
         document.getElementById('mailsMeta').textContent =
           `Gmail · ${cache.processed} non lus · ${cache.ageLabel}`;
@@ -2009,9 +2136,10 @@ body {
           document.getElementById('mailsMeta').textContent = `Gmail · analyse…`;
         }
 
-        MAIL_ALL_DELETE.push(...(data.toDelete ?? []));
-        MAIL_ALL_REPLY.push(...(data.toReply ?? []));
-        MAIL_ALL_TASK.push(...(data.toTask ?? []));
+        MAIL_ALL_DELETE.push(...(data.toDelete  ?? []));
+        MAIL_ALL_REPLY.push(...(data.toReply   ?? []));
+        MAIL_ALL_TASK.push(...(data.toTask     ?? []));
+        MAIL_ALL_ARCHIVE.push(...(data.toArchive ?? []));
         (data.toReply ?? []).forEach(m => { REPLY_MAILS[m.id] = m; });
 
         processed      += data.batchSize ?? 0;
@@ -2043,7 +2171,7 @@ body {
 
     // Sauvegarder dans le cache pour éviter de relancer Haiku au prochain chargement
     MAIL_PROCESSED = processed;
-    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, processed);
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, processed);
 
     // Mettre à jour le compteur avec le vrai total
     document.getElementById('mailsMeta').textContent =
