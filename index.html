@@ -314,6 +314,23 @@ body {
   display: flex; align-items: center; gap: 8px;
 }
 
+/* Header catégorie + bouton groupé */
+.mail-cat-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 16px 0 6px;
+}
+.mail-cat-row .mail-cat-label { margin: 0; }
+.mail-bulk-btn {
+  font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+  padding: 6px 14px; border-radius: 20px; border: none; cursor: pointer;
+  transition: opacity .15s, transform .1s;
+}
+.mail-bulk-btn:disabled { opacity: .5; cursor: default; }
+.mail-bulk-btn:active:not(:disabled) { transform: scale(.97); }
+.mail-bulk-delete { background: var(--urgent-bg); color: var(--urgent); }
+.mail-bulk-reply  { background: var(--navy-bg);   color: var(--navy); }
+.mail-bulk-task   { background: var(--done-bg);   color: var(--done); }
+
 /* Barre de progression batching */
 .mail-progress-wrap {
   padding: 20px 4px 8px;
@@ -1669,22 +1686,40 @@ body {
     let html = '';
 
     if (d.length) {
-      html += `<div class="mail-cat-label">À supprimer (${d.length})</div>`;
-      html += '<div class="card">';
+      html += `
+        <div class="mail-cat-row">
+          <div class="mail-cat-label">À supprimer (${d.length})</div>
+          <button class="mail-bulk-btn mail-bulk-delete" id="bulkDeleteBtn" onclick="deleteAllMails()">
+            Tout supprimer
+          </button>
+        </div>`;
+      html += '<div class="card" id="deleteMailsCard">';
       html += d.map(m => mailRowHTML(m, 'delete')).join('');
       html += '</div>';
     }
     if (r.length) {
-      html += `<div class="mail-cat-label">À répondre (${r.length})</div>`;
-      html += '<div class="card">';
+      html += `
+        <div class="mail-cat-row">
+          <div class="mail-cat-label">À répondre (${r.length})</div>
+          <button class="mail-bulk-btn mail-bulk-reply" id="bulkReplyBtn" onclick="sendAllReplies()">
+            Tout envoyer
+          </button>
+        </div>`;
+      html += '<div class="card" id="replyMailsCard">';
       html += r.map(m => mailRowHTML(m, 'reply')).join('');
       html += '</div>';
     }
     if (t.length) {
-      html += `<div class="mail-cat-label">À ajouter en tâche (${t.length})</div>`;
-      html += '<div class="mail-task-chips">';
+      html += `
+        <div class="mail-cat-row">
+          <div class="mail-cat-label">À tasker (${t.length})</div>
+          <button class="mail-bulk-btn mail-bulk-task" id="bulkTaskBtn" onclick="addAllTasks()">
+            Tout créer
+          </button>
+        </div>`;
+      html += '<div class="mail-task-chips" id="taskMailsChips">';
       html += t.map(m => `
-        <button class="mail-task-chip" onclick="addMailTask(${JSON.stringify(m.taskTitle)},this)">
+        <button class="mail-task-chip" data-title="${escHtml(m.taskTitle)}" onclick="addMailTask(${JSON.stringify(m.taskTitle)},this)">
           <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
           ${escHtml(m.taskTitle)}
         </button>`).join('');
@@ -1692,6 +1727,82 @@ body {
     }
 
     document.getElementById('mailsContainer').innerHTML = html;
+  }
+
+  // ── Action groupée : tout supprimer ──────────────────────
+  async function deleteAllMails() {
+    const btn  = document.getElementById('bulkDeleteBtn');
+    const card = document.getElementById('deleteMailsCard');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = 'Suppression…';
+    const ids = MAIL_ALL_DELETE.map(m => m.id);
+    try {
+      await fetch('/api/gmail-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', ids }),
+      });
+      MAIL_ALL_DELETE = [];
+      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK,
+        MAIL_ALL_REPLY.length + MAIL_ALL_TASK.length);
+      if (card) { card.style.opacity = '0'; card.style.transition = 'opacity .3s'; }
+      setTimeout(() => showMailResults(), 350);
+    } catch { btn.disabled = false; btn.textContent = 'Tout supprimer'; }
+  }
+
+  // ── Action groupée : tout envoyer ────────────────────────
+  async function sendAllReplies() {
+    const btn = document.getElementById('bulkReplyBtn');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    const total = MAIL_ALL_REPLY.length;
+    let done = 0;
+    for (const mail of [...MAIL_ALL_REPLY]) {
+      btn.textContent = `Envoi ${done + 1}/${total}…`;
+      try {
+        await fetch('/api/gmail-action', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'send',
+            replyTo:   mail.email,
+            subject:   `Re: ${mail.subject}`,
+            body:      mail.draftReply,
+            threadId:  mail.threadId,
+            inReplyTo: mail.messageId,
+          }),
+        });
+      } catch { /* continue même si un envoi échoue */ }
+      done++;
+    }
+    MAIL_ALL_REPLY = [];
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK,
+      MAIL_ALL_DELETE.length + MAIL_ALL_TASK.length);
+    btn.textContent = `${done} envoyé${done > 1 ? 's' : ''} ✓`;
+    setTimeout(() => showMailResults(), 800);
+  }
+
+  // ── Action groupée : tout créer en tâches ────────────────
+  async function addAllTasks() {
+    const btn = document.getElementById('bulkTaskBtn');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    const total = MAIL_ALL_TASK.length;
+    let done = 0;
+    for (const mail of [...MAIL_ALL_TASK]) {
+      btn.textContent = `Création ${done + 1}/${total}…`;
+      try {
+        await fetch('/api/create-task', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: mail.taskTitle }),
+        });
+      } catch { /* continue */ }
+      done++;
+    }
+    MAIL_ALL_TASK = [];
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK,
+      MAIL_ALL_DELETE.length + MAIL_ALL_REPLY.length);
+    btn.textContent = `${done} tâche${done > 1 ? 's' : ''} créée${done > 1 ? 's' : ''} ✓`;
+    setTimeout(() => { showMailResults(); fetchTasks(); }, 800);
   }
 
   // ── Boucle de batching automatique ───────────────────────

@@ -172,7 +172,7 @@ async function analyzeWithHaiku(emails, apiKey) {
     `${i + 1}. [ID:${e.id}]\n   De: ${e.from} <${e.email}>\n   Sujet: ${e.subject}\n   Date: ${e.date}\n   Aperçu: ${e.snippet}`
   ).join('\n\n');
 
-  const prompt = `Tu es l'assistante IA d'Alexis Berthe. Analyse ces ${emails.length} emails non lus et classe chacun dans exactement une catégorie. Réponds UNIQUEMENT en JSON valide, sans markdown.
+  const prompt = `Tu es l'assistante IA d'Alexis Berthe. Analyse ces ${emails.length} emails non lus. Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte avant ou après.
 
 EMAILS :
 ${emailsText}
@@ -180,22 +180,23 @@ ${emailsText}
 Retourne ce JSON exact :
 {
   "toDelete": [
-    { "id": "messageId", "reason": "raison courte en français" }
+    { "id": "messageId", "reason": "raison en 5 mots max" }
   ],
   "toReply": [
-    { "id": "messageId", "draftReply": "Brouillon complet de la réponse, naturel et professionnel. Corps du mail uniquement, signé Alexis." }
+    { "id": "messageId", "draftReply": "Bonjour,\n\n[réponse courte et naturelle, 2-4 phrases max]\n\nCordialement,\nAlexis" }
   ],
   "toTask": [
-    { "id": "messageId", "taskTitle": "Titre de tâche actionnable et concis" }
+    { "id": "messageId", "taskTitle": "Action courte et concrète" }
   ]
 }
 
-Règles :
-- toDelete : newsletters, notifications automatiques, promotions, confirmations sans valeur.
-- toReply : mails qui attendent une vraie réponse d'Alexis. Le draftReply doit être une réponse complète prête à envoyer.
-- toTask : mails qui impliquent une action concrète (document à lire, paiement, rdv à confirmer).
-- Chaque mail dans une seule catégorie. Les mails sans action claire vont en toDelete.
-- Réponds UNIQUEMENT avec le JSON, rien d'autre.`;
+Règles strictes :
+- toDelete : newsletters, notifs automatiques, promos, confirmations inutiles. Maximum 12 par batch.
+- toReply : email qui attend UNE vraie réponse humaine d'Alexis. Maximum 3 par batch. Le draftReply = corps du mail uniquement, 2-4 phrases, signé Alexis.
+- toTask : implique une action concrète sans réponse mail (paiement, document à lire, RDV à confirmer). Maximum 3 par batch.
+- Tout mail sans action claire → toDelete.
+- Chaque mail dans UNE SEULE catégorie.
+- Réponds UNIQUEMENT avec le JSON.`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8500);
@@ -211,7 +212,7 @@ Règles :
       },
       body: JSON.stringify({
         model:      'claude-haiku-4-5-20251001',
-        max_tokens: 1200,
+        max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
@@ -225,9 +226,11 @@ Règles :
     const raw       = haikuData.content?.[0]?.text ?? '{}';
 
     try {
-      return JSON.parse(raw);
+      // Nettoyer le JSON si Haiku a quand même ajouté du markdown
+      const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+      return JSON.parse(cleaned);
     } catch {
-      console.warn('[Haiku] JSON invalide:', raw.slice(0, 200));
+      console.warn('[Haiku] JSON invalide (', raw.length, 'chars):', raw.slice(0, 300));
       return { toDelete: [], toReply: [], toTask: [] };
     }
   } catch (err) {
