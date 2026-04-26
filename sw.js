@@ -1,6 +1,6 @@
 // Service Worker Elie — 20260424-1
 // ⚠️  Ne pas modifier manuellement — version gérée automatiquement
-const CACHE = 'elie-20260426-1';
+const CACHE = 'elie-20260426-4';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])));
   self.skipWaiting();

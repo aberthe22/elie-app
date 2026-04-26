@@ -1,18 +1,27 @@
 // ═══════════════════════════════════════════════════════════
 //  api/gmail.js  —  Vercel Serverless Function
 //
-//  1. Récupère les mails NON LUS d'Alexis (max 20)
-//  2. Envoie les métadonnées à Claude Haiku
-//  3. Haiku catégorise chaque mail en :
-//       - toDelete  : à supprimer (newsletters, notifs, etc.)
-//       - toReply   : nécessite une réponse → brouillon généré
-//       - toTask    : implique une action → titre de tâche généré
-//  4. Retourne les trois listes enrichies avec les infos mail
+//  Analyse les mails NON LUS par batch de 15.
+//  Chaque appel traite un batch et retourne le pageToken suivant
+//  si des mails restent à analyser.
+//
+//  Query params (optionnels) :
+//    ?pageToken=xxx   → reprend à la page suivante Gmail
+//
+//  Réponse :
+//  {
+//    toDelete: [...], toReply: [...], toTask: [...],
+//    batchSize: 15,
+//    totalEstimate: 200,
+//    nextPageToken: "xxx" | null
+//  }
 //
 //  Variables d'env requises :
 //    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN
 //    ANTHROPIC_API_KEY
 // ═══════════════════════════════════════════════════════════
+
+const BATCH_SIZE = 15;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,25 +36,38 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY manquante' });
   }
 
+  const pageToken = req.query?.pageToken ?? null;
+
   try {
     // ── 1. ACCESS TOKEN ──────────────────────────────────────
     const accessToken = await getAccessToken(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN);
 
-    // ── 2. MAILS NON LUS UNIQUEMENT ─────────────────────────
+    // ── 2. LISTE DES MAILS NON LUS (batch) ──────────────────
+    const params = new URLSearchParams({
+      maxResults: String(BATCH_SIZE),
+      q: 'is:unread -in:trash -in:spam',
+    });
+    if (pageToken) params.set('pageToken', pageToken);
+
     const listRes = await fetch(
-      'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q=is:unread+-in:trash+-in:spam',
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages?${params}`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     if (!listRes.ok) throw new Error(`Gmail list: ${listRes.status}`);
-    const listData   = await listRes.json();
-    const messageIds = (listData.messages ?? []).map(m => m.id);
+    const listData = await listRes.json();
+
+    const messageIds    = (listData.messages ?? []).map(m => m.id);
+    const nextPageToken = listData.nextPageToken ?? null;
+    const totalEstimate = listData.resultSizeEstimate ?? messageIds.length;
 
     if (messageIds.length === 0) {
-      return res.status(200).json({ toDelete: [], toReply: [], toTask: [], unreadCount: 0 });
+      return res.status(200).json({
+        toDelete: [], toReply: [], toTask: [],
+        batchSize: 0, totalEstimate: 0, nextPageToken: null,
+      });
     }
 
     // ── 3. MÉTADONNÉES (en parallèle) ───────────────────────
-    // Message-ID récupéré pour le threading des réponses (In-Reply-To)
     const details = await Promise.all(
       messageIds.map(id =>
         fetch(
@@ -83,15 +105,20 @@ export default async function handler(req, res) {
       .map(item => ({ ...emailMap[item.id], reason: item.reason }))
       .filter(e => e?.id);
 
-    const toReply  = (analysis.toReply ?? [])
+    const toReply = (analysis.toReply ?? [])
       .map(item => ({ ...emailMap[item.id], draftReply: item.draftReply }))
       .filter(e => e?.id);
 
-    const toTask   = (analysis.toTask ?? [])
+    const toTask = (analysis.toTask ?? [])
       .map(item => ({ ...emailMap[item.id], taskTitle: item.taskTitle }))
       .filter(e => e?.id);
 
-    return res.status(200).json({ toDelete, toReply, toTask, unreadCount: emails.length });
+    return res.status(200).json({
+      toDelete, toReply, toTask,
+      batchSize:     emails.length,
+      totalEstimate,
+      nextPageToken,
+    });
 
   } catch (error) {
     console.error('[api/gmail]', error.message);
@@ -164,38 +191,53 @@ Retourne ce JSON exact :
 }
 
 Règles :
-- toDelete : newsletters, notifications automatiques, promotions, confirmations sans valeur. Maximum 10.
-- toReply : mails qui attendent une vraie réponse d'Alexis. Le draftReply doit être une réponse complète prête à envoyer. Maximum 5.
-- toTask : mails qui impliquent une action concrète mais pas de réponse (document à lire, paiement, rdv). Maximum 4.
-- Chaque mail dans une seule catégorie maximum. Les mails sans action claire sont ignorés.
+- toDelete : newsletters, notifications automatiques, promotions, confirmations sans valeur.
+- toReply : mails qui attendent une vraie réponse d'Alexis. Le draftReply doit être une réponse complète prête à envoyer.
+- toTask : mails qui impliquent une action concrète (document à lire, paiement, rdv à confirmer).
+- Chaque mail dans une seule catégorie. Les mails sans action claire vont en toDelete.
 - Réponds UNIQUEMENT avec le JSON, rien d'autre.`;
 
-  const haikuRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key':         apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type':      'application/json',
-    },
-    body: JSON.stringify({
-      model:      'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
-
-  if (!haikuRes.ok) {
-    console.error('[Haiku error]', await haikuRes.text());
-    return { toDelete: [], toReply: [], toTask: [] };
-  }
-
-  const haikuData = await haikuRes.json();
-  const raw       = haikuData.content?.[0]?.text ?? '{}';
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8500);
 
   try {
-    return JSON.parse(raw);
-  } catch {
-    console.warn('[Haiku] JSON invalide:', raw.slice(0, 200));
+    const haikuRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'x-api-key':         apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type':      'application/json',
+      },
+      body: JSON.stringify({
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!haikuRes.ok) {
+      console.error('[Haiku error]', await haikuRes.text());
+      return { toDelete: [], toReply: [], toTask: [] };
+    }
+
+    const haikuData = await haikuRes.json();
+    const raw       = haikuData.content?.[0]?.text ?? '{}';
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      console.warn('[Haiku] JSON invalide:', raw.slice(0, 200));
+      return { toDelete: [], toReply: [], toTask: [] };
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.warn('[Haiku] Timeout 8.5s');
+    } else {
+      console.error('[Haiku]', err.message);
+    }
     return { toDelete: [], toReply: [], toTask: [] };
+  } finally {
+    clearTimeout(timer);
   }
 }

@@ -314,6 +314,23 @@ body {
   display: flex; align-items: center; gap: 8px;
 }
 
+/* Barre de progression batching */
+.mail-progress-wrap {
+  padding: 20px 4px 8px;
+}
+.mail-progress-bar {
+  width: 100%; height: 5px; border-radius: 99px;
+  background: var(--line); overflow: hidden; margin-bottom: 10px;
+}
+.mail-progress-fill {
+  height: 100%; border-radius: 99px;
+  background: var(--navy);
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+.mail-progress-label {
+  font-size: 12px; color: var(--ink-3); text-align: center;
+}
+
 /* Chips tâches */
 .mail-task-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 4px 0; }
 .mail-task-chip {
@@ -1593,65 +1610,129 @@ body {
   // Stocke les mails toReply pour y accéder depuis le sheet
   let REPLY_MAILS = {};
 
-  async function fetchMails() {
-    try {
-      const res = await fetch('/api/gmail');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { toDelete, toReply, toTask, unreadCount } = await res.json();
+  // Accumulation globale des mails analysés
+  let MAIL_ALL_DELETE = [];
+  let MAIL_ALL_REPLY  = [];
+  let MAIL_ALL_TASK   = [];
 
-      document.getElementById('mailsMeta').textContent =
-        `Gmail · ${unreadCount ?? 0} non lu${unreadCount !== 1 ? 's' : ''}`;
+  // ── Barre de progression ─────────────────────────────────
+  function setMailProgress(pct, label) {
+    document.getElementById('mailsContainer').innerHTML = `
+      <div class="mail-progress-wrap">
+        <div class="mail-progress-bar">
+          <div class="mail-progress-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="mail-progress-label">${label}</div>
+      </div>`;
+  }
 
-      // Indexer les mails toReply pour les retrouver au clic
-      REPLY_MAILS = {};
-      (toReply ?? []).forEach(m => { REPLY_MAILS[m.id] = m; });
+  // ── Affichage final des résultats ────────────────────────
+  function showMailResults() {
+    const d = MAIL_ALL_DELETE, r = MAIL_ALL_REPLY, t = MAIL_ALL_TASK;
+    const total = d.length + r.length + t.length;
 
-      const total = (toDelete?.length ?? 0) + (toReply?.length ?? 0) + (toTask?.length ?? 0);
-
-      if (total === 0) {
-        document.getElementById('mailsContainer').innerHTML =
-          `<div class="card"><div class="mail-empty">✓ Boîte vide — tout est traité</div></div>`;
-        return;
-      }
-
-      let html = '';
-
-      // ── À SUPPRIMER
-      if (toDelete?.length) {
-        html += `<div class="mail-cat-label">À supprimer (${toDelete.length})</div>`;
-        html += '<div class="card">';
-        html += toDelete.map(m => mailRowHTML(m, 'delete')).join('');
-        html += '</div>';
-      }
-
-      // ── À RÉPONDRE
-      if (toReply?.length) {
-        html += `<div class="mail-cat-label">À répondre (${toReply.length})</div>`;
-        html += '<div class="card">';
-        html += toReply.map(m => mailRowHTML(m, 'reply')).join('');
-        html += '</div>';
-      }
-
-      // ── À TASKER
-      if (toTask?.length) {
-        html += `<div class="mail-cat-label">À ajouter en tâche (${toTask.length})</div>`;
-        html += '<div class="mail-task-chips">';
-        html += toTask.map(m => `
-          <button class="mail-task-chip" onclick="addMailTask(${JSON.stringify(m.taskTitle)},this)">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-            ${escHtml(m.taskTitle)}
-          </button>`).join('');
-        html += '</div>';
-      }
-
-      document.getElementById('mailsContainer').innerHTML = html;
-
-    } catch (err) {
-      console.warn('[Elie] Mails:', err.message);
-      document.getElementById('mailsMeta').textContent = 'Gmail · non connecté';
+    if (total === 0) {
       document.getElementById('mailsContainer').innerHTML =
-        `<div class="card"><div class="tasks-empty"><strong>Gmail non connecté</strong>Configure GOOGLE_REFRESH_TOKEN dans Vercel pour activer cette section.</div></div>`;
+        `<div class="card"><div class="mail-empty">✓ Boîte vide — tout est traité</div></div>`;
+      return;
     }
+
+    let html = '';
+
+    if (d.length) {
+      html += `<div class="mail-cat-label">À supprimer (${d.length})</div>`;
+      html += '<div class="card">';
+      html += d.map(m => mailRowHTML(m, 'delete')).join('');
+      html += '</div>';
+    }
+    if (r.length) {
+      html += `<div class="mail-cat-label">À répondre (${r.length})</div>`;
+      html += '<div class="card">';
+      html += r.map(m => mailRowHTML(m, 'reply')).join('');
+      html += '</div>';
+    }
+    if (t.length) {
+      html += `<div class="mail-cat-label">À ajouter en tâche (${t.length})</div>`;
+      html += '<div class="mail-task-chips">';
+      html += t.map(m => `
+        <button class="mail-task-chip" onclick="addMailTask(${JSON.stringify(m.taskTitle)},this)">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          ${escHtml(m.taskTitle)}
+        </button>`).join('');
+      html += '</div>';
+    }
+
+    document.getElementById('mailsContainer').innerHTML = html;
+  }
+
+  // ── Boucle de batching automatique ───────────────────────
+  async function fetchMails() {
+    MAIL_ALL_DELETE = [];
+    MAIL_ALL_REPLY  = [];
+    MAIL_ALL_TASK   = [];
+    REPLY_MAILS     = {};
+
+    document.getElementById('mailsMeta').textContent = 'Gmail · chargement…';
+    setMailProgress(3, 'Connexion à Gmail…');
+
+    let pageToken     = null;
+    let totalEstimate = 0;
+    let processed     = 0;
+
+    do {
+      const url = '/api/gmail' + (pageToken ? `?pageToken=${encodeURIComponent(pageToken)}` : '');
+
+      try {
+        const ctrl  = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 20000);
+        let res;
+        try { res = await fetch(url, { signal: ctrl.signal }); }
+        finally { clearTimeout(timer); }
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // Premier batch : récupérer l'estimation du total réel
+        if (processed === 0) {
+          totalEstimate = data.totalEstimate ?? data.batchSize ?? 1;
+          document.getElementById('mailsMeta').textContent =
+            `Gmail · ${totalEstimate} non lu${totalEstimate !== 1 ? 's' : ''}`;
+        }
+
+        MAIL_ALL_DELETE.push(...(data.toDelete ?? []));
+        MAIL_ALL_REPLY.push(...(data.toReply ?? []));
+        MAIL_ALL_TASK.push(...(data.toTask ?? []));
+        (data.toReply ?? []).forEach(m => { REPLY_MAILS[m.id] = m; });
+
+        processed += data.batchSize ?? 0;
+        pageToken  = data.nextPageToken ?? null;
+
+        const pct = totalEstimate > 0
+          ? Math.min(Math.round(processed / totalEstimate * 100), pageToken ? 97 : 100)
+          : (pageToken ? 50 : 100);
+
+        setMailProgress(pct,
+          pageToken
+            ? `Traitement ${pct}% — ${processed} / ~${totalEstimate} mails analysés`
+            : `Traitement terminé — ${processed} mails analysés`
+        );
+
+      } catch (err) {
+        console.warn('[Elie] Batch Gmail:', err.message);
+        if (processed === 0) {
+          document.getElementById('mailsMeta').textContent = 'Gmail · non connecté';
+          document.getElementById('mailsContainer').innerHTML =
+            `<div class="card"><div class="tasks-empty"><strong>Gmail non connecté</strong><br>Configure GOOGLE_REFRESH_TOKEN dans Vercel pour activer cette section.</div></div>`;
+          return;
+        }
+        pageToken = null; // arrêt propre si erreur en cours de route
+      }
+
+    } while (pageToken);
+
+    // Petite pause pour voir le 100% avant les résultats
+    await new Promise(ok => setTimeout(ok, 400));
+    showMailResults();
   }
 
   // ── SUPPRIMER ───────────────────────────────────────────
