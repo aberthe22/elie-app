@@ -2002,15 +2002,22 @@ body {
   }
 
   // ── Mise à jour du compteur Mails ────────────────────────
-  // Affiche le nombre de mails ACTUELLEMENT en attente de traitement dans Elie
+  // Affiche le nombre de mails classés par Elie + total analysé si différent
   function updateMailMeta(suffix) {
-    const total = MAIL_ALL_DELETE.length + MAIL_ALL_REPLY.length + MAIL_ALL_TASK.length + MAIL_ALL_ARCHIVE.length;
-    const label = total === 0
-      ? 'tout traité'
-      : `${total} mail${total > 1 ? 's' : ''} à traiter`;
-    document.getElementById('mailsMeta').textContent = suffix
-      ? `Gmail · ${suffix}`
-      : `Gmail · ${label}`;
+    if (suffix) {
+      document.getElementById('mailsMeta').textContent = `Gmail · ${suffix}`;
+      return;
+    }
+    const classés = MAIL_ALL_DELETE.length + MAIL_ALL_REPLY.length + MAIL_ALL_TASK.length + MAIL_ALL_ARCHIVE.length;
+    let label;
+    if (classés === 0) {
+      label = MAIL_PROCESSED > 0 ? 'tout traité' : 'aucun non lu';
+    } else if (MAIL_PROCESSED > classés) {
+      label = `${classés} classés · ${MAIL_PROCESSED} non lus`;
+    } else {
+      label = `${classés} mail${classés > 1 ? 's' : ''} à traiter`;
+    }
+    document.getElementById('mailsMeta').textContent = `Gmail · ${label}`;
   }
 
   // ── Affichage final des résultats ────────────────────────

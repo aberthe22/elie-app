@@ -222,17 +222,18 @@ toTask (emails qui impliquent une action sans réponse) — SEULEMENT si :
 - Rendez-vous à confirmer
 - Deadline ou engagement concret à honorer dans les prochains jours
 
-toArchive (emails à garder mais sans action) — si c'est :
+toArchive (catégorie par défaut) — tout email qui n'est pas clairement à supprimer, répondre ou tasker :
 - Reçu de paiement / facture déjà réglée
 - Confirmation de commande / réservation (pour référence)
 - Rapport ou relevé périodique (banque, GitHub, analytics)
 - Mise à jour de service utile à conserver
 - FYI envoyé sans réponse attendue
+- Tout email ambigu ou inclassable → toArchive par défaut
 Pour chaque mail : "summary" ultra-court (ex: "Reçu Anthropic · 9,00€", "Rapport hebdo GitHub"),
 "label" choisi parmi : Factures, GitHub, Services, Banque, Shopping, Pro, Newsletters, Abonnements, Légal, Autres
 
-Emails qui ne rentrent dans AUCUNE catégorie → ne pas inclure dans le JSON.
-Maximum par batch : 10 toDelete, 3 toReply, 3 toTask, 8 toArchive.
+RÈGLE ABSOLUE : chaque email doit apparaître dans exactement UNE catégorie. Aucun email ne doit être omis.
+Maximum : 10 toDelete, 3 toReply, 3 toTask. Pas de limite pour toArchive.
 Réponds UNIQUEMENT avec le JSON.`;
 
   const controller = new AbortController();
