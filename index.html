@@ -513,6 +513,56 @@ body {
   margin-bottom: 4px;
 }
 
+/* ═══ AGENDA ═══ */
+.cal-skeleton {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px; border-bottom: 1px solid var(--line-2);
+}
+.cal-skeleton:last-child { border-bottom: none; }
+
+.cal-day-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--ink-3);
+  padding: 0 2px 7px; margin-top: 16px;
+}
+.cal-day-label:first-child { margin-top: 0; }
+
+.cal-event {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line-2);
+}
+.cal-event:last-child { border-bottom: none; }
+.cal-time-col {
+  width: 44px; flex-shrink: 0; text-align: right;
+  font-size: 11px; font-weight: 600;
+  color: var(--navy); line-height: 1.4; padding-top: 1px;
+}
+.cal-time-col.allday { color: var(--ink-4); font-weight: 500; }
+.cal-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--navy); flex-shrink: 0; margin-top: 5px;
+}
+.cal-dot.allday { background: var(--line); }
+.cal-body { flex: 1; min-width: 0; }
+.cal-title { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.3; }
+.cal-location { font-size: 11px; color: var(--ink-4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-empty {
+  padding: 18px 16px;
+  font-size: 13px; color: var(--ink-3);
+}
+
+/* Bouton + dans le header de section */
+.section-add-btn {
+  width: 26px; height: 26px; border-radius: 7px;
+  border: 1px solid var(--line); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--navy);
+  transition: background .15s, border-color .15s;
+  box-shadow: var(--shadow-sm);
+}
+.section-add-btn:hover { background: var(--navy-bg); border-color: #c8d8ef; }
+
 /* ═══ BUDGET ═══ */
 .budget-block { padding: 16px; }
 .budget-top {
@@ -811,6 +861,38 @@ body {
     </div>
   </section>
 
+  <!-- AGENDA -->
+  <section class="section" id="calSection">
+    <div class="section-head">
+      <div class="section-title">Agenda</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="section-meta" id="calMeta">Google Cal · chargement…</div>
+        <button class="section-add-btn" onclick="openCalModal()" title="Ajouter un événement">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="calContainer">
+      <div class="card">
+        <div class="cal-skeleton">
+          <div class="skeleton" style="width:44px;height:11px;border-radius:4px;flex-shrink:0"></div>
+          <div class="skeleton" style="width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px"></div>
+          <div style="flex:1"><div class="skeleton" style="height:13px;width:70%;border-radius:4px"></div></div>
+        </div>
+        <div class="cal-skeleton">
+          <div class="skeleton" style="width:44px;height:11px;border-radius:4px;flex-shrink:0"></div>
+          <div class="skeleton" style="width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px"></div>
+          <div style="flex:1"><div class="skeleton" style="height:13px;width:55%;border-radius:4px"></div></div>
+        </div>
+        <div class="cal-skeleton">
+          <div class="skeleton" style="width:44px;height:11px;border-radius:4px;flex-shrink:0"></div>
+          <div class="skeleton" style="width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px"></div>
+          <div style="flex:1"><div class="skeleton" style="height:13px;width:80%;border-radius:4px"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- TÂCHES -->
   <section class="section">
     <div class="section-head">
@@ -967,6 +1049,26 @@ body {
     </button>
   </div>
 </aside>
+
+<!-- MODALE NOUVEL ÉVÉNEMENT AGENDA -->
+<div class="modal-backdrop" id="calModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouvel événement</div>
+    <input class="modal-input" id="calTitle" type="text" placeholder="Titre de l'événement…" maxlength="200" autocomplete="off">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <input class="modal-input" id="calDate" type="date">
+      <input class="modal-input" id="calStartTime" type="time" placeholder="Heure début">
+    </div>
+    <input class="modal-input" id="calEndTime" type="time" placeholder="Heure de fin (optionnel)" style="margin-top:8px">
+    <input class="modal-input" id="calDesc" type="text" placeholder="Description (optionnel)" maxlength="300" style="margin-top:8px" autocomplete="off">
+    <div class="modal-feedback" id="calFeedback"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeCalModal()">Annuler</button>
+      <button class="modal-submit" id="calSubmit" onclick="submitCalEvent()">Ajouter à l'agenda</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODALE NOUVELLE TÂCHE -->
 <div class="modal-backdrop" id="taskModal">
@@ -1312,6 +1414,134 @@ body {
     if (e.key === 'Enter')  submitTask();
     if (e.key === 'Escape') closeTaskModal();
   });
+
+  // ─── AGENDA GOOGLE CALENDAR ───
+
+  function calEventHTML(ev) {
+    const isAllDay = ev.allDay;
+    return `
+      <div class="cal-event">
+        <div class="cal-time-col${isAllDay ? ' allday' : ''}">${isAllDay ? 'Journée' : escHtml(ev.startTime)}</div>
+        <div class="cal-dot${isAllDay ? ' allday' : ''}"></div>
+        <div class="cal-body">
+          <div class="cal-title">${escHtml(ev.summary)}</div>
+          ${ev.location ? `<div class="cal-location">📍 ${escHtml(ev.location)}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  async function fetchCalendar() {
+    try {
+      const res = await fetch('/api/calendar');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { today, upcoming } = await res.json();
+
+      const totalToday = today?.length ?? 0;
+      document.getElementById('calMeta').textContent =
+        totalToday > 0
+          ? `${totalToday} événement${totalToday > 1 ? 's' : ''} aujourd'hui`
+          : 'Google Cal · rien aujourd'hui';
+
+      const container = document.getElementById('calContainer');
+      let html = '';
+
+      // ── Aujourd'hui
+      html += '<div class="cal-day-label">Aujourd\'hui</div>';
+      if (today.length > 0) {
+        html += '<div class="card">' + today.map(calEventHTML).join('') + '</div>';
+      } else {
+        html += '<div class="card"><div class="cal-empty">Aucun événement aujourd\'hui</div></div>';
+      }
+
+      // ── Prochains jours
+      if (upcoming?.length > 0) {
+        upcoming.forEach(day => {
+          html += `<div class="cal-day-label">${escHtml(day.label)}</div>`;
+          html += '<div class="card">' + day.events.map(calEventHTML).join('') + '</div>';
+        });
+      }
+
+      container.innerHTML = html;
+
+    } catch (err) {
+      console.warn('[Elie] Agenda:', err.message);
+      document.getElementById('calMeta').textContent = 'Google Cal · non connecté';
+      document.getElementById('calContainer').innerHTML =
+        `<div class="card"><div class="tasks-empty"><strong>Agenda non connecté</strong>Configure GOOGLE_REFRESH_TOKEN dans Vercel pour activer cette section.</div></div>`;
+    }
+  }
+
+  // ── Modale création événement ───────────────────────────
+  function openCalModal() {
+    // Pré-remplit la date avec aujourd'hui
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById('calDate').value      = today;
+    document.getElementById('calTitle').value     = '';
+    document.getElementById('calStartTime').value = '';
+    document.getElementById('calEndTime').value   = '';
+    document.getElementById('calDesc').value      = '';
+    document.getElementById('calFeedback').textContent = '';
+    document.getElementById('calFeedback').className   = 'modal-feedback';
+    document.getElementById('calSubmit').disabled      = false;
+    document.getElementById('calSubmit').textContent   = 'Ajouter à l\'agenda';
+    document.getElementById('calModal').classList.add('open');
+    setTimeout(() => document.getElementById('calTitle').focus(), 200);
+  }
+
+  function closeCalModal() {
+    document.getElementById('calModal').classList.remove('open');
+  }
+
+  async function submitCalEvent() {
+    const title     = document.getElementById('calTitle').value.trim();
+    const date      = document.getElementById('calDate').value;
+    const startTime = document.getElementById('calStartTime').value;
+    const endTime   = document.getElementById('calEndTime').value;
+    const desc      = document.getElementById('calDesc').value.trim();
+    const submit    = document.getElementById('calSubmit');
+    const fb        = document.getElementById('calFeedback');
+
+    if (!title) { document.getElementById('calTitle').focus(); return; }
+    if (!date)  { document.getElementById('calDate').focus();  return; }
+
+    submit.disabled    = true;
+    submit.textContent = 'Ajout en cours…';
+    fb.textContent     = '';
+
+    try {
+      const res = await fetch('/api/calendar-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary: title, date, startTime: startTime || null, endTime: endTime || null, description: desc || null })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+
+      fb.textContent     = '✓ Événement ajouté à ton agenda';
+      fb.className       = 'modal-feedback';
+      submit.textContent = '✓ Ajouté';
+
+      setTimeout(() => {
+        closeCalModal();
+        fetchCalendar(); // rafraîchit la section
+      }, 1200);
+
+    } catch (err) {
+      fb.textContent    = 'Erreur : ' + err.message;
+      fb.className      = 'modal-feedback error';
+      submit.disabled   = false;
+      submit.textContent = 'Ajouter à l\'agenda';
+    }
+  }
+
+  document.getElementById('calModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCalModal();
+  });
+  document.getElementById('calTitle').addEventListener('keydown', e => {
+    if (e.key === 'Enter')  submitCalEvent();
+    if (e.key === 'Escape') closeCalModal();
+  });
+
+  fetchCalendar();
 
   // ─── MAILS GMAIL ───
   const MAIL_COLORS = ['#3b82f6','#8b5cf6','#ef4444','#f97316','#10b981','#06b6d4','#e11d48','#7c3aed'];
