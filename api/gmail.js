@@ -45,7 +45,7 @@ export default async function handler(req, res) {
     // ── 2. LISTE DES MAILS NON LUS (batch) ──────────────────
     const params = new URLSearchParams({
       maxResults: String(BATCH_SIZE),
-      q: 'is:unread in:inbox',
+      q: 'is:unread in:inbox category:primary',
     });
     if (pageToken) params.set('pageToken', pageToken);
 

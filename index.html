@@ -858,7 +858,12 @@ body {
   <section class="section" id="mailsSection">
     <div class="section-head">
       <div class="section-title">Mails</div>
-      <div class="section-meta" id="mailsMeta">Gmail · chargement…</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="section-meta" id="mailsMeta">Gmail · chargement…</div>
+        <button class="section-add-btn" id="mailRefreshBtn" onclick="fetchMails(true)" title="Rafraîchir" style="display:none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"/></svg>
+        </button>
+      </div>
     </div>
     <div id="mailsContainer">
       <div class="card">
@@ -1615,6 +1620,30 @@ body {
   let MAIL_ALL_REPLY  = [];
   let MAIL_ALL_TASK   = [];
 
+  // ── Cache localStorage (évite de relancer Haiku à chaque rechargement) ──
+  const MAIL_CACHE_KEY = 'elie_mail_v1';
+  const MAIL_CACHE_TTL = 2 * 60 * 60 * 1000; // 2 heures
+
+  function saveMailCache(toDelete, toReply, toTask, processed) {
+    try {
+      localStorage.setItem(MAIL_CACHE_KEY, JSON.stringify({
+        toDelete, toReply, toTask, processed, ts: Date.now()
+      }));
+    } catch(e) {}
+  }
+
+  function loadMailCache() {
+    try {
+      const raw = localStorage.getItem(MAIL_CACHE_KEY);
+      if (!raw) return null;
+      const c = JSON.parse(raw);
+      if (Date.now() - c.ts > MAIL_CACHE_TTL) return null;
+      const age = Math.round((Date.now() - c.ts) / 60000);
+      c.ageLabel = age < 1 ? 'à l\'instant' : `il y a ${age} min`;
+      return c;
+    } catch(e) { return null; }
+  }
+
   // ── Barre de progression ─────────────────────────────────
   function setMailProgress(pct, label) {
     document.getElementById('mailsContainer').innerHTML = `
@@ -1666,13 +1695,30 @@ body {
   }
 
   // ── Boucle de batching automatique ───────────────────────
-  async function fetchMails() {
+  async function fetchMails(forceRefresh = false) {
     MAIL_ALL_DELETE = [];
     MAIL_ALL_REPLY  = [];
     MAIL_ALL_TASK   = [];
     REPLY_MAILS     = {};
 
-    document.getElementById('mailsMeta').textContent = 'Gmail · chargement…';
+    // ── Vérifier le cache d'abord (sauf si rafraîchissement forcé)
+    if (!forceRefresh) {
+      const cache = loadMailCache();
+      if (cache) {
+        MAIL_ALL_DELETE = cache.toDelete;
+        MAIL_ALL_REPLY  = cache.toReply;
+        MAIL_ALL_TASK   = cache.toTask;
+        cache.toReply.forEach(m => { REPLY_MAILS[m.id] = m; });
+        document.getElementById('mailsMeta').textContent =
+          `Gmail · ${cache.processed} non lus · ${cache.ageLabel}`;
+        document.getElementById('mailRefreshBtn').style.display = '';
+        showMailResults();
+        return;
+      }
+    }
+
+    document.getElementById('mailRefreshBtn').style.display = 'none';
+    document.getElementById('mailsMeta').textContent = 'Gmail · analyse…';
     setMailProgress(3, 'Connexion à Gmail…');
 
     let pageToken     = null;
@@ -1695,8 +1741,7 @@ body {
         // Premier batch : récupérer l'estimation du total réel
         if (processed === 0) {
           totalEstimate = data.totalEstimate ?? data.batchSize ?? 1;
-          document.getElementById('mailsMeta').textContent =
-            `Gmail · ${totalEstimate} non lu${totalEstimate !== 1 ? 's' : ''}`;
+          document.getElementById('mailsMeta').textContent = `Gmail · analyse…`;
         }
 
         MAIL_ALL_DELETE.push(...(data.toDelete ?? []));
@@ -1729,6 +1774,14 @@ body {
       }
 
     } while (pageToken);
+
+    // Sauvegarder dans le cache pour éviter de relancer Haiku au prochain chargement
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, processed);
+
+    // Mettre à jour le compteur avec le vrai total
+    document.getElementById('mailsMeta').textContent =
+      `Gmail · ${processed} non lu${processed !== 1 ? 's' : ''}`;
+    document.getElementById('mailRefreshBtn').style.display = '';
 
     // Petite pause pour voir le 100% avant les résultats
     await new Promise(ok => setTimeout(ok, 400));
