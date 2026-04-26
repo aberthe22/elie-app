@@ -344,6 +344,56 @@ body {
 .mail-btn-archive { background: var(--soon-bg); color: var(--soon); border-color: #e8d5a0; }
 .mail-btn-archive:hover { background: var(--soon); color: #fff; }
 
+/* ── Onglets mails ── */
+.mail-tabs {
+  display: flex; gap: 4px; padding: 0 0 12px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.mail-tabs::-webkit-scrollbar { display: none; }
+.mail-tab {
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--line);
+  background: var(--surface); font-family: var(--font-ui); font-size: 12px;
+  font-weight: 500; color: var(--ink-3); cursor: pointer;
+  transition: all .15s; flex-shrink: 0;
+}
+.mail-tab:hover { border-color: var(--ink-3); color: var(--ink); }
+.mail-tab.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+.mail-tab-badge {
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,.25); color: inherit;
+  padding: 1px 6px; border-radius: 10px; min-width: 20px; text-align: center;
+}
+.mail-tab:not(.active) .mail-tab-badge { background: var(--surface-2); color: var(--ink-3); }
+.mail-tab-actions {
+  display: flex; justify-content: flex-end; margin-bottom: 8px;
+}
+
+/* Bouton "afficher tout" */
+.mail-show-all {
+  width: 100%; padding: 10px; margin-top: 1px;
+  background: var(--surface-2); border: none; border-radius: 0 0 var(--r-sm) var(--r-sm);
+  font-family: var(--font-ui); font-size: 12px; color: var(--ink-3);
+  cursor: pointer; transition: background .15s;
+}
+.mail-show-all:hover { background: var(--line-2); color: var(--ink-2); }
+
+/* Dropdown label */
+.label-dropdown {
+  position: fixed; z-index: 9000; min-width: 140px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-sm); box-shadow: var(--shadow);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.label-dropdown-opt {
+  padding: 8px 14px; text-align: left; border: none; background: none;
+  font-family: var(--font-ui); font-size: 12px; color: var(--ink-2); cursor: pointer;
+}
+.label-dropdown-opt:hover  { background: var(--surface-2); }
+.label-dropdown-opt.active { color: var(--soon); font-weight: 600; }
+.mail-label-badge { cursor: pointer; user-select: none; }
+.mail-label-badge:hover { opacity: .75; }
+
 /* État vide */
 .mail-empty {
   padding: 20px 16px;
@@ -1664,7 +1714,9 @@ body {
           <div class="mail-row-from">${escHtml(mail.from || mail.email)}</div>
           <div class="mail-row-subj">${escHtml(mail.summary || mail.subject)}</div>
         </div>
-        ${mail.label ? `<span class="mail-label-badge">${escHtml(mail.label)}</span>` : ''}
+        <span class="mail-label-badge" onclick="editArchiveLabel('${mail.id}',event)" title="Changer le label">
+          ${mail.label ? escHtml(mail.label) : '+ Label'}
+        </span>
         <div class="mail-row-time">${escHtml(mail.date)}</div>
         <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
         <button class="mail-btn mail-btn-archive"
@@ -1751,12 +1803,13 @@ body {
       _correctionsCache.unshift(entry);
       _correctionsCache = _correctionsCache.slice(0, MAX_CORRECTIONS);
     }
-    // Envoi vers Notion (fire-and-forget)
+    // Envoi vers Notion (fire-and-forget, log si erreur)
     fetch('/api/corrections', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(entry),
-    }).catch(() => {});
+    }).then(r => { if (!r.ok) r.text().then(t => console.warn('[Corrections]', r.status, t)); })
+      .catch(e => console.warn('[Corrections]', e.message));
   }
 
   // Charge les corrections depuis Notion (avec fallback localStorage)
@@ -1857,53 +1910,79 @@ body {
       </div>`;
   }
 
+  // ── Onglets et pagination ────────────────────────────────
+  let ACTIVE_MAIL_TAB = null;
+  let MAIL_SHOW_ALL   = { delete: false, reply: false, task: false, archive: false };
+  const PREVIEW_LIMIT = 10;
+  const ARCHIVE_LABELS = ['Factures','GitHub','Services','Banque','Shopping','Pro','Newsletters','Abonnements','Légal','Autres'];
+
+  const TAB_META = {
+    delete:  { label: 'Supprimer', bulk: `<button class="mail-bulk-btn mail-bulk-delete" id="bulkDeleteBtn" onclick="deleteAllMails()">Tout supprimer</button>` },
+    reply:   { label: 'Répondre',  bulk: `<button class="mail-bulk-btn mail-bulk-reply"  id="bulkReplyBtn"  onclick="sendAllReplies()">Tout envoyer</button>` },
+    task:    { label: 'Tâches',    bulk: `<button class="mail-bulk-btn mail-bulk-task"   id="bulkTaskBtn"   onclick="addAllTasks()">Tout créer</button>` },
+    archive: { label: 'Consulter', bulk: `<button class="mail-bulk-btn mail-bulk-archive" id="bulkArchiveBtn" onclick="archiveAllMails()">Tout archiver</button>` },
+  };
+
+  function switchMailTab(tab) {
+    ACTIVE_MAIL_TAB = tab;
+    showMailResults();
+  }
+
+  function showAllInTab(tab) {
+    MAIL_SHOW_ALL[tab] = true;
+    showMailResults();
+  }
+
   // ── Affichage final des résultats ────────────────────────
   function showMailResults() {
-    const d = MAIL_ALL_DELETE, r = MAIL_ALL_REPLY, t = MAIL_ALL_TASK, a = MAIL_ALL_ARCHIVE;
-    const total = d.length + r.length + t.length + a.length;
+    const lists = { delete: MAIL_ALL_DELETE, reply: MAIL_ALL_REPLY, task: MAIL_ALL_TASK, archive: MAIL_ALL_ARCHIVE };
+    const counts = Object.fromEntries(Object.entries(lists).map(([k,v]) => [k, v.length]));
+    const total  = Object.values(counts).reduce((s,n) => s + n, 0);
 
     if (total === 0) {
       document.getElementById('mailsContainer').innerHTML =
         `<div class="card"><div class="mail-empty">✓ Boîte vide — tout est traité</div></div>`;
+      ACTIVE_MAIL_TAB = null;
       return;
     }
 
-    let html = '';
+    // Auto-sélectionner le premier onglet non-vide
+    const tabOrder = ['delete', 'reply', 'task', 'archive'];
+    if (!ACTIVE_MAIL_TAB || counts[ACTIVE_MAIL_TAB] === 0) {
+      ACTIVE_MAIL_TAB = tabOrder.find(t => counts[t] > 0);
+    }
 
-    if (d.length) {
-      html += `
-        <div class="mail-cat-row">
-          <div class="mail-cat-label">À supprimer (${d.length})</div>
-          <button class="mail-bulk-btn mail-bulk-delete" id="bulkDeleteBtn" onclick="deleteAllMails()">
-            Tout supprimer
-          </button>
-        </div>`;
+    // ── Onglets
+    let html = '<div class="mail-tabs">';
+    tabOrder.filter(tab => counts[tab] > 0).forEach(tab => {
+      const active = tab === ACTIVE_MAIL_TAB ? ' active' : '';
+      html += `<button class="mail-tab${active}" onclick="switchMailTab('${tab}')">
+        ${TAB_META[tab].label}
+        <span class="mail-tab-badge">${counts[tab]}</span>
+      </button>`;
+    });
+    html += '</div>';
+
+    // ── Contenu de l'onglet actif
+    const tab   = ACTIVE_MAIL_TAB;
+    const items = lists[tab];
+    const showAll  = MAIL_SHOW_ALL[tab];
+    const displayed = showAll ? items : items.slice(0, PREVIEW_LIMIT);
+    const hasMore   = !showAll && items.length > PREVIEW_LIMIT;
+
+    html += `<div class="mail-tab-actions">${TAB_META[tab].bulk}</div>`;
+
+    if (tab === 'delete') {
       html += '<div class="card" id="deleteMailsCard">';
-      html += d.map(m => mailRowHTML(m, 'delete')).join('');
+      html += displayed.map(m => mailRowHTML(m, 'delete')).join('');
       html += '</div>';
-    }
-    if (r.length) {
-      html += `
-        <div class="mail-cat-row">
-          <div class="mail-cat-label">À répondre (${r.length})</div>
-          <button class="mail-bulk-btn mail-bulk-reply" id="bulkReplyBtn" onclick="sendAllReplies()">
-            Tout envoyer
-          </button>
-        </div>`;
+    } else if (tab === 'reply') {
       html += '<div class="card" id="replyMailsCard">';
-      html += r.map(m => mailRowHTML(m, 'reply')).join('');
+      html += displayed.map(m => mailRowHTML(m, 'reply')).join('');
       html += '</div>';
-    }
-    if (t.length) {
-      html += `
-        <div class="mail-cat-row">
-          <div class="mail-cat-label">À tasker (${t.length})</div>
-          <button class="mail-bulk-btn mail-bulk-task" id="bulkTaskBtn" onclick="addAllTasks()">
-            Tout créer
-          </button>
-        </div>`;
+    } else if (tab === 'task') {
       html += '<div class="card mail-task-chips" id="taskMailsChips">';
-      html += t.map(m => `
+      html += displayed.map(m => `
         <button class="mail-task-chip" data-title="${escHtml(m.taskTitle)}" data-id="${m.id}" onclick="addMailTask(this.dataset.title,this)">
           <span class="mail-task-chip-icon">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -1915,21 +1994,47 @@ body {
           </span>
         </button>`).join('');
       html += '</div>';
-    }
-    if (a.length) {
-      html += `
-        <div class="mail-cat-row">
-          <div class="mail-cat-label">À consulter (${a.length})</div>
-          <button class="mail-bulk-btn mail-bulk-archive" id="bulkArchiveBtn" onclick="archiveAllMails()">
-            Tout archiver
-          </button>
-        </div>`;
+    } else if (tab === 'archive') {
       html += '<div class="card" id="archiveMailsCard">';
-      html += a.map(m => archiveRowHTML(m)).join('');
+      html += displayed.map(m => archiveRowHTML(m)).join('');
       html += '</div>';
     }
 
+    if (hasMore) {
+      html += `<button class="mail-show-all" onclick="showAllInTab('${tab}')">
+        Afficher tout · ${items.length} mails
+      </button>`;
+    }
+
     document.getElementById('mailsContainer').innerHTML = html;
+  }
+
+  // ── Édition du label d'archive ───────────────────────────
+  function editArchiveLabel(mailId, evt) {
+    evt.stopPropagation();
+    document.querySelectorAll('.label-dropdown').forEach(d => d.remove());
+    const mail = MAIL_ALL_ARCHIVE.find(m => m.id === mailId);
+    if (!mail) return;
+    const dd = document.createElement('div');
+    dd.className = 'label-dropdown';
+    dd.innerHTML = ARCHIVE_LABELS.map(l =>
+      `<button class="label-dropdown-opt${l === mail.label ? ' active' : ''}" onclick="setArchiveLabel('${mailId}','${l}')">${l}</button>`
+    ).join('');
+    const rect = evt.currentTarget.getBoundingClientRect();
+    dd.style.top  = (rect.bottom + 4) + 'px';
+    dd.style.left = rect.left + 'px';
+    document.body.appendChild(dd);
+    setTimeout(() => document.addEventListener('click', () => dd.remove(), { once: true }), 0);
+  }
+
+  function setArchiveLabel(mailId, label) {
+    const mail = MAIL_ALL_ARCHIVE.find(m => m.id === mailId);
+    if (mail) {
+      mail.label = label;
+      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+    }
+    document.querySelectorAll('.label-dropdown').forEach(d => d.remove());
+    showMailResults();
   }
 
   // ── Action groupée : tout supprimer ──────────────────────
@@ -2080,6 +2185,8 @@ body {
     MAIL_ALL_TASK    = [];
     MAIL_ALL_ARCHIVE = [];
     REPLY_MAILS      = {};
+    MAIL_SHOW_ALL    = { delete: false, reply: false, task: false, archive: false };
+    ACTIVE_MAIL_TAB  = null;
 
     // ── Vérifier le cache d'abord (sauf si rafraîchissement forcé)
     if (!forceRefresh) {
