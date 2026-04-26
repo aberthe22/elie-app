@@ -307,6 +307,31 @@ body {
 .mail-btn-reply { background: var(--navy-bg); color: var(--navy); border-color: #c8d8ef; }
 .mail-btn-reply:hover { background: var(--navy); color: #fff; }
 
+/* Bouton de recorrection */
+.mail-correct-btn {
+  width: 24px; height: 24px; border-radius: 6px; border: none;
+  background: transparent; color: var(--ink-4); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: color .15s, background .15s; margin-left: -2px;
+}
+.mail-correct-btn:hover { background: var(--surface-2); color: var(--ink-2); }
+
+/* Picker de recorrection (sous la row) */
+.mail-correct-picker {
+  display: flex; gap: 6px; padding: 0 14px 10px 60px;
+  border-bottom: 1px solid var(--line-2);
+}
+.mail-correct-picker.hidden { display: none; }
+.mail-correct-opt {
+  flex: 1; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line);
+  background: var(--surface); font-family: var(--font-ui); font-size: 11px; font-weight: 500;
+  color: var(--ink-3); cursor: pointer; display: flex; align-items: center; gap: 4px;
+  justify-content: center; transition: all .15s;
+}
+.mail-correct-opt-del:hover  { border-color: var(--urgent); color: var(--urgent); background: var(--urgent-bg); }
+.mail-correct-opt-rep:hover  { border-color: var(--navy); color: var(--navy); background: var(--navy-bg); }
+.mail-correct-opt-task:hover { border-color: var(--done); color: var(--done); background: var(--done-bg); }
+
 /* État vide */
 .mail-empty {
   padding: 20px 16px;
@@ -348,19 +373,28 @@ body {
   font-size: 12px; color: var(--ink-3); text-align: center;
 }
 
-/* Chips tâches */
-.mail-task-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 4px 0; }
+/* Cartes tâches */
+.mail-task-chips { display: flex; flex-direction: column; gap: 0; }
 .mail-task-chip {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 7px 13px; border-radius: 20px;
-  border: 1.5px solid var(--line); background: var(--surface);
-  font-family: var(--font-ui); font-size: 12px; font-weight: 500;
-  color: var(--ink-2); cursor: pointer; box-shadow: var(--shadow-sm);
-  transition: border-color .15s, background .15s, color .15s;
+  display: flex; align-items: flex-start; gap: 10px; width: 100%;
+  padding: 12px 16px; border-radius: 0; border: none; border-bottom: 1px solid var(--line-2);
+  background: var(--surface); font-family: var(--font-ui);
+  color: var(--ink); cursor: pointer; text-align: left;
+  transition: background .15s;
 }
-.mail-task-chip:hover { border-color: var(--navy); color: var(--navy); background: var(--navy-bg); }
+.mail-task-chip:first-child { border-radius: var(--r-sm) var(--r-sm) 0 0; }
+.mail-task-chip:last-child  { border-bottom: none; border-radius: 0 0 var(--r-sm) var(--r-sm); }
+.mail-task-chip:only-child  { border-radius: var(--r-sm); border-bottom: none; }
+.mail-task-chip:hover { background: var(--surface-2); }
 .mail-task-chip.adding { opacity: .5; pointer-events: none; }
-.mail-task-chip.added { border-color: var(--done); background: var(--done-bg); color: var(--done); pointer-events: none; }
+.mail-task-chip.added  { background: var(--done-bg); pointer-events: none; }
+.mail-task-chip-icon { flex-shrink: 0; margin-top: 2px; color: var(--navy); }
+.mail-task-chip.added .mail-task-chip-icon { color: var(--done); }
+.mail-task-chip-body { flex: 1; min-width: 0; }
+.mail-task-chip-title { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; margin-bottom: 3px; }
+.mail-task-chip.added .mail-task-chip-title { color: var(--done); }
+.mail-task-chip-meta  { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+.mail-task-chip-snippet { font-size: 11px; color: var(--ink-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ── Bottom sheet Réponse ── */
 .reply-sheet-from { font-size: 13px; color: var(--ink-3); margin-bottom: 2px; }
@@ -1590,6 +1624,23 @@ body {
     return MAIL_COLORS[(str || '?').charCodeAt(0) % MAIL_COLORS.length];
   }
 
+  // Génère le picker de recorrection pour une row
+  function correctPickerHTML(mail, currentType) {
+    const opts = {
+      delete: `<button class="mail-correct-opt mail-correct-opt-del" data-id="${mail.id}" data-from="${currentType}" data-to="delete" onclick="correctMail(this)">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6"/></svg> Supprimer</button>`,
+      reply:  `<button class="mail-correct-opt mail-correct-opt-rep" data-id="${mail.id}" data-from="${currentType}" data-to="reply" onclick="correctMail(this)">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg> Répondre</button>`,
+      task:   `<button class="mail-correct-opt mail-correct-opt-task" data-id="${mail.id}" data-from="${currentType}" data-to="task" onclick="correctMail(this)">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Tâche</button>`,
+    };
+    const choices = Object.entries(opts).filter(([k]) => k !== currentType).map(([,v]) => v).join('');
+    return `<div class="mail-correct-picker hidden" id="picker-${mail.id}">${choices}</div>`;
+  }
+
+  // Icône "mal classé" (petit bouton discret)
+  const CORRECT_ICON = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M12 3l-9 9 9 9"/></svg>`;
+
   function mailRowHTML(mail, type) {
     const init  = (mail.from || mail.email || '?').charAt(0).toUpperCase();
     const color = mailAvatar(init);
@@ -1604,14 +1655,15 @@ body {
             ${mail.reason ? `<div class="mail-row-reason">${escHtml(mail.reason)}</div>` : ''}
           </div>
           <div class="mail-row-time">${escHtml(mail.date)}</div>
+          <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
           <button class="mail-btn mail-btn-del" onclick="deleteMailRow('${mail.id}',this)" title="Supprimer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
           </button>
-        </div>`;
+        </div>
+        ${correctPickerHTML(mail, 'delete')}`;
     }
 
     if (type === 'reply') {
-      const data = JSON.stringify({ id: mail.id, from: mail.from, email: mail.email, subject: mail.subject, draftReply: mail.draftReply, threadId: mail.threadId, messageId: mail.messageId }).replace(/'/g, '&#39;');
       return `
         <div class="mail-row" data-id="${mail.id}" style="max-height:80px">
           <div class="mail-av" style="background:${color}">${init}</div>
@@ -1620,10 +1672,12 @@ body {
             <div class="mail-row-subj">${escHtml(mail.subject)}</div>
           </div>
           <div class="mail-row-time">${escHtml(mail.date)}</div>
+          <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
           <button class="mail-btn mail-btn-reply" onclick="openReplySheet('${mail.id}')" title="Voir le brouillon">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
           </button>
-        </div>`;
+        </div>
+        ${correctPickerHTML(mail, 'reply')}`;
     }
 
     return '';
@@ -1636,6 +1690,87 @@ body {
   let MAIL_ALL_DELETE = [];
   let MAIL_ALL_REPLY  = [];
   let MAIL_ALL_TASK   = [];
+  let MAIL_PROCESSED  = 0; // compte réel des mails traités
+
+  // ── Corrections utilisateur (apprentissage) ──────────────
+  const CORRECTIONS_KEY = 'elie_corrections_v1';
+  const MAX_CORRECTIONS = 25;
+
+  // Cache session en mémoire (évite un appel API à chaque batch)
+  let _correctionsCache = null;
+
+  // Sauvegarde une correction → Notion (durable) + cache local (session)
+  function saveCorrection(mail, fromCat, toCat) {
+    const entry = {
+      from:    (mail.from || mail.email || '').slice(0, 100),
+      subject: (mail.subject || '').slice(0, 200),
+      snippet: (mail.snippet || '').slice(0, 200),
+      fromCat, toCat,
+    };
+    // Mise à jour du cache mémoire immédiatement
+    if (_correctionsCache) {
+      _correctionsCache.unshift(entry);
+      _correctionsCache = _correctionsCache.slice(0, MAX_CORRECTIONS);
+    }
+    // Envoi vers Notion (fire-and-forget)
+    fetch('/api/corrections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    }).catch(() => {});
+  }
+
+  // Charge les corrections depuis Notion (avec fallback localStorage)
+  async function loadCorrections() {
+    if (_correctionsCache) return _correctionsCache; // déjà chargé cette session
+    try {
+      const res = await fetch('/api/corrections');
+      if (res.ok) {
+        const data = await res.json();
+        _correctionsCache = data.corrections ?? [];
+        return _correctionsCache;
+      }
+    } catch(e) {}
+    // Fallback : localStorage (si Notion inaccessible)
+    try { return JSON.parse(localStorage.getItem(CORRECTIONS_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+
+  // Ouvre / ferme le mini-picker de recorrection
+  function toggleCorrectPicker(mailId) {
+    const picker = document.getElementById('picker-' + mailId);
+    if (!picker) return;
+    picker.classList.toggle('hidden');
+  }
+
+  // Recorriger un mail : le déplacer vers une autre catégorie
+  function correctMail(btn) {
+    const mailId  = btn.dataset.id;
+    const fromCat = btn.dataset.from;
+    const toCat   = btn.dataset.to;
+    const srcMap  = { delete: MAIL_ALL_DELETE, reply: MAIL_ALL_REPLY, task: MAIL_ALL_TASK };
+
+    const src = srcMap[fromCat];
+    const idx = src.findIndex(m => m.id === mailId);
+    if (idx === -1) return;
+    const mail = src.splice(idx, 1)[0];
+
+    // Ajouter à la cible
+    srcMap[toCat].push(mail);
+
+    // Sync REPLY_MAILS
+    if (toCat === 'reply')   REPLY_MAILS[mail.id] = mail;
+    if (fromCat === 'reply') delete REPLY_MAILS[mail.id];
+
+    // Sauvegarder la correction pour l'apprentissage
+    saveCorrection(mail, fromCat, toCat);
+
+    // Mettre à jour le cache
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_PROCESSED);
+
+    // Re-render la section mails
+    showMailResults();
+  }
 
   // ── Cache localStorage (évite de relancer Haiku à chaque rechargement) ──
   const MAIL_CACHE_KEY = 'elie_mail_v1';
@@ -1717,11 +1852,17 @@ body {
             Tout créer
           </button>
         </div>`;
-      html += '<div class="mail-task-chips" id="taskMailsChips">';
+      html += '<div class="card mail-task-chips" id="taskMailsChips">';
       html += t.map(m => `
-        <button class="mail-task-chip" data-title="${escHtml(m.taskTitle)}" onclick="addMailTask(${JSON.stringify(m.taskTitle)},this)">
-          <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          ${escHtml(m.taskTitle)}
+        <button class="mail-task-chip" data-title="${escHtml(m.taskTitle)}" data-id="${m.id}" onclick="addMailTask(this.dataset.title,this)">
+          <span class="mail-task-chip-icon">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          </span>
+          <span class="mail-task-chip-body">
+            <span class="mail-task-chip-title">${escHtml(m.taskTitle)}</span>
+            <span class="mail-task-chip-meta">${escHtml(m.from)} · ${escHtml(m.subject)}</span>
+            ${m.snippet ? `<span class="mail-task-chip-snippet">${escHtml(m.snippet)}</span>` : ''}
+          </span>
         </button>`).join('');
       html += '</div>';
     }
@@ -1786,9 +1927,10 @@ body {
     const btn = document.getElementById('bulkTaskBtn');
     if (!btn || btn.disabled) return;
     btn.disabled = true;
-    const total = MAIL_ALL_TASK.length;
+    const taskMails = [...MAIL_ALL_TASK];
+    const total = taskMails.length;
     let done = 0;
-    for (const mail of [...MAIL_ALL_TASK]) {
+    for (const mail of taskMails) {
       btn.textContent = `Création ${done + 1}/${total}…`;
       try {
         await fetch('/api/create-task', {
@@ -1798,9 +1940,10 @@ body {
       } catch { /* continue */ }
       done++;
     }
+    // Marquer tous ces mails comme lus dans Gmail en une seule fois
+    markMailRead(taskMails.map(m => m.id));
     MAIL_ALL_TASK = [];
-    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK,
-      MAIL_ALL_DELETE.length + MAIL_ALL_REPLY.length);
+    saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_PROCESSED);
     btn.textContent = `${done} tâche${done > 1 ? 's' : ''} créée${done > 1 ? 's' : ''} ✓`;
     setTimeout(() => { showMailResults(); fetchTasks(); }, 800);
   }
@@ -1835,9 +1978,20 @@ body {
     let pageToken     = null;
     let totalEstimate = 0;
     let processed     = 0;
+    MAIL_PROCESSED    = 0;
+
+    // Charger les corrections depuis Notion pour injection dans le prompt
+    const corrections = (await loadCorrections()).slice(0, 8); // 8 plus récentes
+    const corrParam   = corrections.length
+      ? encodeURIComponent(JSON.stringify(corrections))
+      : null;
 
     do {
-      const url = '/api/gmail' + (pageToken ? `?pageToken=${encodeURIComponent(pageToken)}` : '');
+      const params = new URLSearchParams();
+      if (pageToken)  params.set('pageToken', pageToken);
+      if (corrParam)  params.set('corrections', corrParam);
+      const qs  = params.toString();
+      const url = '/api/gmail' + (qs ? '?' + qs : '');
 
       try {
         const ctrl  = new AbortController();
@@ -1860,8 +2014,9 @@ body {
         MAIL_ALL_TASK.push(...(data.toTask ?? []));
         (data.toReply ?? []).forEach(m => { REPLY_MAILS[m.id] = m; });
 
-        processed += data.batchSize ?? 0;
-        pageToken  = data.nextPageToken ?? null;
+        processed      += data.batchSize ?? 0;
+        MAIL_PROCESSED  = processed;
+        pageToken       = data.nextPageToken ?? null;
 
         const pct = pageToken
           ? Math.min(Math.round(processed / Math.max(processed, totalEstimate) * 100), 99)
@@ -1887,6 +2042,7 @@ body {
     } while (pageToken);
 
     // Sauvegarder dans le cache pour éviter de relancer Haiku au prochain chargement
+    MAIL_PROCESSED = processed;
     saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, processed);
 
     // Mettre à jour le compteur avec le vrai total
@@ -1972,6 +2128,9 @@ body {
       fb.textContent  = '✓ Envoyé !';
       sendBtn.textContent = '✓ Envoyé';
 
+      // Marquer le mail comme lu dans Gmail (non bloquant)
+      markMailRead(CURRENT_REPLY.id);
+
       // Retire la ligne du mail depuis le sheet
       const row = document.querySelector(`.mail-row[data-id="${CURRENT_REPLY.id}"]`);
       if (row) {
@@ -1991,24 +2150,36 @@ body {
     }
   }
 
+  // ── MARQUER COMME LU (fire-and-forget) ──────────────────
+  function markMailRead(ids) {
+    if (!ids || ids.length === 0) return;
+    fetch('/api/gmail-action', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'read', ids: Array.isArray(ids) ? ids : [ids] }),
+    }).catch(() => {}); // silencieux — non bloquant
+  }
+
   // ── AJOUTER TÂCHE DEPUIS MAIL ───────────────────────────
   async function addMailTask(title, btn) {
     if (btn.classList.contains('added') || btn.classList.contains('adding')) return;
     btn.classList.add('adding');
-    const orig = btn.innerHTML;
-    btn.innerHTML = '…';
+    const mailId = btn.dataset.id;
+    const iconEl = btn.querySelector('.mail-task-chip-icon');
+    if (iconEl) iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
     try {
       const res = await fetch('/api/create-task', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title })
       });
       if (!res.ok) throw new Error();
-      btn.className = 'mail-task-chip added';
-      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg> ${escHtml(title)}`;
+      btn.classList.remove('adding');
+      btn.classList.add('added');
+      if (iconEl) iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>';
+      markMailRead(mailId); // marquer le mail comme lu dans Gmail
       setTimeout(() => fetchTasks(), 900);
     } catch {
       btn.classList.remove('adding');
-      btn.innerHTML = orig;
+      if (iconEl) iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
     }
   }
 

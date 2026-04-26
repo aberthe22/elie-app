@@ -36,7 +36,13 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY manquante' });
   }
 
-  const pageToken = req.query?.pageToken ?? null;
+  const pageToken  = req.query?.pageToken ?? null;
+
+  // Corrections utilisateur passées depuis le frontend pour l'apprentissage
+  let corrections = [];
+  if (req.query?.corrections) {
+    try { corrections = JSON.parse(req.query.corrections); } catch {}
+  }
 
   try {
     // ── 1. ACCESS TOKEN ──────────────────────────────────────
@@ -96,7 +102,7 @@ export default async function handler(req, res) {
     });
 
     // ── 5. ANALYSE HAIKU ─────────────────────────────────────
-    const analysis = await analyzeWithHaiku(emails, ANTHROPIC_API_KEY);
+    const analysis = await analyzeWithHaiku(emails, ANTHROPIC_API_KEY, corrections);
 
     // ── 6. ENRICHISSEMENT ────────────────────────────────────
     const emailMap = Object.fromEntries(emails.map(e => [e.id, e]));
@@ -167,36 +173,55 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-async function analyzeWithHaiku(emails, apiKey) {
+async function analyzeWithHaiku(emails, apiKey, corrections = []) {
   const emailsText = emails.map((e, i) =>
     `${i + 1}. [ID:${e.id}]\n   De: ${e.from} <${e.email}>\n   Sujet: ${e.subject}\n   Date: ${e.date}\n   Aperçu: ${e.snippet}`
   ).join('\n\n');
 
-  const prompt = `Tu es l'assistante IA d'Alexis Berthe. Analyse ces ${emails.length} emails non lus. Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte avant ou après.
+  const catLabel = c => ({ delete: 'toDelete', reply: 'toReply', task: 'toTask' })[c] || c;
+  const correctionsBlock = corrections.length > 0
+    ? `\nCORRECTIONS PASSÉES D'ALEXIS (exemples réels, à respecter absolument) :
+${corrections.map(c =>
+  `- "${c.from}" · "${c.subject}" → était en ${catLabel(c.fromCat)}, Alexis a corrigé en ${catLabel(c.toCat)}.`
+).join('\n')}\n`
+    : '';
+
+  const prompt = `Tu es l'assistante IA d'Alexis Berthe. Analyse ces ${emails.length} emails. Réponds UNIQUEMENT en JSON valide, sans markdown.
 
 EMAILS :
 ${emailsText}
 
-Retourne ce JSON exact :
+JSON attendu :
 {
-  "toDelete": [
-    { "id": "messageId", "reason": "raison en 5 mots max" }
-  ],
-  "toReply": [
-    { "id": "messageId", "draftReply": "Bonjour,\n\n[réponse courte et naturelle, 2-4 phrases max]\n\nCordialement,\nAlexis" }
-  ],
-  "toTask": [
-    { "id": "messageId", "taskTitle": "Action courte et concrète" }
-  ]
+  "toDelete": [{ "id": "...", "reason": "raison courte" }],
+  "toReply":  [{ "id": "...", "draftReply": "Corps du mail, 2-3 phrases, signé Alexis." }],
+  "toTask":   [{ "id": "...", "taskTitle": "Action concrète à faire" }]
 }
 
-Règles strictes :
-- toDelete : newsletters, notifs automatiques, promos, confirmations inutiles. Maximum 12 par batch.
-- toReply : email qui attend UNE vraie réponse humaine d'Alexis. Maximum 3 par batch. Le draftReply = corps du mail uniquement, 2-4 phrases, signé Alexis.
-- toTask : implique une action concrète sans réponse mail (paiement, document à lire, RDV à confirmer). Maximum 3 par batch.
-- Tout mail sans action claire → toDelete.
-- Chaque mail dans UNE SEULE catégorie.
-- Réponds UNIQUEMENT avec le JSON.`;
+${correctionsBlock}RÈGLES — lis attentivement avant de classer :
+
+toDelete (emails à supprimer) — SEULEMENT si c'est clairement :
+- Newsletter / email marketing / promotion commerciale
+- Notification automatique d'un service (GitHub, LinkedIn, réseaux sociaux, app, banque)
+- Confirmation de commande / livraison / réservation sans action requise
+- Email envoyé à une liste (pas adressé personnellement à Alexis)
+NE PAS mettre en toDelete : un email d'une vraie personne, même court.
+
+toReply (emails qui nécessitent une réponse) — SEULEMENT si :
+- Envoyé par une vraie personne (pas un service automatique)
+- Adressé directement à Alexis
+- Attend clairement une réponse de sa part
+Le draftReply = corps du mail uniquement, naturel, 2-3 phrases max, signé "Alexis".
+
+toTask (emails qui impliquent une action sans réponse) — SEULEMENT si :
+- Facture / paiement à effectuer
+- Document à signer ou à lire
+- Rendez-vous à confirmer
+- Deadline ou engagement concret à honorer
+
+Emails qui ne rentrent dans AUCUNE catégorie → ne pas inclure dans le JSON.
+Maximum par batch : 12 toDelete, 3 toReply, 3 toTask.
+Réponds UNIQUEMENT avec le JSON.`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8500);
