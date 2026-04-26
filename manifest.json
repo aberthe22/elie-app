@@ -4,19 +4,15 @@
   "description": "Assistante personnelle — Alexis Berthe",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f3ef",
-  "theme_color": "#f4f3ef",
+  "background_color": "#F2F0EB",
+  "theme_color": "#F2F0EB",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192/f4f3ef/18181b?text=E",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://via.placeholder.com/512x512/f4f3ef/18181b?text=E",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

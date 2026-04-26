@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#F2F0EB">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Elie">
@@ -2000,11 +2001,25 @@ body {
     showMailResults();
   }
 
+  // ── Mise à jour du compteur Mails ────────────────────────
+  // Affiche le nombre de mails ACTUELLEMENT en attente de traitement dans Elie
+  function updateMailMeta(suffix) {
+    const total = MAIL_ALL_DELETE.length + MAIL_ALL_REPLY.length + MAIL_ALL_TASK.length + MAIL_ALL_ARCHIVE.length;
+    const label = total === 0
+      ? 'tout traité'
+      : `${total} mail${total > 1 ? 's' : ''} à traiter`;
+    document.getElementById('mailsMeta').textContent = suffix
+      ? `Gmail · ${suffix}`
+      : `Gmail · ${label}`;
+  }
+
   // ── Affichage final des résultats ────────────────────────
   function showMailResults() {
     const lists = { delete: MAIL_ALL_DELETE, reply: MAIL_ALL_REPLY, task: MAIL_ALL_TASK, archive: MAIL_ALL_ARCHIVE };
     const counts = Object.fromEntries(Object.entries(lists).map(([k,v]) => [k, v.length]));
     const total  = Object.values(counts).reduce((s,n) => s + n, 0);
+
+    updateMailMeta(); // synchronise le compteur en temps réel
 
     if (total === 0) {
       document.getElementById('mailsContainer').innerHTML =
@@ -2269,8 +2284,7 @@ body {
         MAIL_ALL_ARCHIVE = cache.toArchive ?? [];
         cache.toReply.forEach(m => { REPLY_MAILS[m.id] = m; });
         (cache.toTask ?? []).forEach(m => { TASK_MAILS[m.id] = m; });
-        document.getElementById('mailsMeta').textContent =
-          `Gmail · ${cache.processed} non lus · ${cache.ageLabel}`;
+        updateMailMeta();
         document.getElementById('mailRefreshBtn').style.display = '';
         showMailResults();
         return;
@@ -2354,8 +2368,7 @@ body {
     saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, processed);
 
     // Mettre à jour le compteur avec le vrai total
-    document.getElementById('mailsMeta').textContent =
-      `Gmail · ${processed} non lu${processed !== 1 ? 's' : ''}`;
+    updateMailMeta();
     document.getElementById('mailRefreshBtn').style.display = '';
 
     // Petite pause pour voir le 100% avant les résultats
@@ -2483,8 +2496,8 @@ body {
       btn.classList.remove('adding');
       btn.classList.add('added');
       if (iconEl) iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>';
-      markMailRead(mailId);
       setTimeout(() => fetchTasks(), 900);
+      // markMailRead appelé uniquement quand l'utilisateur décide quoi faire (archive/delete)
 
       // Afficher le panel "Et ce mail ?"
       const item = btn.closest('.mail-task-item');

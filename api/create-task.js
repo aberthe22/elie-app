@@ -27,13 +27,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Le titre est requis' });
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+
   try {
     // ── CRÉATION DE LA PAGE NOTION ────────────────────────
     // On crée une page dans la base de tâches avec :
     //   - "Tâche"  : le titre saisi par l'utilisateur
     //   - "État"   : "Pas commencé" → atterrit dans l'Inbox Notion
-    // Tout le reste (date, importance, domaine) reste vide
-    // et sera rempli dans Notion si besoin.
+    //   - "Date"   : date du jour
+    //   - "Domaine": "Inbox"
     const notionRes = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
       headers: {
@@ -52,6 +54,9 @@ export default async function handler(req, res) {
           },
           'Domaine': {
             select: { name: 'Inbox' }
+          },
+          'Date': {
+            date: { start: today }
           }
         }
       })
