@@ -123,6 +123,23 @@ export default async function handler(req, res) {
       .map(item => ({ ...emailMap[item.id], summary: item.summary, label: item.label }))
       .filter(e => e?.id);
 
+    // ── 7. FILET DE SÉCURITÉ — aucun mail ne doit être perdu ─
+    // Tout email non classé par Haiku atterrit automatiquement en toArchive
+    const classifiedIds = new Set([
+      ...toDelete.map(e => e.id),
+      ...toReply.map(e => e.id),
+      ...toTask.map(e => e.id),
+      ...toArchive.map(e => e.id),
+    ]);
+    const unclassified = emails.filter(e => !classifiedIds.has(e.id));
+    for (const mail of unclassified) {
+      toArchive.push({
+        ...mail,
+        summary: mail.subject || mail.from || '(sans objet)',
+        label:   'Autres',
+      });
+    }
+
     return res.status(200).json({
       toDelete, toReply, toTask, toArchive,
       batchSize:     emails.length,
@@ -250,7 +267,7 @@ Réponds UNIQUEMENT avec le JSON.`;
       },
       body: JSON.stringify({
         model:      'claude-haiku-4-5-20251001',
-        max_tokens: 2000,
+        max_tokens: 3000,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
