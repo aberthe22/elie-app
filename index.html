@@ -748,6 +748,31 @@ body {
   font-size: 13px; color: var(--ink-3);
 }
 
+/* Onglets Agenda */
+.cal-tabs {
+  display: flex; gap: 6px; margin-bottom: 10px;
+}
+.cal-tab {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500; padding: 6px 13px;
+  border-radius: 20px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink-3);
+  cursor: pointer; transition: all .15s;
+}
+.cal-tab.active {
+  background: var(--navy); border-color: var(--navy);
+  color: #fff; font-weight: 600;
+}
+.cal-tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 8px; font-size: 10px; font-weight: 700;
+  background: rgba(255,255,255,.25); color: inherit;
+}
+.cal-tab:not(.active) .cal-tab-badge {
+  background: var(--navy-bg); color: var(--navy);
+}
+
 /* Bouton + dans le header de section */
 .section-add-btn {
   width: 26px; height: 26px; border-radius: 7px;
@@ -1631,38 +1656,66 @@ body {
       </div>`;
   }
 
+  let ACTIVE_CAL_TAB = 'today';
+
+  function showCalTab(tab) {
+    ACTIVE_CAL_TAB = tab;
+    document.querySelectorAll('.cal-tab').forEach(el => {
+      el.classList.toggle('active', el.dataset.tab === tab);
+    });
+    document.getElementById('calPanelToday').style.display  = tab === 'today'    ? '' : 'none';
+    document.getElementById('calPanelLater').style.display  = tab === 'later'    ? '' : 'none';
+  }
+
   async function fetchCalendar() {
     try {
       const res = await fetch('/api/calendar');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const { today, upcoming } = await res.json();
 
-      const totalToday = today?.length ?? 0;
+      const totalToday   = today?.length ?? 0;
+      const totalUpcoming = (upcoming ?? []).reduce((s, d) => s + d.events.length, 0);
+
       document.getElementById('calMeta').textContent =
         totalToday > 0
           ? `${totalToday} événement${totalToday > 1 ? 's' : ''} aujourd'hui`
           : "Google Cal · rien aujourd'hui";
 
       const container = document.getElementById('calContainer');
-      let html = '';
 
-      // ── Aujourd'hui
-      html += '<div class="cal-day-label">Aujourd\'hui</div>';
-      if (today.length > 0) {
-        html += '<div class="card">' + today.map(calEventHTML).join('') + '</div>';
+      // ── Onglets
+      let tabs = `<div class="cal-tabs">
+        <button class="cal-tab active" data-tab="today" onclick="showCalTab('today')">
+          Aujourd'hui${totalToday > 0 ? ` <span class="cal-tab-badge">${totalToday}</span>` : ''}
+        </button>
+        <button class="cal-tab" data-tab="later" onclick="showCalTab('later')">
+          Plus tard${totalUpcoming > 0 ? ` <span class="cal-tab-badge">${totalUpcoming}</span>` : ''}
+        </button>
+      </div>`;
+
+      // ── Panel Aujourd'hui
+      let panelToday = '<div id="calPanelToday">';
+      if (totalToday > 0) {
+        panelToday += '<div class="card">' + today.map(calEventHTML).join('') + '</div>';
       } else {
-        html += '<div class="card"><div class="cal-empty">Aucun événement aujourd\'hui</div></div>';
+        panelToday += '<div class="card"><div class="cal-empty">Aucun événement aujourd\'hui 🎉</div></div>';
       }
+      panelToday += '</div>';
 
-      // ── Prochains jours
-      if (upcoming?.length > 0) {
-        upcoming.forEach(day => {
-          html += `<div class="cal-day-label">${escHtml(day.label)}</div>`;
-          html += '<div class="card">' + day.events.map(calEventHTML).join('') + '</div>';
+      // ── Panel Plus tard
+      let panelLater = '<div id="calPanelLater" style="display:none">';
+      if (totalUpcoming > 0) {
+        (upcoming ?? []).forEach(day => {
+          panelLater += `<div class="cal-day-label">${escHtml(day.label)}</div>`;
+          panelLater += '<div class="card">' + day.events.map(calEventHTML).join('') + '</div>';
         });
+      } else {
+        panelLater += '<div class="card"><div class="cal-empty">Rien de prévu cette semaine</div></div>';
       }
+      panelLater += '</div>';
 
-      container.innerHTML = html;
+      container.innerHTML = tabs + panelToday + panelLater;
+      ACTIVE_CAL_TAB = 'today';
 
     } catch (err) {
       console.warn('[Elie] Agenda:', err.message);
