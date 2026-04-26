@@ -1707,13 +1707,13 @@ body {
         processed += data.batchSize ?? 0;
         pageToken  = data.nextPageToken ?? null;
 
-        const pct = totalEstimate > 0
-          ? Math.min(Math.round(processed / totalEstimate * 100), pageToken ? 97 : 100)
-          : (pageToken ? 50 : 100);
+        const pct = pageToken
+          ? Math.min(Math.round(processed / Math.max(processed, totalEstimate) * 100), 99)
+          : 100;
 
         setMailProgress(pct,
           pageToken
-            ? `Traitement ${pct}% — ${processed} / ~${totalEstimate} mails analysés`
+            ? `Traitement ${pct}% — ${processed} mails analysés…`
             : `Traitement terminé — ${processed} mails analysés`
         );
 
