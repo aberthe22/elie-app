@@ -31,7 +31,7 @@ async function getClientToken(clientId, clientSecret) {
       client_id:     clientId,
       client_secret: clientSecret,
       grant_type:    'client_credentials',
-      scope:         'authorization:grant,user:read,credentials:read',
+      scope:         'user:create,authorization:grant',
     }),
   });
   const data = await res.json();
@@ -144,17 +144,18 @@ export default async function handler(req, res) {
         const externalUserId = TINK_EXTERNAL_USER_ID ?? `elie-${Date.now()}`;
 
         // Créer l'utilisateur (idempotent si déjà existant)
-        await fetch(`${BASE}/user/create`, {
+        const createRes = await fetch(`${BASE}/user/create`, {
           method: 'POST', headers,
-          body: JSON.stringify({
-            external_user_id: externalUserId,
-            market: 'FR',
-            locale: 'fr_FR',
-          }),
+          body: JSON.stringify({ external_user_id: externalUserId, market: 'FR', locale: 'fr_FR' }),
         });
+        const createBody = await createRes.text();
+        console.log('[tink user/create]', createRes.status, createBody.slice(0, 200));
+        // 409 = utilisateur déjà existant → OK
+        if (!createRes.ok && createRes.status !== 409) {
+          throw new Error(`user/create ${createRes.status}: ${createBody}`);
+        }
 
         // Générer le code de délégation pour Tink Link
-        // Endpoint correct : /oauth/authorization-grant/delegate (pas /link/delegatedauthorization/grant)
         const TINK_LINK_SCOPE = 'authorization:read,authorization:grant,credentials:refresh,credentials:read,credentials:write,providers:read,user:read,accounts:read,balances:read,transactions:read,identity:read';
         const delegateBody = new URLSearchParams({
           external_user_id: externalUserId,
@@ -163,16 +164,15 @@ export default async function handler(req, res) {
         });
         const delegateRes = await fetch(`${BASE}/oauth/authorization-grant/delegate`, {
           method: 'POST',
-          headers: {
-            Authorization:  `Bearer ${clientToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+          headers: { Authorization: `Bearer ${clientToken}`, 'Content-Type': 'application/x-www-form-urlencoded' },
           body: delegateBody,
         });
-        if (!delegateRes.ok) throw new Error(`Delegate grant: ${await delegateRes.text()}`);
-        const delegateData = await delegateRes.json();
+        const delegateText = await delegateRes.text();
+        console.log('[tink delegate]', delegateRes.status, delegateText.slice(0, 300));
+        if (!delegateRes.ok) throw new Error(`Delegate grant ${delegateRes.status}: ${delegateText}`);
+        const delegateData = JSON.parse(delegateText);
         const code = delegateData.code ?? delegateData.authorization_code;
-        if (!code) throw new Error(`Pas de code dans la réponse: ${JSON.stringify(delegateData)}`);
+        if (!code) throw new Error(`Pas de code dans la réponse: ${delegateText}`);
 
         const authUrl = `https://link.tink.com/1.0/transactions/connect-accounts`
           + `?client_id=${encodeURIComponent(TINK_CLIENT_ID)}`

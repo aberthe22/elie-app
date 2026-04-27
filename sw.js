@@ -1,6 +1,6 @@
-// Service Worker Elie — 20260427-07
+// Service Worker Elie — 20260427-08
 // Stratégie : Network First (réseau prioritaire, cache en fallback offline)
-const CACHE = 'elie-20260427-07';
+const CACHE = 'elie-20260427-08';
 
 self.addEventListener('install', e => {
   self.skipWaiting(); // prend le contrôle immédiatement

@@ -3030,8 +3030,8 @@ body {
     if (btn) { btn.disabled = true; btn.textContent = 'Connexion…'; }
     try {
       const res = await fetch('/api/revolut?action=connect-start');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       if (data.error) throw new Error(data.error);
       localStorage.setItem('elie_tink_user_id', data.externalUserId);
       window.location.href = data.authUrl;
