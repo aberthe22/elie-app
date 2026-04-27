@@ -36,6 +36,63 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY manquante' });
   }
 
+  const action = req.query?.action ?? null;
+
+  // ── ACTION : draft-single — génère un brouillon pour un mail reclassé ──
+  if (action === 'draft-single') {
+    const mailId = req.query?.id;
+    if (!mailId) return res.status(400).json({ error: 'id manquant' });
+    try {
+      const accessToken = await getAccessToken(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN);
+
+      // Récupérer le mail complet
+      const msgRes = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${mailId}?format=full`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (!msgRes.ok) throw new Error(`Gmail fetch mail: ${msgRes.status}`);
+      const msg = await msgRes.json();
+
+      const headers = msg.payload?.headers ?? [];
+      const get = name => headers.find(h => h.name === name)?.value ?? '';
+      const from    = get('From');
+      const subject = get('Subject') || '(sans objet)';
+      const body    = extractMailBody(msg.payload);
+      const snippet = (msg.snippet ?? '').slice(0, 300);
+
+      // Appel Haiku pour générer le brouillon
+      const prompt = `Tu es l'assistante IA d'Alexis Berthe. Génère un brouillon de réponse pour ce mail.
+
+De : ${from}
+Objet : ${subject}
+Contenu : ${body ? body.slice(0, 800) : snippet}
+
+Réponds UNIQUEMENT avec le corps du mail (sans objet, sans en-tête).
+Naturel, 2-4 phrases, signé "Alexis". Français. Pas de formules trop formelles.`;
+
+      const haikuRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key':         ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'content-type':      'application/json',
+        },
+        body: JSON.stringify({
+          model:      'claude-haiku-4-5-20251001',
+          max_tokens: 400,
+          messages:   [{ role: 'user', content: prompt }],
+        }),
+      });
+      if (!haikuRes.ok) throw new Error(`Haiku: ${haikuRes.status}`);
+      const haikuData = await haikuRes.json();
+      const draft = haikuData.content?.[0]?.text?.trim() ?? '';
+      return res.status(200).json({ draftReply: draft });
+    } catch (err) {
+      console.error('[gmail/draft-single]', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   const pageToken  = req.query?.pageToken ?? null;
 
   // Corrections utilisateur passées depuis le frontend pour l'apprentissage
@@ -298,4 +355,27 @@ Réponds UNIQUEMENT avec le JSON.`;
   } finally {
     clearTimeout(timer);
   }
+}
+
+// ── Extraire le texte brut d'un payload Gmail (MIME) ─────
+function extractMailBody(payload) {
+  if (!payload) return '';
+  // Partie text/plain directe
+  if (payload.mimeType === 'text/plain' && payload.body?.data) {
+    return Buffer.from(payload.body.data, 'base64url').toString('utf-8');
+  }
+  // Multipart : chercher text/plain en premier
+  if (payload.parts?.length) {
+    for (const part of payload.parts) {
+      if (part.mimeType === 'text/plain' && part.body?.data) {
+        return Buffer.from(part.body.data, 'base64url').toString('utf-8');
+      }
+    }
+    // Fallback récursif (multipart/alternative, etc.)
+    for (const part of payload.parts) {
+      const text = extractMailBody(part);
+      if (text) return text;
+    }
+  }
+  return '';
 }

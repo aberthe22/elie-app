@@ -1359,7 +1359,10 @@ body {
   <div class="sheet-handle"></div>
   <div class="reply-sheet-from" id="replySheetFrom">—</div>
   <div class="reply-sheet-subj" id="replySheetSubj">—</div>
-  <div class="reply-draft-label">Brouillon d'Elie — modifie si besoin</div>
+  <div class="reply-draft-label" id="replyDraftLabel">Brouillon d'Elie — modifie si besoin</div>
+  <div id="replyDraftBanner" style="display:none;font-size:12px;color:var(--ink-3);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-bottom:8px;">
+    ✏️ Ce mail n'avait pas été analysé par l'IA — rédige ta réponse ci-dessous.
+  </div>
   <textarea class="reply-draft-area" id="replyDraftArea" rows="5"></textarea>
   <div class="reply-feedback" id="replyFeedback"></div>
   <div class="reply-actions">
@@ -2070,7 +2073,6 @@ body {
     if (toCat === 'task' && !mail.taskTitle) {
       mail.taskTitle = mail.summary || mail.subject || 'Tâche';
     }
-
     // Ajouter à la cible
     srcMap[toCat].push(mail);
 
@@ -2082,6 +2084,35 @@ body {
 
     // Sauvegarder la correction pour l'apprentissage
     saveCorrection(mail, fromCat, toCat);
+
+    // Si déplacé vers "reply" sans brouillon, en générer un via Haiku
+    if (toCat === 'reply' && !mail.draftReply) {
+      mail.draftReply   = '…';
+      mail._draftPending = true;
+      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+      showMailResults();
+      // Génération asynchrone — mettre à jour quand Haiku répond
+      fetch(`/api/gmail?action=draft-single&id=${mail.id}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+          mail.draftReply    = data.draftReply || '';
+          mail._draftPending = false;
+          REPLY_MAILS[mail.id] = mail;
+          // Mettre à jour le bouton "Voir le brouillon" s'il est affiché
+          const replyBtn = document.querySelector(`.mail-btn-reply[onclick*="${mail.id}"]`);
+          if (replyBtn) replyBtn.title = 'Voir le brouillon';
+          saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+        })
+        .catch(err => {
+          console.warn('[draft-single] échec', err);
+          mail.draftReply    = `Bonjour,\n\n\n\nCordialement,\nAlexis`;
+          mail._draftPending = false;
+          mail._draftGenerated = false;
+          REPLY_MAILS[mail.id] = mail;
+          saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+        });
+      return; // showMailResults déjà appelé
+    }
 
     // Mettre à jour le cache
     saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
@@ -2283,21 +2314,38 @@ body {
     // Traitement par lots de 25 pour éviter les timeouts
     const CHUNK  = 25;
     let done = 0;
+    const failedIds = new Set();
     try {
       for (let i = 0; i < allIds.length; i += CHUNK) {
         const chunk = allIds.slice(i, i + CHUNK);
         btn.textContent = `Suppression ${done + 1}–${Math.min(done + CHUNK, total)}/${total}…`;
-        const res = await fetch('/api/gmail-action', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'delete', ids: chunk }),
-        });
-        if (!res.ok) console.warn('[deleteAllMails] lot', i, 'erreur', res.status);
+        try {
+          const res = await fetch('/api/gmail-action', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete', ids: chunk }),
+          });
+          if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            (data.failed ?? []).forEach(f => failedIds.add(f.id));
+          } else {
+            console.warn('[deleteAllMails] lot', i, 'erreur', res.status);
+            chunk.forEach(id => failedIds.add(id));
+          }
+        } catch (fetchErr) {
+          console.warn('[deleteAllMails] réseau', fetchErr.message);
+          chunk.forEach(id => failedIds.add(id));
+        }
         done += chunk.length;
       }
-      MAIL_ALL_DELETE = [];
+      // Ne retirer de la liste QUE les mails réellement supprimés
+      MAIL_ALL_DELETE = MAIL_ALL_DELETE.filter(m => failedIds.has(m.id));
       saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
-      if (card) { card.style.opacity = '0'; card.style.transition = 'opacity .3s'; }
-      btn.textContent = `${total} supprimé${total > 1 ? 's' : ''} ✓`;
+      if (card && failedIds.size === 0) { card.style.opacity = '0'; card.style.transition = 'opacity .3s'; }
+      const ok = total - failedIds.size;
+      btn.textContent = failedIds.size > 0
+        ? `${ok} supprimé${ok > 1 ? 's' : ''} · ⚠ ${failedIds.size} échoué${failedIds.size > 1 ? 's' : ''}`
+        : `${total} supprimé${total > 1 ? 's' : ''} ✓`;
+      btn.disabled = failedIds.size > 0; // réactiver pour retry si erreurs
       setTimeout(() => showMailResults(), 350);
     } catch (err) {
       btn.disabled = false;
@@ -2414,21 +2462,37 @@ body {
       (byLabel[k] = byLabel[k] || []).push(m.id);
     });
 
+    const failedArchiveIds = new Set();
     for (const [label, ids] of Object.entries(byLabel)) {
       btn.textContent = `Archivage ${done + 1}–${done + ids.length}/${total}…`;
       try {
-        await fetch('/api/gmail-action', {
+        const res = await fetch('/api/gmail-action', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'archive', ids, ...(label ? { label } : {}) }),
         });
-      } catch { /* continue */ }
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          (data.failed ?? []).forEach(f => failedArchiveIds.add(f.id));
+        } else {
+          console.warn('[archiveAllMails] label', label, 'erreur', res.status);
+          ids.forEach(id => failedArchiveIds.add(id));
+        }
+      } catch (fetchErr) {
+        console.warn('[archiveAllMails] réseau', fetchErr.message);
+        ids.forEach(id => failedArchiveIds.add(id));
+      }
       done += ids.length;
     }
 
-    MAIL_ALL_ARCHIVE = [];
+    // Ne retirer de la liste QUE les mails réellement archivés
+    MAIL_ALL_ARCHIVE = MAIL_ALL_ARCHIVE.filter(m => failedArchiveIds.has(m.id));
     saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
-    if (card) { card.style.opacity = '0'; card.style.transition = 'opacity .3s'; }
-    btn.textContent = `${done} archivé${done > 1 ? 's' : ''} ✓`;
+    if (card && failedArchiveIds.size === 0) { card.style.opacity = '0'; card.style.transition = 'opacity .3s'; }
+    const okArchive = total - failedArchiveIds.size;
+    btn.textContent = failedArchiveIds.size > 0
+      ? `${okArchive} archivé${okArchive > 1 ? 's' : ''} · ⚠ ${failedArchiveIds.size} échoué${failedArchiveIds.size > 1 ? 's' : ''}`
+      : `${okArchive} archivé${okArchive > 1 ? 's' : ''} ✓`;
+    btn.disabled = failedArchiveIds.size > 0;
     setTimeout(() => showMailResults(), 350);
   }
 
@@ -2585,10 +2649,51 @@ body {
     CURRENT_REPLY = mail;
     document.getElementById('replySheetFrom').textContent  = mail.from || mail.email;
     document.getElementById('replySheetSubj').textContent  = mail.subject;
-    document.getElementById('replyDraftArea').value        = mail.draftReply || '';
+    const banner  = document.getElementById('replyDraftBanner');
+    const label   = document.getElementById('replyDraftLabel');
+    const textarea = document.getElementById('replyDraftArea');
+    const sendBtn  = document.getElementById('replySendBtn');
+    if (mail._draftPending) {
+      // Brouillon en cours de génération
+      textarea.value       = '';
+      textarea.placeholder = '✦ Haiku génère un brouillon…';
+      textarea.disabled    = true;
+      sendBtn.disabled     = true;
+      banner.style.display = 'none';
+      label.style.display  = '';
+      label.textContent    = '✦ Génération du brouillon…';
+      // Rafraîchir la sheet automatiquement quand le brouillon arrive
+      const pollId = setInterval(() => {
+        if (!mail._draftPending) {
+          clearInterval(pollId);
+          textarea.value       = mail.draftReply || '';
+          textarea.placeholder = '';
+          textarea.disabled    = false;
+          sendBtn.disabled     = false;
+          label.textContent    = 'Brouillon d\'Elie — modifie si besoin';
+          if (mail._draftGenerated === false) {
+            banner.style.display = 'block';
+            label.style.display  = 'none';
+          }
+        }
+      }, 500);
+    } else {
+      textarea.value       = mail.draftReply || '';
+      textarea.placeholder = '';
+      textarea.disabled    = false;
+      // Bandeau si brouillon non généré par l'IA (fallback)
+      if (mail._draftGenerated === false) {
+        banner.style.display = 'block';
+        label.style.display  = 'none';
+      } else {
+        banner.style.display = 'none';
+        label.style.display  = '';
+        label.textContent    = 'Brouillon d\'Elie — modifie si besoin';
+      }
+    }
     document.getElementById('replyFeedback').textContent   = '';
     document.getElementById('replyFeedback').className     = 'reply-feedback';
-    document.getElementById('replySendBtn').disabled       = false;
+    sendBtn.disabled = !!mail._draftPending;
     document.getElementById('replySendBtn').innerHTML      = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg> Envoyer`;
     document.getElementById('replySheet').classList.add('open');
     document.getElementById('replyBackdrop').classList.add('open');
