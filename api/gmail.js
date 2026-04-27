@@ -252,8 +252,13 @@ function formatDate(dateStr) {
 }
 
 async function analyzeWithHaiku(emails, apiKey, corrections = []) {
+  // Utiliser des numéros séquentiels comme IDs dans le prompt pour éviter que Haiku
+  // mélange les longs IDs Gmail hexadécimaux → décorrélation titre/contenu impossible
+  const seqToReal = {}; // "1" → vrai ID Gmail
+  emails.forEach((e, i) => { seqToReal[String(i + 1)] = e.id; });
+
   const emailsText = emails.map((e, i) =>
-    `${i + 1}. [ID:${e.id}]\n   De: ${e.from} <${e.email}>\n   Sujet: ${e.subject}\n   Date: ${e.date}\n   Aperçu: ${e.snippet}`
+    `[${i + 1}] De: ${e.from} <${e.email}>\n    Sujet: ${e.subject}\n    Date: ${e.date}\n    Aperçu: ${e.snippet}`
   ).join('\n\n');
 
   const catLabel = c => ({ delete: 'toDelete', reply: 'toReply', task: 'toTask', archive: 'toArchive' })[c] || c;
@@ -266,15 +271,15 @@ ${corrections.map(c =>
 
   const prompt = `Tu es l'assistante IA d'Alexis Berthe. Analyse ces ${emails.length} emails. Réponds UNIQUEMENT en JSON valide, sans markdown.
 
-EMAILS :
+EMAILS (utilise le numéro entre crochets comme "id" dans ta réponse) :
 ${emailsText}
 
-JSON attendu :
+JSON attendu (id = numéro entre crochets, ex: "1", "2", "3"…) :
 {
-  "toDelete":  [{ "id": "...", "reason": "raison courte" }],
-  "toReply":   [{ "id": "...", "draftReply": "Corps du mail, 2-3 phrases, signé Alexis." }],
-  "toTask":    [{ "id": "...", "taskTitle": "Action concrète à faire" }],
-  "toArchive": [{ "id": "...", "summary": "Reçu Anthropic · 9,00€", "label": "Factures" }]
+  "toDelete":  [{ "id": "1", "reason": "raison courte" }],
+  "toReply":   [{ "id": "2", "draftReply": "Corps du mail, 2-3 phrases, signé Alexis." }],
+  "toTask":    [{ "id": "3", "taskTitle": "Action concrète à faire" }],
+  "toArchive": [{ "id": "4", "summary": "Reçu Anthropic · 9,00€", "label": "Factures" }]
 }
 
 ${correctionsBlock}RÈGLES — lis attentivement avant de classer :
@@ -340,10 +345,26 @@ Réponds UNIQUEMENT avec le JSON.`;
     try {
       // Nettoyer le JSON si Haiku a quand même ajouté du markdown
       const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
-      return JSON.parse(cleaned);
+      const parsed  = JSON.parse(cleaned);
+
+      // Remplacer les numéros séquentiels par les vrais IDs Gmail
+      const remapId = item => {
+        const realId = seqToReal[String(item.id)];
+        if (!realId) {
+          console.warn('[Haiku] id inconnu ignoré:', item.id);
+          return null;
+        }
+        return { ...item, id: realId };
+      };
+      return {
+        toDelete:  (parsed.toDelete  ?? []).map(remapId).filter(Boolean),
+        toReply:   (parsed.toReply   ?? []).map(remapId).filter(Boolean),
+        toTask:    (parsed.toTask    ?? []).map(remapId).filter(Boolean),
+        toArchive: (parsed.toArchive ?? []).map(remapId).filter(Boolean),
+      };
     } catch {
       console.warn('[Haiku] JSON invalide (', raw.length, 'chars):', raw.slice(0, 300));
-      return { toDelete: [], toReply: [], toTask: [] };
+      return { toDelete: [], toReply: [], toTask: [], toArchive: [] };
     }
   } catch (err) {
     if (err.name === 'AbortError') {

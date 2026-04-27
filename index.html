@@ -2739,19 +2739,38 @@ body {
       fb.textContent  = '✓ Envoyé !';
       sendBtn.textContent = '✓ Envoyé';
 
-      // Marquer le mail comme lu dans Gmail (non bloquant)
-      markMailRead(CURRENT_REPLY.id);
+      const sentMail = CURRENT_REPLY;
 
-      // Retire la ligne du mail depuis le sheet
-      const row = document.querySelector(`.mail-row[data-id="${CURRENT_REPLY.id}"]`);
+      // Archiver + marquer comme lu dans Gmail (non bloquant)
+      const archiveLabel = sentMail.label || null;
+      fetch('/api/gmail-action', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'archive',
+          ids:    [sentMail.id],
+          ...(archiveLabel ? { label: archiveLabel } : {}),
+        }),
+      }).catch(() => {});
+
+      // Retirer de MAIL_ALL_REPLY et du cache
+      const idx = MAIL_ALL_REPLY.findIndex(m => m.id === sentMail.id);
+      if (idx !== -1) MAIL_ALL_REPLY.splice(idx, 1);
+      delete REPLY_MAILS[sentMail.id];
+      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+
+      // Animer la sortie de la ligne
+      const row = document.querySelector(`.mail-row[data-id="${sentMail.id}"]`);
       if (row) {
         row.style.maxHeight = row.offsetHeight + 'px';
         requestAnimationFrame(() => { row.classList.add('removing'); });
         setTimeout(() => row.remove(), 320);
       }
-      delete REPLY_MAILS[CURRENT_REPLY.id];
 
-      setTimeout(() => closeReplySheet(), 900);
+      setTimeout(() => {
+        closeReplySheet();
+        if (MAIL_ALL_REPLY.length === 0) showMailResults();
+        updateMailMeta();
+      }, 900);
     } catch (err) {
       fb.textContent  = 'Erreur : ' + err.message;
       fb.className    = 'reply-feedback error';
