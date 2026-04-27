@@ -1090,6 +1090,91 @@ body {
 .modal-submit:disabled { opacity: .4; cursor: not-allowed; }
 .modal-feedback { font-size: 12px; margin-top: 8px; min-height: 16px; color: var(--done); }
 .modal-feedback.error { color: var(--urgent); }
+
+/* ═══ CHAT BAR + PANEL ═══ */
+body { padding-bottom: 64px; }
+
+.chat-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 8px 12px 10px;
+}
+.chat-input-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.chat-input {
+  flex: 1; background: var(--surface-2); border: 1.5px solid var(--line-2);
+  border-radius: 22px; padding: 10px 16px;
+  font-size: 16px; color: var(--ink); font-family: inherit; outline: none;
+  transition: border-color .15s;
+}
+.chat-input:focus { border-color: var(--navy); }
+.chat-input::placeholder { color: var(--ink-4); }
+.chat-send-btn {
+  width: 38px; height: 38px; flex-shrink: 0;
+  background: var(--navy); border: none; border-radius: 50%;
+  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: opacity .15s; opacity: .45;
+}
+.chat-send-btn.active { opacity: 1; }
+
+/* Panel historique */
+.chat-panel {
+  position: fixed; bottom: 64px; left: 0; right: 0; z-index: 199;
+  background: var(--surface); border-top: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  max-height: 65vh;
+  transform: translateY(100%); transition: transform .25s cubic-bezier(.32,.72,0,1);
+  pointer-events: none;
+}
+.chat-panel.open { transform: translateY(0); pointer-events: all; }
+
+.chat-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 8px; border-bottom: 1px solid var(--line-2);
+  flex-shrink: 0;
+}
+.chat-panel-title { font-size: 12px; font-weight: 600; color: var(--ink-3); letter-spacing: .05em; }
+.chat-panel-close {
+  background: none; border: none; color: var(--ink-4); font-size: 18px;
+  cursor: pointer; padding: 0 4px; line-height: 1;
+}
+
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 8px;
+  overscroll-behavior: contain;
+}
+.chat-msg {
+  max-width: 82%; padding: 8px 12px; border-radius: 16px;
+  font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+}
+.chat-msg.user {
+  background: var(--navy); color: #fff;
+  align-self: flex-end; border-bottom-right-radius: 4px;
+}
+.chat-msg.elie {
+  background: var(--surface-2); color: var(--ink);
+  align-self: flex-start; border-bottom-left-radius: 4px;
+  border: 1px solid var(--line-2);
+}
+.chat-typing {
+  align-self: flex-start; padding: 10px 14px;
+  background: var(--surface-2); border: 1px solid var(--line-2);
+  border-radius: 16px; border-bottom-left-radius: 4px;
+  display: none; gap: 4px; align-items: center;
+}
+.chat-typing.visible { display: flex; }
+.chat-typing span {
+  width: 5px; height: 5px; background: var(--ink-4); border-radius: 50%;
+  animation: chatDot 1.2s ease-in-out infinite;
+}
+.chat-typing span:nth-child(2) { animation-delay: .2s; }
+.chat-typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes chatDot {
+  0%,60%,100% { transform: translateY(0); opacity: .4; }
+  30%          { transform: translateY(-4px); opacity: 1; }
+}
 </style>
 </head>
 <body>
@@ -3028,7 +3113,174 @@ body {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
+
+  // ── CHAT ELIE ──────────────────────────────────────────────────────
+
+  const HISTORY_KEY = 'elie_chat_history';
+  const CONTEXT_KEY = 'elie_chat_context';
+  let CHAT_HISTORY  = [];
+  let CHAT_CONTEXT  = '';
+  let chatOpen      = false;
+
+  function loadChatStorage() {
+    try {
+      CHAT_HISTORY = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      CHAT_CONTEXT = localStorage.getItem(CONTEXT_KEY) || '';
+    } catch { CHAT_HISTORY = []; CHAT_CONTEXT = ''; }
+  }
+
+  function saveChatStorage() {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(CHAT_HISTORY.slice(-30)));
+    localStorage.setItem(CONTEXT_KEY, CHAT_CONTEXT);
+  }
+
+  function updateSendBtn() {
+    const btn = document.getElementById('chatSendBtn');
+    const inp = document.getElementById('chatInput');
+    if (btn && inp) btn.classList.toggle('active', inp.value.trim().length > 0);
+  }
+
+  function openChatPanel() {
+    if (chatOpen) return;
+    chatOpen = true;
+    document.getElementById('chatPanel').classList.add('open');
+    renderChatMessages();
+  }
+
+  function closeChatPanel() {
+    chatOpen = false;
+    document.getElementById('chatPanel').classList.remove('open');
+    document.getElementById('chatInput').blur();
+  }
+
+  function scrollChatBottom() {
+    const el = document.getElementById('chatMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  function renderChatMessages() {
+    const container = document.getElementById('chatMessages');
+    if (!container) return;
+    if (CHAT_HISTORY.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:var(--ink-4);font-size:12px;padding:20px">Salut Alexis, je suis Elie.\nDis-moi ce dont tu as besoin.</div>';
+      return;
+    }
+    container.innerHTML = CHAT_HISTORY.slice(-30).map(m =>
+      `<div class="chat-msg ${m.role === 'user' ? 'user' : 'elie'}">${escHtml(m.content).replace(/\n/g, '<br>')}</div>`
+    ).join('');
+    scrollChatBottom();
+  }
+
+  async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = (input?.value ?? '').trim();
+    if (!message) return;
+
+    input.value = '';
+    input.disabled = true;
+    updateSendBtn();
+
+    // Afficher message user immédiatement
+    CHAT_HISTORY.push({ role: 'user', content: message });
+    openChatPanel();
+    renderChatMessages();
+
+    // Typing indicator
+    const typing = document.getElementById('chatTyping');
+    if (typing) typing.classList.add('visible');
+    scrollChatBottom();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          history: CHAT_HISTORY.slice(-22).map(m => ({ role: m.role, content: m.content })),
+          context: CHAT_CONTEXT,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      CHAT_HISTORY.push({ role: 'assistant', content: data.reply });
+      if (data.history) CHAT_HISTORY = data.history;
+      saveChatStorage();
+      renderChatMessages();
+
+      // Rafraîchir les sections si des actions ont été effectuées
+      const actions = data.actions_taken ?? [];
+      if (actions.some(a => ['create_task','update_task'].includes(a))) fetchTasks();
+      if (actions.some(a => ['archive_emails'].includes(a))) fetchMails();
+      if (actions.some(a => ['create_event'].includes(a))) fetchCalendar();
+
+    } catch (err) {
+      CHAT_HISTORY.push({ role: 'assistant', content: `Erreur : ${err.message}` });
+      saveChatStorage();
+      renderChatMessages();
+    } finally {
+      if (typing) typing.classList.remove('visible');
+      if (input) { input.disabled = false; input.focus(); }
+    }
+  }
+
+  // Fermer le panel si on clique en dehors
+  document.addEventListener('click', e => {
+    if (!chatOpen) return;
+    const bar   = document.getElementById('chatBar');
+    const panel = document.getElementById('chatPanel');
+    if (bar && panel && !bar.contains(e.target) && !panel.contains(e.target)) {
+      closeChatPanel();
+    }
+  }, { passive: true });
+
+  // Ajuster le panel quand le clavier mobile s'ouvre
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const bar = document.getElementById('chatBar');
+      if (!bar) return;
+      const kbH = Math.max(0,
+        window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop
+      );
+      bar.style.bottom = kbH > 20 ? kbH + 'px' : '';
+      const panel = document.getElementById('chatPanel');
+      if (panel) panel.style.bottom = kbH > 20 ? (kbH + 64) + 'px' : '';
+    });
+  }
+
+  loadChatStorage();
 </script>
+
+<!-- CHAT PANEL (historique, slide-up) -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-head">
+    <span class="chat-panel-title">✦ ELIE</span>
+    <button class="chat-panel-close" onclick="closeChatPanel()" aria-label="Fermer">×</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-typing" id="chatTyping">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- CHAT BAR (barre fixe bas de page) -->
+<div class="chat-bar" id="chatBar">
+  <div class="chat-input-row">
+    <input
+      class="chat-input"
+      id="chatInput"
+      type="text"
+      placeholder="Demande à Elie…"
+      autocomplete="off"
+      onfocus="openChatPanel()"
+      oninput="updateSendBtn()"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"
+    >
+    <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()" aria-label="Envoyer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
