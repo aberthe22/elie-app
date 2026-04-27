@@ -883,35 +883,6 @@ body {
 .budget-tx-amount.neg { color: var(--ink); }
 .budget-tx-amount.pos { color: var(--done); }
 
-/* Setup wizard */
-.revolut-setup-steps { padding: 16px; }
-.revolut-setup-step {
-  display: flex; gap: 12px; align-items: flex-start;
-  padding: 10px 0; border-bottom: 1px solid var(--line-2);
-}
-.revolut-setup-step:last-child { border-bottom: none; }
-.revolut-step-num {
-  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-  background: var(--navy-bg); color: var(--navy);
-  font-size: 11px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
-.revolut-step-body { flex: 1; font-size: 12px; color: var(--ink-2); line-height: 1.5; }
-.revolut-step-body strong { color: var(--ink); font-size: 13px; display: block; margin-bottom: 2px; }
-.revolut-step-link {
-  display: inline-block; margin-top: 6px;
-  background: var(--navy); color: #fff;
-  font-size: 12px; font-weight: 600; padding: 7px 14px;
-  border-radius: 16px; text-decoration: none; border: none; cursor: pointer;
-  transition: opacity .15s;
-}
-.revolut-step-link:hover { opacity: .85; }
-.revolut-account-id-box {
-  margin-top: 8px; padding: 8px 10px; background: var(--surface-2);
-  border-radius: 8px; border: 1px solid var(--line-2);
-  font-size: 11px; font-family: monospace; color: var(--ink-2);
-  word-break: break-all;
-}
 
 /* ═══ APPRENDRE ═══ */
 .learn-scroll {
@@ -1279,14 +1250,14 @@ body {
   <section class="section" id="budgetSection">
     <div class="section-head">
       <div class="section-title">Budget</div>
-      <div class="section-meta" id="budgetMeta">Revolut · chargement…</div>
+      <div class="section-meta" id="budgetMeta">Budget</div>
     </div>
     <div class="card" id="budgetContainer">
       <div class="revolut-connect">
-        <p>Connecte ton compte Revolut<br>pour voir tes dépenses en temps réel.</p>
-        <button class="revolut-connect-btn" onclick="startRevolutSetup()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
-          Connecter Revolut
+        <p>Importe un relevé bancaire<br>pour visualiser tes dépenses du mois.</p>
+        <button class="revolut-connect-btn" onclick="importBudgetCSV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Importer un relevé
         </button>
       </div>
     </div>
@@ -1321,7 +1292,7 @@ body {
       </div>
       <div class="shortcut">
         <div class="shortcut-icon pay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
-        <div class="shortcut-label">Revolut</div>
+        <div class="shortcut-label">Budget</div>
       </div>
       <div class="shortcut">
         <div class="shortcut-icon note"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></div>
@@ -2924,7 +2895,7 @@ body {
     const fillClass = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : '';
 
     document.getElementById('budgetMeta').textContent =
-      `Revolut · ${data.month}`;
+      `Budget · ${data.month}`;
 
     let html = '';
 
@@ -3023,90 +2994,10 @@ body {
     }
   }
 
-  // ── TINK / BUDGET CONNEXION ────────────────────────────────────────
-
-  async function startRevolutSetup() {
-    const btn = document.querySelector('.revolut-connect-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Connexion…'; }
-    try {
-      const res = await fetch('/api/revolut?action=connect-start');
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-      if (data.error) throw new Error(data.error);
-      localStorage.setItem('elie_tink_user_id', data.externalUserId);
-      window.location.href = data.authUrl;
-    } catch (err) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Connecter Revolut'; }
-      alert('Erreur connexion Tink : ' + err.message);
-    }
-  }
-
-  async function finalizeTinkSetup() {
-    const container = document.getElementById('budgetContainer');
-    if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-3)">Finalisation de la connexion Tink…</div>';
-    document.getElementById('budgetMeta').textContent = 'Tink · finalisation…';
-    try {
-      const res = await fetch('/api/revolut?action=connect-finalize');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      const accounts = data.accounts ?? [];
-      const userId   = localStorage.getItem('elie_tink_user_id') || '—';
-      let html = '<div style="padding:16px">';
-      html += '<p style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px">✓ Connexion Tink réussie !</p>';
-      html += '<p style="font-size:12px;color:var(--ink-3);margin-bottom:10px">Ajoute cette variable dans tes env Vercel, puis redéploie :</p>';
-      html += '<code style="display:block;background:var(--surface-2);padding:10px;border-radius:8px;font-size:12px;margin-bottom:14px;word-break:break-all">TINK_EXTERNAL_USER_ID = ' + escHtml(userId) + '</code>';
-      if (accounts.length > 0) {
-        html += '<p style="font-size:12px;color:var(--ink-3);margin-bottom:6px">Comptes détectés :</p>';
-        accounts.forEach(a => {
-          html += '<div style="font-size:12px;padding:7px 0;border-bottom:1px solid var(--line-2)">';
-          html += '<strong>' + escHtml(a.name) + '</strong>';
-          if (a.iban)        html += ' · <span style="color:var(--ink-3)">' + escHtml(a.iban) + '</span>';
-          if (a.balance !== null) html += ' · <strong>' + a.balance + ' ' + a.currency + '</strong>';
-          html += '<br><span style="font-size:10px;color:var(--ink-4)">ID : ' + escHtml(a.id) + '</span>';
-          html += '</div>';
-        });
-        if (accounts.length > 1)
-          html += '<p style="font-size:11px;color:var(--ink-3);margin-top:10px">Pour un compte spécifique, ajoute aussi : <code>TINK_ACCOUNT_ID = {id}</code></p>';
-      }
-      html += '</div>';
-      if (container) container.innerHTML = html;
-      document.getElementById('budgetMeta').textContent = 'Tink · connexion OK';
-    } catch (err) {
-      if (container) container.innerHTML = '<div style="padding:16px;color:var(--urgent);font-size:13px">Erreur Tink : ' + escHtml(err.message) + '</div>';
-      document.getElementById('budgetMeta').textContent = 'Tink · erreur';
-    }
-  }
-
-  async function fetchBudget() {
-    document.getElementById('budgetMeta').textContent = 'Tink · chargement…';
-    try {
-      const res  = await fetch('/api/revolut');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (data.status === 'not_configured') {
-        document.getElementById('budgetMeta').textContent = 'Budget · à configurer';
-        return;
-      }
-      if (data.status === 'not_connected') {
-        document.getElementById('budgetMeta').textContent = 'Budget · non connecté';
-        document.getElementById('budgetContainer').innerHTML = `
-          <div class="revolut-connect">
-            <p>Connecte ton compte Revolut<br>pour voir tes dépenses en temps réel.</p>
-            <button class="revolut-connect-btn" onclick="startRevolutSetup()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
-              Connecter Revolut
-            </button>
-          </div>`;
-        return;
-      }
-      if (data.error) throw new Error(data.error);
-      window._budgetData = data;
-      renderBudget(data);
-    } catch (err) {
-      console.warn('[fetchBudget]', err.message);
-      document.getElementById('budgetMeta').textContent = 'Budget · erreur';
-    }
+  // ── BUDGET CSV (implémenté à l'étape suivante) ───────────────────
+  function importBudgetCSV() {
+    // TODO: ouvrir le sélecteur de fichier CSV
+    alert('Import CSV — bientôt disponible !');
   }
 
   // ── INITIALISATION ──────────────────────────────────────────────
@@ -3114,13 +3005,7 @@ body {
   fetchTasks();
   fetchMails();
   fetchCalendar();
-  fetchBudget();
 
-  // Détecter le retour depuis Tink Link (#tink-setup)
-  if (window.location.hash === '#tink-setup') {
-    history.replaceState(null, '', window.location.pathname);
-    finalizeTinkSetup();
-  }
 
   // Clavier mobile : remonter sheets/modals quand le clavier s'ouvre
   if (window.visualViewport) {
@@ -3146,3 +3031,4 @@ body {
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      

@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/*.js": {
-      "maxDuration": 10
-    }
+    "api/gmail.js":        { "maxDuration": 30 },
+    "api/gmail-action.js": { "maxDuration": 30 },
+    "api/*.js":            { "maxDuration": 10 }
   }
 }
