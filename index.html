@@ -532,7 +532,7 @@ body {
   width: 100%; min-height: 130px; max-height: 240px;
   padding: 12px 14px; border-radius: var(--r-sm);
   border: 1.5px solid var(--line); background: var(--surface-2);
-  font-family: var(--font-ui); font-size: 14px; color: var(--ink);
+  font-family: var(--font-ui); font-size: 16px; color: var(--ink); /* 16px empêche zoom iOS */
   line-height: 1.55; resize: vertical; outline: none;
   transition: border-color .15s;
 }
@@ -1019,7 +1019,10 @@ body {
   padding: 20px 24px 40px;
   z-index: 51;
   box-shadow: var(--shadow-lg);
-  transition: transform .28s cubic-bezier(.34,1.56,.64,1);
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1), bottom .15s ease;
+  max-height: 92svh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .sheet.open { transform: translateX(-50%) translateY(0); }
 .sheet-handle { width: 32px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 18px; }
@@ -1075,6 +1078,9 @@ body {
   box-shadow: var(--shadow-lg);
   transform: translateY(20px);
   transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+  max-height: 92svh;           /* svh = viewport sans barre nav mobile */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .modal-backdrop.open .modal-sheet { transform: translateY(0); }
 .modal-handle { width: 36px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 20px; }
@@ -1087,7 +1093,7 @@ body {
   border-radius: var(--r-sm);
   border: 1.5px solid var(--line);
   background: var(--surface-2);
-  font-family: var(--font-ui); font-size: 15px; color: var(--ink);
+  font-family: var(--font-ui); font-size: 16px; color: var(--ink); /* 16px empêche le zoom iOS */
   outline: none; transition: border-color .15s;
 }
 .modal-input::placeholder { color: var(--ink-4); }
@@ -3006,6 +3012,25 @@ body {
   }
 
   fetchBudget();
+
+  // ─── CLAVIER MOBILE : remonter les sheets/modals quand le clavier s'ouvre ───
+  if (window.visualViewport) {
+    const adjustForKeyboard = () => {
+      const kbH = Math.max(0,
+        window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop
+      );
+      const offset = kbH > 20 ? `${kbH}px` : '';
+      // Bottom sheet réponse mail
+      const sheet = document.getElementById('replySheet');
+      if (sheet) sheet.style.bottom = offset;
+      // Modals (ajout tâche, agenda…)
+      document.querySelectorAll('.modal-backdrop').forEach(el => {
+        el.style.paddingBottom = offset;
+      });
+    };
+    window.visualViewport.addEventListener('resize', adjustForKeyboard);
+    window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+  }
 
   // ─── SERVICE WORKER ───
   if ('serviceWorker' in navigator) {

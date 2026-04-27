@@ -1,16 +1,21 @@
 // ═══════════════════════════════════════════════════════════
 //  api/revolut.js  —  Vercel Serverless Function
 //
-//  GET → retourne balance + transactions du mois en cours
-//        depuis Nordigen (Open Banking PSD2)
+//  GET                              → balance + transactions du mois
+//  GET ?action=connect-start        → crée requisition Nordigen, retourne authUrl
+//  GET ?action=connect-finalize&reqId=xxx → retourne les account IDs
 //
 //  Variables d'env requises :
-//    NORDIGEN_SECRET_ID, NORDIGEN_SECRET_KEY, NORDIGEN_ACCOUNT_ID
+//    NORDIGEN_SECRET_ID, NORDIGEN_SECRET_KEY
+//    NORDIGEN_ACCOUNT_ID  (après connexion initiale)
+//  Optionnel :
+//    NORDIGEN_INSTITUTION_ID  (défaut : REVOLUT_CZGB)
+//    APP_URL                  (URL de redirection après auth)
 // ═══════════════════════════════════════════════════════════
 
 const BASE = 'https://bankaccountdata.gocardless.com/api/v2';
 
-// Cache in-memory du token (dure 23h, réinitialisé à chaque cold start)
+// Cache in-memory du token Nordigen (dure 23h par instance)
 let _tokenCache = null;
 let _tokenExpiry = 0;
 
@@ -24,7 +29,7 @@ async function getToken(secretId, secretKey) {
   const data = await res.json();
   if (!data.access) throw new Error(`Token Nordigen KO: ${JSON.stringify(data)}`);
   _tokenCache  = data.access;
-  _tokenExpiry = Date.now() + 23 * 3600 * 1000; // 23h de marge
+  _tokenExpiry = Date.now() + 23 * 3600 * 1000;
   return _tokenCache;
 }
 
@@ -47,7 +52,7 @@ function guessCategory(tx) {
   if (/pharmacie|médecin|docteur|clinique|hopital|mutuelle|santé|doctor|health/.test(t)) return 'Santé';
   if (/bar|pub|club|disco|soirée|concert|billet|théâtre|cinéma/.test(t)) return 'Sorties';
   if (/airbnb|booking|hotel|hôtel|hostel|voyage|air.france|easyjet|ryanair|sncf.voyage/.test(t)) return 'Voyages';
-  if (/electric|gaz|edf|engie|eau|orange|sfr|free|bouygues/.test(t)) return 'Charges';
+  if (/electric|gaz|edf|engie|eau/.test(t)) return 'Charges';
   return 'Autres';
 }
 
@@ -57,8 +62,62 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { NORDIGEN_SECRET_ID, NORDIGEN_SECRET_KEY, NORDIGEN_ACCOUNT_ID } = process.env;
+  const action = req.query?.action ?? null;
 
-  // Pas encore configuré → indiquer au frontend
+  // ── WIZARD DE CONNEXION ────────────────────────────────────
+  if (action === 'connect-start' || action === 'connect-finalize') {
+    if (!NORDIGEN_SECRET_ID || !NORDIGEN_SECRET_KEY) {
+      return res.status(500).json({ error: 'NORDIGEN_SECRET_ID / NORDIGEN_SECRET_KEY manquants' });
+    }
+    try {
+      const token = await getToken(NORDIGEN_SECRET_ID, NORDIGEN_SECRET_KEY);
+      const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Accept: 'application/json' };
+
+      if (action === 'connect-start') {
+        const institutionId = process.env.NORDIGEN_INSTITUTION_ID ?? 'REVOLUT_CZGB';
+        const appUrl        = process.env.APP_URL ?? `https://${req.headers.host}`;
+        const r = await fetch(`${BASE}/requisitions/`, {
+          method: 'POST', headers,
+          body: JSON.stringify({
+            redirect:       `${appUrl}/#revolut-setup`,
+            institution_id: institutionId,
+            reference:      `elie-revolut-${Date.now()}`,
+            user_language:  'FR',
+          }),
+        });
+        if (!r.ok) throw new Error(`Nordigen requisition: ${await r.text()}`);
+        const data = await r.json();
+        return res.status(200).json({ requisitionId: data.id, authUrl: data.link });
+      }
+
+      if (action === 'connect-finalize') {
+        const reqId = req.query?.reqId;
+        if (!reqId) return res.status(400).json({ error: 'reqId manquant' });
+        const r = await fetch(`${BASE}/requisitions/${reqId}/`, { headers });
+        if (!r.ok) throw new Error(`Nordigen requisition GET: ${await r.text()}`);
+        const data = await r.json();
+        if (!data.accounts?.length) {
+          return res.status(200).json({ status: data.status, message: 'Autorisation en attente ou expirée', accounts: [] });
+        }
+        const accountDetails = await Promise.allSettled(
+          data.accounts.map(async id => {
+            const r2 = await fetch(`${BASE}/accounts/${id}/details/`, { headers });
+            const d2 = r2.ok ? await r2.json() : {};
+            return { id, iban: d2.account?.iban, name: d2.account?.name || d2.account?.product };
+          })
+        );
+        return res.status(200).json({
+          status:   data.status,
+          accounts: accountDetails.map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean),
+        });
+      }
+    } catch (err) {
+      console.error('[revolut connect]', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // ── DONNÉES (balance + transactions) ─────────────────────
   if (!NORDIGEN_SECRET_ID || !NORDIGEN_SECRET_KEY) {
     return res.status(200).json({ status: 'not_configured' });
   }
@@ -70,10 +129,20 @@ export default async function handler(req, res) {
     const token   = await getToken(NORDIGEN_SECRET_ID, NORDIGEN_SECRET_KEY);
     const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' };
 
-    // ── 1. SOLDE ────────────────────────────────────────────
-    const balRes  = await fetch(`${BASE}/accounts/${NORDIGEN_ACCOUNT_ID}/balances/`, { headers });
-    if (!balRes.ok) throw new Error(`Balances: ${balRes.status} ${await balRes.text()}`);
-    const balData = await balRes.json();
+    const [balRes, txRes] = await Promise.all([
+      fetch(`${BASE}/accounts/${NORDIGEN_ACCOUNT_ID}/balances/`, { headers }),
+      (() => {
+        const now = new Date();
+        const dateFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        return fetch(`${BASE}/accounts/${NORDIGEN_ACCOUNT_ID}/transactions/?date_from=${dateFrom}`, { headers });
+      })(),
+    ]);
+
+    if (!balRes.ok) throw new Error(`Balances: ${balRes.status}`);
+    if (!txRes.ok)  throw new Error(`Transactions: ${txRes.status}`);
+
+    const balData  = await balRes.json();
+    const txData   = await txRes.json();
 
     const balances  = balData.balances ?? [];
     const available = balances.find(b => b.balanceType === 'interimAvailable')
@@ -82,27 +151,11 @@ export default async function handler(req, res) {
     const balance  = available ? parseFloat(available.balanceAmount.amount) : null;
     const currency = available?.balanceAmount?.currency ?? 'EUR';
 
-    // ── 2. TRANSACTIONS DU MOIS EN COURS ────────────────────
-    const now      = new Date();
-    const dateFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-
-    const txRes  = await fetch(
-      `${BASE}/accounts/${NORDIGEN_ACCOUNT_ID}/transactions/?date_from=${dateFrom}`,
-      { headers }
-    );
-    if (!txRes.ok) throw new Error(`Transactions: ${txRes.status} ${await txRes.text()}`);
-    const txData = await txRes.json();
-
     const booked = txData.transactions?.booked ?? [];
-
-    // ── 3. NORMALISATION ─────────────────────────────────────
     const transactions = booked.map(tx => {
       const amount = parseFloat(tx.transactionAmount.amount);
-      const label  = tx.remittanceInformationUnstructured
-        || tx.remittanceInformationStructured
-        || tx.creditorName
-        || tx.debtorName
-        || '(sans description)';
+      const label  = tx.remittanceInformationUnstructured || tx.remittanceInformationStructured
+        || tx.creditorName || tx.debtorName || '(sans description)';
       return {
         id:       tx.transactionId || tx.internalTransactionId || Math.random().toString(36).slice(2),
         date:     tx.bookingDate || tx.valueDate || '',
@@ -113,18 +166,16 @@ export default async function handler(req, res) {
       };
     }).sort((a, b) => (b.date > a.date ? 1 : -1));
 
-    // ── 4. TOTAUX PAR CATÉGORIE (dépenses uniquement) ────────
-    const expenses = transactions.filter(t => t.amount < 0);
     const byCategory = {};
-    expenses.forEach(t => {
+    transactions.filter(t => t.amount < 0).forEach(t => {
       byCategory[t.category] = (byCategory[t.category] ?? 0) + Math.abs(t.amount);
     });
-    const monthTotal = Object.values(byCategory).reduce((s, v) => s + v, 0);
-
-    const categories = Object.entries(byCategory)
+    const monthTotal  = Object.values(byCategory).reduce((s, v) => s + v, 0);
+    const categories  = Object.entries(byCategory)
       .map(([name, amount]) => ({ name, amount: Math.round(amount * 100) / 100 }))
       .sort((a, b) => b.amount - a.amount);
 
+    const now = new Date();
     return res.status(200).json({
       status:       'connected',
       balance:      balance !== null ? Math.round(balance * 100) / 100 : null,
