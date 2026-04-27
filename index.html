@@ -141,6 +141,112 @@ body {
 }
 .brief-btn:hover { background: var(--navy); color: #fff; }
 
+/* ═══ BRIEF MODAL (bottom sheet) ═══ */
+.brief-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(26,23,20,.5);
+  backdrop-filter: blur(3px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.brief-overlay.open { opacity: 1; pointer-events: all; }
+
+.brief-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 301;
+  max-width: 480px; margin: 0 auto;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  max-height: 80vh;
+  transform: translateY(100%);
+  transition: transform .32s cubic-bezier(.32,1,.45,1);
+  display: flex; flex-direction: column;
+  box-shadow: 0 -6px 32px rgba(26,23,20,.18);
+  overflow: hidden;
+}
+.brief-sheet.open { transform: translateY(0); }
+
+.brief-sheet-drag {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--line); margin: 10px auto 0;
+  flex-shrink: 0;
+}
+.brief-sheet-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.brief-sheet-title {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 21px;
+  color: var(--navy);
+  letter-spacing: -.01em;
+}
+.brief-close-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--line);
+  color: var(--ink-2); font-size: 13px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.brief-close-btn:hover { background: var(--line); }
+
+.brief-body {
+  flex: 1; overflow-y: auto;
+  padding: 20px 20px 8px;
+  font-size: 14px; line-height: 1.7;
+  color: var(--ink);
+}
+.brief-body p { margin-bottom: 14px; }
+.brief-body strong { color: var(--ink); font-weight: 600; }
+.brief-body .brief-section {
+  margin-bottom: 16px;
+}
+.brief-body .brief-section-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em;
+  margin-bottom: 6px;
+}
+.brief-body ul { padding-left: 0; list-style: none; }
+.brief-body li {
+  padding: 3px 0 3px 14px;
+  position: relative; color: var(--ink);
+}
+.brief-body li::before {
+  content: '•'; position: absolute; left: 0;
+  color: var(--navy); font-weight: 700;
+}
+
+.brief-loading {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px; padding: 48px 20px;
+  color: var(--ink-3); font-size: 13px;
+}
+.brief-spinner {
+  width: 26px; height: 26px;
+  border: 2.5px solid var(--line);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.brief-sheet-actions {
+  padding: 12px 20px 24px;
+  border-top: 1px solid var(--line-2);
+  flex-shrink: 0;
+}
+.brief-chat-btn {
+  width: 100%;
+  background: var(--navy); color: #fff;
+  border: none; border-radius: 12px;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+  padding: 13px; cursor: pointer;
+  transition: opacity .15s;
+}
+.brief-chat-btn:hover { opacity: .88; }
+
 /* ═══ HERO ═══ */
 .hero {
   padding: 4px 4px 28px;
@@ -1210,7 +1316,7 @@ body { padding-bottom: 64px; }
       </div>
     </div>
     <div class="topbar-right">
-      <button class="brief-btn" onclick="sendQuick('Brief-moi')">✦ Brief</button>
+      <button class="brief-btn" onclick="openBrief()">✦ Brief</button>
       <div class="date-badge" id="dateBadge">—</div>
     </div>
   </header>
@@ -3278,8 +3384,101 @@ body { padding-bottom: 64px; }
     });
   }
 
+  // ── BRIEF MODAL ────────────────────────────────────────────
+  let briefLastReply = '';
+
+  function formatBriefHtml(text) {
+    // Escape HTML
+    let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Colorise checkmarks and warnings
+    s = s.replace(/✓/g,'<span style="color:var(--done)">✓</span>');
+    s = s.replace(/⚠|⚡/g,'<span style="color:var(--urgent)">$&</span>');
+    // Bold **...**
+    s = s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    // Emoji section headers (line starting with an emoji + bold)
+    s = s.replace(/^(📋|📅|📬|🎯|✅|🔴|🟡|🟢)(.+)$/gm,'<div class="brief-section-title">$1$2</div>');
+    // Bullet lines
+    s = s.replace(/^[•\-]\s+(.+)$/gm,'<li>$1</li>');
+    // Wrap consecutive <li> in <ul>
+    s = s.replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>');
+    // Double newlines → paragraph breaks
+    s = s.replace(/\n\n/g,'</p><p>');
+    s = s.replace(/\n/g,'<br>');
+    return '<p>' + s + '</p>';
+  }
+
+  async function openBrief() {
+    document.getElementById('briefOverlay').classList.add('open');
+    document.getElementById('briefSheet').classList.add('open');
+    document.getElementById('briefBody').innerHTML =
+      '<div class="brief-loading"><div class="brief-spinner"></div><span>Elie prépare ton brief…</span></div>';
+    document.getElementById('briefActions').style.display = 'none';
+    briefLastReply = '';
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'Brief-moi',
+          history: CHAT_HISTORY.slice(-10),
+          context: CHAT_CONTEXT,
+        }),
+      });
+      const data = await res.json();
+      if (data.reply) {
+        briefLastReply = data.reply;
+        document.getElementById('briefBody').innerHTML = formatBriefHtml(data.reply);
+        document.getElementById('briefActions').style.display = 'block';
+        // Persist to chat history
+        CHAT_HISTORY = data.history || [
+          ...CHAT_HISTORY,
+          { role: 'user', content: 'Brief-moi' },
+          { role: 'assistant', content: data.reply },
+        ];
+        saveChatStorage();
+      } else {
+        document.getElementById('briefBody').innerHTML =
+          '<p style="color:var(--ink-3);text-align:center">Erreur lors du brief. Réessaie.</p>';
+      }
+    } catch (e) {
+      document.getElementById('briefBody').innerHTML =
+        '<p style="color:var(--ink-3);text-align:center">Erreur réseau. Réessaie.</p>';
+    }
+  }
+
+  function closeBrief() {
+    document.getElementById('briefOverlay').classList.remove('open');
+    document.getElementById('briefSheet').classList.remove('open');
+  }
+
+  function briefToChat() {
+    closeBrief();
+    openChatPanel();
+  }
+  // ── FIN BRIEF MODAL ─────────────────────────────────────────
+
   loadChatStorage();
 </script>
+
+<!-- BRIEF OVERLAY + BOTTOM SHEET -->
+<div class="brief-overlay" id="briefOverlay" onclick="closeBrief()"></div>
+<div class="brief-sheet" id="briefSheet">
+  <div class="brief-sheet-drag"></div>
+  <div class="brief-sheet-head">
+    <span class="brief-sheet-title">✦ Brief du jour</span>
+    <button class="brief-close-btn" onclick="closeBrief()">✕</button>
+  </div>
+  <div class="brief-body" id="briefBody">
+    <div class="brief-loading">
+      <div class="brief-spinner"></div>
+      <span>Elie prépare ton brief…</span>
+    </div>
+  </div>
+  <div class="brief-sheet-actions" id="briefActions" style="display:none">
+    <button class="brief-chat-btn" onclick="briefToChat()">💬 Continuer avec Elie</button>
+  </div>
+</div>
 
 <!-- CHAT PANEL (historique, slide-up) -->
 <div class="chat-panel" id="chatPanel">

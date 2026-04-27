@@ -14,16 +14,16 @@ const GCAL_BASE     = 'https://www.googleapis.com/calendar/v3';
 
 // ── OAuth Google (Gmail + Calendar partagent le même token) ──────────
 async function getGoogleToken() {
-  const { GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN } = process.env;
-  if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN)
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN } = process.env;
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN)
     throw new Error('Google OAuth non configuré');
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id:     GMAIL_CLIENT_ID,
-      client_secret: GMAIL_CLIENT_SECRET,
-      refresh_token: GMAIL_REFRESH_TOKEN,
+      client_id:     GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      refresh_token: GOOGLE_REFRESH_TOKEN,
       grant_type:    'refresh_token',
     }),
   });
@@ -316,7 +316,7 @@ Capacités via tools :
 Comportement :
 - Réponds TOUJOURS en français, concis (2-4 lignes max sauf briefing demandé)
 - Actions directes : si tu peux agir, agis et confirme brièvement ("✓ Tâche créée", "✓ 3 mails archivés")
-- Briefing = tâches urgentes en retard + agenda du jour + mails importants, en 6-8 lignes max
+- Briefing (quand le message est "Brief-moi") = lance get_tasks + get_emails + get_calendar en parallèle, puis réponds avec format structuré : "📋 **Priorités**" (3 tâches urgentes/en retard max), "📅 **Agenda**" (events du jour), "📬 **Mails**" (non-lus notables), "🎯 **Focus**" (reco d'action principale). Puces (•) et **gras**. Max 18 lignes.
 - "J'attends un retour de X" → cherche les tâches liées, passe-les en statut "Bloqué" + importance "Basse", confirme
 - Pour modifier des tâches : appelle d'abord get_tasks pour avoir les IDs, cherche par mots-clés dans le titre
 - Enchaîne les actions sans demander confirmation sauf si ambigu
