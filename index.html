@@ -784,34 +784,134 @@ body {
 }
 .section-add-btn:hover { background: var(--navy-bg); border-color: #c8d8ef; }
 
-/* ═══ BUDGET ═══ */
-.budget-block { padding: 16px; }
-.budget-top {
+/* ═══ BUDGET / REVOLUT ═══ */
+.revolut-connect {
+  padding: 20px 16px; text-align: center;
+}
+.revolut-connect p { font-size: 13px; color: var(--ink-3); margin-bottom: 14px; line-height: 1.5; }
+.revolut-connect-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--navy); color: #fff;
+  font-size: 13px; font-weight: 600; padding: 10px 20px;
+  border-radius: 20px; border: none; cursor: pointer; transition: opacity .15s;
+}
+.revolut-connect-btn:hover { opacity: .85; }
+.revolut-connect-btn:disabled { opacity: .5; cursor: default; }
+
+/* Balance + mois */
+.budget-header { padding: 16px 16px 0; }
+.budget-balance-row {
   display: flex; align-items: flex-end; justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 4px;
 }
-.budget-spent {
-  font-size: 34px; font-weight: 700; letter-spacing: -1.5px;
-  line-height: 1;
+.budget-balance-val {
+  font-size: 32px; font-weight: 700; letter-spacing: -1.5px; line-height: 1;
 }
-.budget-spent .currency { font-size: 18px; font-weight: 500; color: var(--ink-3); margin-left: 2px; }
-.budget-right { text-align: right; }
-.budget-total { font-size: 12px; color: var(--ink-3); }
-.budget-delta { font-size: 12px; color: var(--done); font-weight: 600; margin-top: 2px; }
-.budget-bar {
-  height: 5px; background: var(--line); border-radius: 3px;
-  margin-bottom: 16px; overflow: hidden;
+.budget-balance-val .bsym { font-size: 16px; font-weight: 500; color: var(--ink-3); }
+.budget-balance-label { font-size: 11px; color: var(--ink-3); padding-bottom: 4px; }
+.budget-month-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: 12px; margin-bottom: 14px;
 }
-.budget-bar-fill { height: 5px; background: var(--navy); border-radius: 3px; }
-.budget-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.budget-cat {
-  background: var(--surface-2);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-sm);
-  padding: 10px 12px;
+.budget-month-spent { font-size: 18px; font-weight: 700; color: var(--ink); }
+.budget-month-label { font-size: 11px; color: var(--ink-3); }
+.budget-month-budget {
+  font-size: 12px; color: var(--ink-3); cursor: pointer;
+  border-bottom: 1px dashed var(--ink-4);
 }
-.budget-cat-name { font-size: 11px; color: var(--ink-3); margin-bottom: 3px; }
-.budget-cat-val { font-size: 15px; font-weight: 600; }
+
+/* Barre globale */
+.budget-global-bar {
+  height: 6px; background: var(--line); border-radius: 3px;
+  margin-bottom: 18px; overflow: hidden;
+}
+.budget-global-fill {
+  height: 6px; border-radius: 3px;
+  background: var(--navy); transition: width .4s ease;
+}
+.budget-global-fill.warn  { background: var(--soon); }
+.budget-global-fill.over  { background: var(--urgent); }
+
+/* Catégories */
+.budget-cats-list { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+.budget-cat-row { display: flex; flex-direction: column; gap: 4px; }
+.budget-cat-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.budget-cat-name { font-size: 12px; font-weight: 500; color: var(--ink-2); }
+.budget-cat-amounts { font-size: 11px; color: var(--ink-3); }
+.budget-cat-amounts strong { color: var(--ink); font-weight: 600; }
+.budget-cat-bar {
+  height: 4px; background: var(--line-2); border-radius: 2px; overflow: hidden;
+}
+.budget-cat-fill {
+  height: 4px; border-radius: 2px; transition: width .4s ease;
+  background: var(--navy);
+}
+.budget-cat-fill.warn { background: var(--soon); }
+.budget-cat-fill.over { background: var(--urgent); }
+.budget-cat-edit-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 10px; color: var(--ink-4); padding: 2px 4px;
+  border-radius: 4px; transition: color .12s;
+}
+.budget-cat-edit-btn:hover { color: var(--ink-2); }
+
+/* Transactions (collapsible) */
+.budget-tx-toggle {
+  width: 100%; padding: 11px 16px; background: none; border: none;
+  border-top: 1px solid var(--line-2); cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 500; color: var(--ink-3);
+  transition: color .12s;
+}
+.budget-tx-toggle:hover { color: var(--ink-2); }
+.budget-tx-list { display: none; border-top: 1px solid var(--line-2); }
+.budget-tx-list.open { display: block; }
+.budget-tx-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; border-bottom: 1px solid var(--line-2);
+}
+.budget-tx-row:last-child { border-bottom: none; }
+.budget-tx-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  flex-shrink: 0; background: var(--navy);
+}
+.budget-tx-label { flex: 1; font-size: 12px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.budget-tx-date { font-size: 10px; color: var(--ink-4); flex-shrink: 0; }
+.budget-tx-amount { font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.budget-tx-amount.neg { color: var(--ink); }
+.budget-tx-amount.pos { color: var(--done); }
+
+/* Setup wizard */
+.revolut-setup-steps { padding: 16px; }
+.revolut-setup-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 0; border-bottom: 1px solid var(--line-2);
+}
+.revolut-setup-step:last-child { border-bottom: none; }
+.revolut-step-num {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  background: var(--navy-bg); color: var(--navy);
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.revolut-step-body { flex: 1; font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+.revolut-step-body strong { color: var(--ink); font-size: 13px; display: block; margin-bottom: 2px; }
+.revolut-step-link {
+  display: inline-block; margin-top: 6px;
+  background: var(--navy); color: #fff;
+  font-size: 12px; font-weight: 600; padding: 7px 14px;
+  border-radius: 16px; text-decoration: none; border: none; cursor: pointer;
+  transition: opacity .15s;
+}
+.revolut-step-link:hover { opacity: .85; }
+.revolut-account-id-box {
+  margin-top: 8px; padding: 8px 10px; background: var(--surface-2);
+  border-radius: 8px; border: 1px solid var(--line-2);
+  font-size: 11px; font-family: monospace; color: var(--ink-2);
+  word-break: break-all;
+}
 
 /* ═══ APPRENDRE ═══ */
 .learn-scroll {
@@ -1169,30 +1269,19 @@ body {
     </div>
   </section>
 
-  <!-- BUDGET -->
-  <section class="section">
+  <!-- BUDGET / REVOLUT -->
+  <section class="section" id="budgetSection">
     <div class="section-head">
       <div class="section-title">Budget</div>
-      <div class="section-meta">Avril</div>
+      <div class="section-meta" id="budgetMeta">Revolut · chargement…</div>
     </div>
-    <div class="card">
-      <div class="budget-block">
-        <div class="budget-top">
-          <div class="budget-spent">1 240<span class="currency"> €</span></div>
-          <div class="budget-right">
-            <div class="budget-total">sur <strong>2 400 €</strong></div>
-            <div class="budget-delta">−12 % vs mars</div>
-          </div>
-        </div>
-        <div class="budget-bar">
-          <div class="budget-bar-fill" style="width:52%"></div>
-        </div>
-        <div class="budget-cats">
-          <div class="budget-cat"><div class="budget-cat-name">Logement</div><div class="budget-cat-val">680 €</div></div>
-          <div class="budget-cat"><div class="budget-cat-name">Courses</div><div class="budget-cat-val">240 €</div></div>
-          <div class="budget-cat"><div class="budget-cat-name">Abonnements</div><div class="budget-cat-val">185 €</div></div>
-          <div class="budget-cat"><div class="budget-cat-name">Sorties</div><div class="budget-cat-val">135 €</div></div>
-        </div>
+    <div class="card" id="budgetContainer">
+      <div class="revolut-connect">
+        <p>Connecte ton compte Revolut<br>pour voir tes dépenses en temps réel.</p>
+        <button class="revolut-connect-btn" onclick="startRevolutSetup()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+          Connecter Revolut
+        </button>
       </div>
     </div>
   </section>
@@ -2055,21 +2144,15 @@ body {
   }
 
   // ── Mise à jour du compteur Mails ────────────────────────
-  // Affiche le nombre de mails classés par Elie + total analysé si différent
   function updateMailMeta(suffix) {
     if (suffix) {
       document.getElementById('mailsMeta').textContent = `Gmail · ${suffix}`;
       return;
     }
-    const classés = MAIL_ALL_DELETE.length + MAIL_ALL_REPLY.length + MAIL_ALL_TASK.length + MAIL_ALL_ARCHIVE.length;
-    let label;
-    if (classés === 0) {
-      label = MAIL_PROCESSED > 0 ? 'tout traité' : 'aucun non lu';
-    } else if (MAIL_PROCESSED > classés) {
-      label = `${classés} classés · ${MAIL_PROCESSED} non lus`;
-    } else {
-      label = `${classés} mail${classés > 1 ? 's' : ''} à traiter`;
-    }
+    const total = MAIL_ALL_DELETE.length + MAIL_ALL_REPLY.length + MAIL_ALL_TASK.length + MAIL_ALL_ARCHIVE.length;
+    const label = total === 0
+      ? 'tout traité ✓'
+      : `${total} mail${total > 1 ? 's' : ''} à traiter`;
     document.getElementById('mailsMeta').textContent = `Gmail · ${label}`;
   }
 
@@ -2189,18 +2272,32 @@ body {
     const card = document.getElementById('deleteMailsCard');
     if (!btn || btn.disabled) return;
     btn.disabled = true;
-    btn.textContent = 'Suppression…';
-    const ids = MAIL_ALL_DELETE.map(m => m.id);
+    const allIds = MAIL_ALL_DELETE.map(m => m.id);
+    const total  = allIds.length;
+    // Traitement par lots de 25 pour éviter les timeouts
+    const CHUNK  = 25;
+    let done = 0;
     try {
-      await fetch('/api/gmail-action', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', ids }),
-      });
+      for (let i = 0; i < allIds.length; i += CHUNK) {
+        const chunk = allIds.slice(i, i + CHUNK);
+        btn.textContent = `Suppression ${done + 1}–${Math.min(done + CHUNK, total)}/${total}…`;
+        const res = await fetch('/api/gmail-action', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', ids: chunk }),
+        });
+        if (!res.ok) console.warn('[deleteAllMails] lot', i, 'erreur', res.status);
+        done += chunk.length;
+      }
       MAIL_ALL_DELETE = [];
       saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
       if (card) { card.style.opacity = '0'; card.style.transition = 'opacity .3s'; }
+      btn.textContent = `${total} supprimé${total > 1 ? 's' : ''} ✓`;
       setTimeout(() => showMailResults(), 350);
-    } catch { btn.disabled = false; btn.textContent = 'Tout supprimer'; }
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Tout supprimer';
+      console.warn('[deleteAllMails]', err);
+    }
   }
 
   // ── Action groupée : tout envoyer ────────────────────────
@@ -2208,25 +2305,30 @@ body {
     const btn = document.getElementById('bulkReplyBtn');
     if (!btn || btn.disabled) return;
     btn.disabled = true;
-    const total = MAIL_ALL_REPLY.length;
+    const replyMails = [...MAIL_ALL_REPLY];
+    const total = replyMails.length;
     let done = 0;
-    for (const mail of [...MAIL_ALL_REPLY]) {
+    const sentIds = [];
+    for (const mail of replyMails) {
       btn.textContent = `Envoi ${done + 1}/${total}…`;
       try {
-        await fetch('/api/gmail-action', {
+        const res = await fetch('/api/gmail-action', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'send',
             replyTo:   mail.email,
-            subject:   `Re: ${mail.subject}`,
+            subject:   mail.subject?.startsWith('Re:') ? mail.subject : `Re: ${mail.subject}`,
             body:      mail.draftReply,
             threadId:  mail.threadId,
             inReplyTo: mail.messageId,
           }),
         });
+        if (res.ok) sentIds.push(mail.id);
       } catch { /* continue même si un envoi échoue */ }
       done++;
     }
+    // Marquer tous les mails répondus comme lus dans Gmail
+    if (sentIds.length > 0) markMailRead(sentIds);
     MAIL_ALL_REPLY = [];
     saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
     btn.textContent = `${done} envoyé${done > 1 ? 's' : ''} ✓`;
@@ -2440,15 +2542,32 @@ body {
   async function deleteMailRow(mailId, btn) {
     const row = btn.closest('.mail-row');
     if (!row || row.classList.contains('removing')) return;
+    btn.disabled = true;
     try {
-      await fetch('/api/gmail-action', {
+      const res = await fetch('/api/gmail-action', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', ids: [mailId] })
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Retirer de la liste locale et du cache
+      const idx = MAIL_ALL_DELETE.findIndex(m => m.id === mailId);
+      if (idx !== -1) MAIL_ALL_DELETE.splice(idx, 1);
+      saveMailCache(MAIL_ALL_DELETE, MAIL_ALL_REPLY, MAIL_ALL_TASK, MAIL_ALL_ARCHIVE, MAIL_PROCESSED);
+      updateMailMeta();
+      // Animation de sortie
+      const picker = document.getElementById('picker-' + mailId);
       row.style.maxHeight = row.offsetHeight + 'px';
-      requestAnimationFrame(() => { row.classList.add('removing'); });
-      setTimeout(() => row.remove(), 320);
+      requestAnimationFrame(() => {
+        row.classList.add('removing');
+        if (picker) picker.classList.add('removing');
+      });
+      setTimeout(() => {
+        row.remove();
+        if (picker) picker.remove();
+        if (MAIL_ALL_DELETE.length === 0) showMailResults();
+      }, 320);
     } catch (err) {
+      btn.disabled = false;
       console.warn('[deleteMailRow]', err);
     }
   }
@@ -2647,6 +2766,246 @@ body {
   }
 
   fetchMails();
+
+  // ─── REVOLUT / BUDGET ───────────────────────────────────
+
+  // Budgets locaux : { catégorie: montantMax }
+  // Editables inline — persistés dans localStorage
+  const BUDGET_KEY = 'elie_budgets_v1';
+  function loadBudgets() {
+    try { return JSON.parse(localStorage.getItem(BUDGET_KEY) || '{}'); } catch { return {}; }
+  }
+  function saveBudgets(b) { localStorage.setItem(BUDGET_KEY, JSON.stringify(b)); }
+
+  // Budget mensuel global
+  const GLOBAL_BUDGET_KEY = 'elie_global_budget_v1';
+  function loadGlobalBudget() { return parseInt(localStorage.getItem(GLOBAL_BUDGET_KEY) || '0', 10) || 0; }
+  function saveGlobalBudget(v) { localStorage.setItem(GLOBAL_BUDGET_KEY, String(v)); }
+
+  function fmtEur(n) {
+    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n) + ' €';
+  }
+
+  function renderBudget(data) {
+    const budgets     = loadBudgets();
+    const globalBudget = loadGlobalBudget();
+    const container   = document.getElementById('budgetContainer');
+    const pct = globalBudget > 0 ? Math.min(data.monthTotal / globalBudget * 100, 100) : 0;
+    const fillClass = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : '';
+
+    document.getElementById('budgetMeta').textContent =
+      `Revolut · ${data.month}`;
+
+    let html = '';
+
+    // ── Balance
+    html += `<div class="budget-header">
+      <div class="budget-balance-row">
+        <div class="budget-balance-val">${fmtEur(data.balance ?? 0)}<span class="bsym"></span></div>
+        <div class="budget-balance-label">Solde disponible</div>
+      </div>
+      <div class="budget-month-row">
+        <div>
+          <div class="budget-month-spent">${fmtEur(data.monthTotal)}</div>
+          <div class="budget-month-label">dépensé ce mois</div>
+        </div>
+        <div class="budget-month-budget" onclick="editGlobalBudget()" title="Modifier le budget mensuel">
+          ${globalBudget > 0 ? `budget : ${fmtEur(globalBudget)}` : '+ Définir un budget'}
+        </div>
+      </div>
+      ${globalBudget > 0 ? `
+      <div class="budget-global-bar">
+        <div class="budget-global-fill ${fillClass}" style="width:${pct.toFixed(1)}%"></div>
+      </div>` : ''}
+    </div>`;
+
+    // ── Catégories
+    if (data.categories.length > 0) {
+      html += '<div class="budget-cats-list">';
+      data.categories.forEach(cat => {
+        const limit   = budgets[cat.name] || 0;
+        const catPct  = limit > 0 ? Math.min(cat.amount / limit * 100, 100) : 0;
+        const cf      = catPct >= 100 ? 'over' : catPct >= 80 ? 'warn' : '';
+        const barW    = limit > 0 ? catPct.toFixed(1) : 0;
+        html += `<div class="budget-cat-row">
+          <div class="budget-cat-top">
+            <span class="budget-cat-name">${escHtml(cat.name)}</span>
+            <span class="budget-cat-amounts">
+              <strong>${fmtEur(cat.amount)}</strong>
+              ${limit > 0 ? ` / ${fmtEur(limit)}` : ''}
+              <button class="budget-cat-edit-btn" onclick="editCatBudget('${escHtml(cat.name)}')" title="Définir un budget">✎</button>
+            </span>
+          </div>
+          ${limit > 0 ? `<div class="budget-cat-bar"><div class="budget-cat-fill ${cf}" style="width:${barW}%"></div></div>` : ''}
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    // ── Transactions (collapsible)
+    html += `<button class="budget-tx-toggle" onclick="toggleBudgetTx(this)">
+      Transactions du mois (${data.transactions.length})
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6,9 12,15 18,9"/></svg>
+    </button>`;
+    html += '<div class="budget-tx-list" id="budgetTxList">';
+    data.transactions.forEach(tx => {
+      const pos   = tx.amount > 0;
+      const sign  = pos ? '+' : '';
+      const date  = tx.date ? new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
+      html += `<div class="budget-tx-row">
+        <div class="budget-tx-dot" style="background:${pos ? 'var(--done)' : 'var(--navy)'}"></div>
+        <div class="budget-tx-label" title="${escHtml(tx.label)}">${escHtml(tx.label)}</div>
+        <div class="budget-tx-date">${date}</div>
+        <div class="budget-tx-amount ${pos ? 'pos' : 'neg'}">${sign}${fmtEur(Math.abs(tx.amount))}</div>
+      </div>`;
+    });
+    html += '</div>';
+
+    container.innerHTML = html;
+  }
+
+  function toggleBudgetTx(btn) {
+    const list = document.getElementById('budgetTxList');
+    if (!list) return;
+    const open = list.classList.toggle('open');
+    btn.querySelector('svg').style.transform = open ? 'rotate(180deg)' : '';
+  }
+
+  function editGlobalBudget() {
+    const current = loadGlobalBudget();
+    const val     = prompt('Budget mensuel global (€) :', current || '');
+    if (val === null) return;
+    const num = parseInt(val.replace(/\s/g, ''), 10);
+    if (!isNaN(num) && num >= 0) { saveGlobalBudget(num); fetchBudget(); }
+  }
+
+  function editCatBudget(catName) {
+    const budgets = loadBudgets();
+    const current = budgets[catName] || '';
+    const val     = prompt(`Budget pour "${catName}" (€) :`, current);
+    if (val === null) return;
+    const num = parseInt(val.replace(/\s/g, ''), 10);
+    if (!isNaN(num) && num >= 0) {
+      budgets[catName] = num;
+      saveBudgets(budgets);
+      fetchBudget();
+    }
+  }
+
+  async function fetchBudget() {
+    try {
+      const res  = await fetch('/api/revolut');
+      const data = await res.json();
+
+      if (data.status === 'not_configured' || data.status === 'not_connected') {
+        document.getElementById('budgetMeta').textContent = 'Revolut · non connecté';
+        document.getElementById('budgetContainer').innerHTML = `
+          <div class="revolut-connect">
+            <p>Connecte ton compte Revolut<br>pour voir tes dépenses en temps réel.</p>
+            <button class="revolut-connect-btn" onclick="startRevolutSetup()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+              Connecter Revolut
+            </button>
+          </div>`;
+        return;
+      }
+
+      if (data.error) throw new Error(data.error);
+      renderBudget(data);
+
+    } catch (err) {
+      console.warn('[Budget]', err.message);
+      document.getElementById('budgetMeta').textContent = 'Revolut · erreur';
+    }
+  }
+
+  // ── WIZARD DE CONNEXION ──────────────────────────────────
+  async function startRevolutSetup() {
+    const btn = document.querySelector('.revolut-connect-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Préparation…'; }
+    try {
+      const res  = await fetch('/api/revolut-connect?action=start');
+      const data = await res.json();
+      if (!data.authUrl) throw new Error(data.error || 'Pas de lien retourné');
+
+      // Sauvegarder le requisitionId pour la finalisation
+      localStorage.setItem('elie_revolut_req', data.requisitionId);
+
+      // Afficher les instructions
+      document.getElementById('budgetContainer').innerHTML = `
+        <div class="revolut-setup-steps">
+          <div class="revolut-setup-step">
+            <div class="revolut-step-num">1</div>
+            <div class="revolut-step-body">
+              <strong>Autoriser l'accès à Revolut</strong>
+              Clique sur le bouton — tu seras redirigé vers Revolut pour confirmer l'accès en lecture.
+              <a class="revolut-step-link" href="${escHtml(data.authUrl)}" target="_blank">Ouvrir Revolut →</a>
+            </div>
+          </div>
+          <div class="revolut-setup-step">
+            <div class="revolut-step-num">2</div>
+            <div class="revolut-step-body">
+              <strong>Revenir ici et finaliser</strong>
+              Après l'autorisation, clique pour récupérer ton ID de compte.
+              <button class="revolut-step-link" onclick="finalizeRevolutSetup()">J'ai autorisé →</button>
+            </div>
+          </div>
+        </div>`;
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Connecter Revolut'; }
+      alert('Erreur : ' + err.message);
+    }
+  }
+
+  async function finalizeRevolutSetup() {
+    const reqId = localStorage.getItem('elie_revolut_req');
+    if (!reqId) return alert('Requisition ID introuvable — recommence l\'étape 1.');
+    try {
+      const res  = await fetch(`/api/revolut-connect?action=finalize&reqId=${reqId}`);
+      const data = await res.json();
+
+      if (!data.accounts?.length) {
+        return alert('Aucun compte trouvé. As-tu bien complété l\'autorisation Revolut ?');
+      }
+
+      const accountsHtml = data.accounts.map(a =>
+        `<div class="revolut-setup-step">
+          <div class="revolut-step-num">✓</div>
+          <div class="revolut-step-body">
+            <strong>${escHtml(a.name || 'Compte principal')}</strong>
+            ${a.iban ? `IBAN : ${escHtml(a.iban)}<br>` : ''}
+            Copie cet ID dans Vercel → Settings → Environment Variables<br>
+            <strong>NORDIGEN_ACCOUNT_ID</strong> =
+            <div class="revolut-account-id-box">${escHtml(a.id)}</div>
+          </div>
+        </div>`
+      ).join('');
+
+      document.getElementById('budgetContainer').innerHTML = `
+        <div class="revolut-setup-steps">
+          ${accountsHtml}
+          <div class="revolut-setup-step">
+            <div class="revolut-step-num">3</div>
+            <div class="revolut-step-body">
+              <strong>Redéployer Vercel</strong>
+              Après avoir ajouté la variable, redéploie le projet (ou attend le prochain push).
+              L'accès est valable 90 jours — Elie t'avertira quand il faudra renouveler.
+            </div>
+          </div>
+        </div>`;
+      localStorage.removeItem('elie_revolut_req');
+    } catch (err) {
+      alert('Erreur : ' + err.message);
+    }
+  }
+
+  // Détecter le retour du redirect Nordigen (#revolut-setup)
+  if (location.hash === '#revolut-setup') {
+    history.replaceState(null, '', location.pathname);
+    setTimeout(() => finalizeRevolutSetup(), 500);
+  }
+
+  fetchBudget();
 
   // ─── SERVICE WORKER ───
   if ('serviceWorker' in navigator) {
