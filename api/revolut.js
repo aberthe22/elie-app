@@ -155,6 +155,9 @@ export default async function handler(req, res) {
           throw new Error(`user/create ${createRes.status}: ${createBody}`);
         }
 
+        // Délai de propagation sandbox
+        await new Promise(r => setTimeout(r, 1000));
+
         // Générer le code de délégation pour Tink Link
         const TINK_LINK_SCOPE = 'authorization:read,authorization:grant,credentials:refresh,credentials:read,credentials:write,providers:read,user:read,accounts:read,balances:read,transactions:read,identity:read';
         const delegateBody = new URLSearchParams({
@@ -180,6 +183,7 @@ export default async function handler(req, res) {
           + `&authorization_code=${encodeURIComponent(code)}`
           + `&market=FR&locale=fr_FR`;
 
+        console.log('[tink authUrl]', authUrl);
         return res.status(200).json({ externalUserId, authUrl });
       }
 
