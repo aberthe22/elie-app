@@ -2994,6 +2994,7 @@ body {
     container.innerHTML = html;
   }
 
+
   function toggleBudgetTx(btn) {
     const list = document.getElementById('budgetTxList');
     if (!list) return;
@@ -3018,17 +3019,77 @@ body {
     if (!isNaN(num) && num >= 0) {
       budgets[catName] = num;
       saveBudgets(budgets);
-      fetchBudget();
+      if (window._budgetData) renderBudget(window._budgetData);
+    }
+  }
+
+  // ── TINK / BUDGET CONNEXION ────────────────────────────────────────
+
+  async function startRevolutSetup() {
+    const btn = document.querySelector('.revolut-connect-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Connexion…'; }
+    try {
+      const res = await fetch('/api/revolut?action=connect-start');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      localStorage.setItem('elie_tink_user_id', data.externalUserId);
+      window.location.href = data.authUrl;
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Connecter Revolut'; }
+      alert('Erreur connexion Tink : ' + err.message);
+    }
+  }
+
+  async function finalizeTinkSetup() {
+    const container = document.getElementById('budgetContainer');
+    if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-3)">Finalisation de la connexion Tink…</div>';
+    document.getElementById('budgetMeta').textContent = 'Tink · finalisation…';
+    try {
+      const res = await fetch('/api/revolut?action=connect-finalize');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      const accounts = data.accounts ?? [];
+      const userId   = localStorage.getItem('elie_tink_user_id') || '—';
+      let html = '<div style="padding:16px">';
+      html += '<p style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px">✓ Connexion Tink réussie !</p>';
+      html += '<p style="font-size:12px;color:var(--ink-3);margin-bottom:10px">Ajoute cette variable dans tes env Vercel, puis redéploie :</p>';
+      html += '<code style="display:block;background:var(--surface-2);padding:10px;border-radius:8px;font-size:12px;margin-bottom:14px;word-break:break-all">TINK_EXTERNAL_USER_ID = ' + escHtml(userId) + '</code>';
+      if (accounts.length > 0) {
+        html += '<p style="font-size:12px;color:var(--ink-3);margin-bottom:6px">Comptes détectés :</p>';
+        accounts.forEach(a => {
+          html += '<div style="font-size:12px;padding:7px 0;border-bottom:1px solid var(--line-2)">';
+          html += '<strong>' + escHtml(a.name) + '</strong>';
+          if (a.iban)        html += ' · <span style="color:var(--ink-3)">' + escHtml(a.iban) + '</span>';
+          if (a.balance !== null) html += ' · <strong>' + a.balance + ' ' + a.currency + '</strong>';
+          html += '<br><span style="font-size:10px;color:var(--ink-4)">ID : ' + escHtml(a.id) + '</span>';
+          html += '</div>';
+        });
+        if (accounts.length > 1)
+          html += '<p style="font-size:11px;color:var(--ink-3);margin-top:10px">Pour un compte spécifique, ajoute aussi : <code>TINK_ACCOUNT_ID = {id}</code></p>';
+      }
+      html += '</div>';
+      if (container) container.innerHTML = html;
+      document.getElementById('budgetMeta').textContent = 'Tink · connexion OK';
+    } catch (err) {
+      if (container) container.innerHTML = '<div style="padding:16px;color:var(--urgent);font-size:13px">Erreur Tink : ' + escHtml(err.message) + '</div>';
+      document.getElementById('budgetMeta').textContent = 'Tink · erreur';
     }
   }
 
   async function fetchBudget() {
+    document.getElementById('budgetMeta').textContent = 'Tink · chargement…';
     try {
       const res  = await fetch('/api/revolut');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-
-      if (data.status === 'not_configured' || data.status === 'not_connected') {
-        document.getElementById('budgetMeta').textContent = 'Revolut · non connecté';
+      if (data.status === 'not_configured') {
+        document.getElementById('budgetMeta').textContent = 'Budget · à configurer';
+        return;
+      }
+      if (data.status === 'not_connected') {
+        document.getElementById('budgetMeta').textContent = 'Budget · non connecté';
         document.getElementById('budgetContainer').innerHTML = `
           <div class="revolut-connect">
             <p>Connecte ton compte Revolut<br>pour voir tes dépenses en temps réel.</p>
@@ -3039,115 +3100,37 @@ body {
           </div>`;
         return;
       }
-
       if (data.error) throw new Error(data.error);
+      window._budgetData = data;
       renderBudget(data);
-
     } catch (err) {
-      console.warn('[Budget]', err.message);
-      document.getElementById('budgetMeta').textContent = 'Revolut · erreur';
+      console.warn('[fetchBudget]', err.message);
+      document.getElementById('budgetMeta').textContent = 'Budget · erreur';
     }
   }
 
-  // ── WIZARD DE CONNEXION ──────────────────────────────────
-  async function startRevolutSetup() {
-    const btn = document.querySelector('.revolut-connect-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Préparation…'; }
-    try {
-      const res  = await fetch('/api/revolut-connect?action=start');
-      const data = await res.json();
-      if (!data.authUrl) throw new Error(data.error || 'Pas de lien retourné');
+  // ── INITIALISATION ──────────────────────────────────────────────
 
-      // Sauvegarder le requisitionId pour la finalisation
-      localStorage.setItem('elie_revolut_req', data.requisitionId);
-
-      // Afficher les instructions
-      document.getElementById('budgetContainer').innerHTML = `
-        <div class="revolut-setup-steps">
-          <div class="revolut-setup-step">
-            <div class="revolut-step-num">1</div>
-            <div class="revolut-step-body">
-              <strong>Autoriser l'accès à Revolut</strong>
-              Clique sur le bouton — tu seras redirigé vers Revolut pour confirmer l'accès en lecture.
-              <a class="revolut-step-link" href="${escHtml(data.authUrl)}" target="_blank">Ouvrir Revolut →</a>
-            </div>
-          </div>
-          <div class="revolut-setup-step">
-            <div class="revolut-step-num">2</div>
-            <div class="revolut-step-body">
-              <strong>Revenir ici et finaliser</strong>
-              Après l'autorisation, clique pour récupérer ton ID de compte.
-              <button class="revolut-step-link" onclick="finalizeRevolutSetup()">J'ai autorisé →</button>
-            </div>
-          </div>
-        </div>`;
-    } catch (err) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Connecter Revolut'; }
-      alert('Erreur : ' + err.message);
-    }
-  }
-
-  async function finalizeRevolutSetup() {
-    const reqId = localStorage.getItem('elie_revolut_req');
-    if (!reqId) return alert('Requisition ID introuvable — recommence l\'étape 1.');
-    try {
-      const res  = await fetch(`/api/revolut-connect?action=finalize&reqId=${reqId}`);
-      const data = await res.json();
-
-      if (!data.accounts?.length) {
-        return alert('Aucun compte trouvé. As-tu bien complété l\'autorisation Revolut ?');
-      }
-
-      const accountsHtml = data.accounts.map(a =>
-        `<div class="revolut-setup-step">
-          <div class="revolut-step-num">✓</div>
-          <div class="revolut-step-body">
-            <strong>${escHtml(a.name || 'Compte principal')}</strong>
-            ${a.iban ? `IBAN : ${escHtml(a.iban)}<br>` : ''}
-            Copie cet ID dans Vercel → Settings → Environment Variables<br>
-            <strong>NORDIGEN_ACCOUNT_ID</strong> =
-            <div class="revolut-account-id-box">${escHtml(a.id)}</div>
-          </div>
-        </div>`
-      ).join('');
-
-      document.getElementById('budgetContainer').innerHTML = `
-        <div class="revolut-setup-steps">
-          ${accountsHtml}
-          <div class="revolut-setup-step">
-            <div class="revolut-step-num">3</div>
-            <div class="revolut-step-body">
-              <strong>Redéployer Vercel</strong>
-              Après avoir ajouté la variable, redéploie le projet (ou attend le prochain push).
-              L'accès est valable 90 jours — Elie t'avertira quand il faudra renouveler.
-            </div>
-          </div>
-        </div>`;
-      localStorage.removeItem('elie_revolut_req');
-    } catch (err) {
-      alert('Erreur : ' + err.message);
-    }
-  }
-
-  // Détecter le retour du redirect Nordigen (#revolut-setup)
-  if (location.hash === '#revolut-setup') {
-    history.replaceState(null, '', location.pathname);
-    setTimeout(() => finalizeRevolutSetup(), 500);
-  }
-
+  fetchTasks();
+  fetchMails();
+  fetchCalendar();
   fetchBudget();
 
-  // ─── CLAVIER MOBILE : remonter les sheets/modals quand le clavier s'ouvre ───
+  // Détecter le retour depuis Tink Link (#tink-setup)
+  if (window.location.hash === '#tink-setup') {
+    history.replaceState(null, '', window.location.pathname);
+    finalizeTinkSetup();
+  }
+
+  // Clavier mobile : remonter sheets/modals quand le clavier s'ouvre
   if (window.visualViewport) {
     const adjustForKeyboard = () => {
       const kbH = Math.max(0,
         window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop
       );
-      const offset = kbH > 20 ? `${kbH}px` : '';
-      // Bottom sheet réponse mail
+      const offset = kbH > 20 ? (kbH + 'px') : '';
       const sheet = document.getElementById('replySheet');
       if (sheet) sheet.style.bottom = offset;
-      // Modals (ajout tâche, agenda…)
       document.querySelectorAll('.modal-backdrop').forEach(el => {
         el.style.paddingBottom = offset;
       });
@@ -3156,7 +3139,7 @@ body {
     window.visualViewport.addEventListener('scroll', adjustForKeyboard);
   }
 
-  // ─── SERVICE WORKER ───
+  // Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
