@@ -121,6 +121,26 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brief-btn {
+  background: var(--navy-bg);
+  color: var(--navy);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 13px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.brief-btn:hover { background: var(--navy); color: #fff; }
+
 /* ═══ HERO ═══ */
 .hero {
   padding: 4px 4px 28px;
@@ -1189,7 +1209,10 @@ body { padding-bottom: 64px; }
         <div class="logo-status"><span class="dot"></span>Connectée</div>
       </div>
     </div>
-    <div class="date-badge" id="dateBadge">—</div>
+    <div class="topbar-right">
+      <button class="brief-btn" onclick="sendQuick('Brief-moi')">✦ Brief</button>
+      <div class="date-badge" id="dateBadge">—</div>
+    </div>
   </header>
 
   <!-- HERO -->
@@ -3132,6 +3155,13 @@ body { padding-bottom: 64px; }
   function saveChatStorage() {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(CHAT_HISTORY.slice(-30)));
     localStorage.setItem(CONTEXT_KEY, CHAT_CONTEXT);
+  }
+
+  function sendQuick(text) {
+    const input = document.getElementById('chatInput');
+    if (input) { input.value = text; updateSendBtn(); }
+    openChatPanel();
+    sendChatMessage();
   }
 
   function updateSendBtn() {
