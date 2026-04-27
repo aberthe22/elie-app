@@ -31,7 +31,7 @@ async function getClientToken(clientId, clientSecret) {
       client_id:     clientId,
       client_secret: clientSecret,
       grant_type:    'client_credentials',
-      scope:         'authorization:grant,credentials:read,user:create,user:read',
+      scope:         'authorization:grant,user:read,credentials:read',
     }),
   });
   const data = await res.json();
@@ -154,12 +154,20 @@ export default async function handler(req, res) {
         });
 
         // Générer le code de délégation pour Tink Link
-        const delegateRes = await fetch(`${BASE}/link/delegatedauthorization/grant`, {
-          method: 'POST', headers,
-          body: JSON.stringify({
-            user_id: externalUserId,
-            scope:   'accounts:read,balances:read,transactions:read,credentials:read,identity:read',
-          }),
+        // Endpoint correct : /oauth/authorization-grant/delegate (pas /link/delegatedauthorization/grant)
+        const TINK_LINK_SCOPE = 'authorization:read,authorization:grant,credentials:refresh,credentials:read,credentials:write,providers:read,user:read,accounts:read,balances:read,transactions:read,identity:read';
+        const delegateBody = new URLSearchParams({
+          external_user_id: externalUserId,
+          actor_client_id:  TINK_CLIENT_ID,
+          scope:            TINK_LINK_SCOPE,
+        });
+        const delegateRes = await fetch(`${BASE}/oauth/authorization-grant/delegate`, {
+          method: 'POST',
+          headers: {
+            Authorization:  `Bearer ${clientToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: delegateBody,
         });
         if (!delegateRes.ok) throw new Error(`Delegate grant: ${await delegateRes.text()}`);
         const delegateData = await delegateRes.json();
@@ -205,7 +213,7 @@ export default async function handler(req, res) {
       }
     } catch (err) {
       console.error('[tink connect]', err.message);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: err.message, detail: err.stack?.split('\n')[1] ?? '' });
     }
   }
 
