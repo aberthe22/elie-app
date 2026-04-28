@@ -98,9 +98,12 @@ export default async function handler(req, res) {
       .sort((a, b) => b.score - a.score)  // les mieux scorées en premier
       .slice(0, 10);                       // top 10 : 5 affichés + 5 en réserve
 
+    const blocked = allTasks.filter(tk => tk.status === 'Bloqué');
+
     return res.status(200).json({
       suggested: scored,
       today:     todayTasks,
+      blocked,
       meta: {
         totalActive: allTasks.length,
         todayCount:  todayTasks.length
@@ -156,7 +159,8 @@ function parsePage(page, today) {
     date:       dateRaw,
     tag,
     tagClass,
-    url:        page.url
+    url:        page.url,
+    lastEdited: page.last_edited_time ?? null,
   };
 }
 

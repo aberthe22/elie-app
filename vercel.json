@@ -1,8 +1,9 @@
 {
   "functions": {
-    "api/gmail.js":        { "maxDuration": 30 },
-    "api/gmail-action.js": { "maxDuration": 30 },
-    "api/chat.js":         { "maxDuration": 30 },
-    "api/*.js":            { "maxDuration": 10 }
+    "api/gmail.js":         { "maxDuration": 30 },
+    "api/gmail-action.js":  { "maxDuration": 30 },
+    "api/chat.js":          { "maxDuration": 30 },
+    "api/budget-vision.js": { "maxDuration": 30 },
+    "api/*.js":             { "maxDuration": 10 }
   }
 }

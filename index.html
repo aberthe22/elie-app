@@ -397,6 +397,94 @@ body {
   font-weight: 500;
 }
 
+/* ═══ RECAP BANNIÈRE WEEKEND ═══ */
+.recap-banner {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--navy-bg);
+  border: 1px solid rgba(30,61,110,.18);
+  border-radius: var(--r);
+  padding: 12px 16px; margin-bottom: 16px;
+  cursor: pointer; transition: background .15s;
+  text-decoration: none;
+}
+.recap-banner:hover { background: #dce7f5; }
+.recap-banner-icon { font-size: 22px; }
+.recap-banner-text { flex: 1; }
+.recap-banner-text strong { display: block; font-size: 13px; font-weight: 600; color: var(--navy); }
+.recap-banner-text span   { font-size: 12px; color: var(--ink-3); }
+.recap-banner-cta {
+  background: var(--navy); color: #fff;
+  border: none; border-radius: 10px;
+  font-size: 12px; font-weight: 600; padding: 6px 13px;
+  cursor: pointer; white-space: nowrap;
+}
+
+/* ═══ RELANCES INTELLIGENTES ═══ */
+.relances-widget {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--soon);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-top: 12px;
+}
+.relances-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--line-2);
+}
+.relances-icon {
+  width: 26px; height: 26px;
+  background: var(--soon-bg); border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.relances-title { font-size: 13px; font-weight: 600; color: var(--soon); flex: 1; }
+.relances-subtitle { font-size: 11px; color: var(--ink-3); }
+.relance-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line-2);
+}
+.relance-item:last-child { border-bottom: none; }
+.relance-days {
+  font-size: 11px; font-weight: 700; color: var(--soon);
+  background: var(--soon-bg); border-radius: 6px;
+  padding: 3px 7px; flex-shrink: 0;
+}
+.relance-days.mid { color: #C05E00; background: #FEF0DC; }
+.relance-days.old { color: var(--urgent); background: var(--urgent-bg); }
+.relance-title-txt {
+  flex: 1; font-size: 13px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.relance-btn {
+  background: var(--navy-bg); color: var(--navy);
+  border: none; border-radius: 8px;
+  font-size: 11px; font-weight: 600; padding: 5px 10px;
+  cursor: pointer; flex-shrink: 0; transition: background .15s;
+}
+.relance-btn:hover { background: var(--navy); color: #fff; }
+
+/* ═══ BUDGET VISION ═══ */
+.budget-advice {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--line-2);
+  font-size: 13px; color: var(--ink-2); line-height: 1.55;
+}
+.budget-advice-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.budget-scan-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 11px;
+  background: var(--navy); color: #fff;
+  border: none; border-radius: 12px;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: opacity .15s;
+}
+.budget-scan-btn:hover { opacity: .88; }
+
 /* ═══ SECTIONS ═══ */
 .section { margin-top: 28px; }
 .section-head {
@@ -1363,6 +1451,15 @@ body { padding-bottom: 64px; }
 
   <!-- HERO -->
   <section class="hero">
+    <!-- Recap banner — visible le week-end uniquement via JS -->
+    <div class="recap-banner" id="recapBanner" style="display:none" onclick="openBrief('weekly')">
+      <div class="recap-banner-icon">📋</div>
+      <div class="recap-banner-text">
+        <strong>Récap de semaine disponible</strong>
+        <span>Bilan, blocages et cap pour la semaine prochaine</span>
+      </div>
+      <button class="recap-banner-cta">Voir →</button>
+    </div>
     <div class="hero-greeting">Bonjour, <em>Alexis</em>.</div>
     <div class="hero-time" id="clock">--:--</div>
 
@@ -1386,6 +1483,16 @@ body { padding-bottom: 64px; }
           <div class="skeleton" style="height:13px;flex:1;border-radius:4px"></div>
         </div>
       </div>
+    </div>
+
+    <!-- Relances intelligentes — tâches bloquées -->
+    <div class="relances-widget" id="relancesWidget" style="display:none">
+      <div class="relances-head">
+        <div class="relances-icon">⏳</div>
+        <div class="relances-title">En attente</div>
+        <div class="relances-subtitle" id="relancesSubtitle"></div>
+      </div>
+      <div id="relancesList"></div>
     </div>
   </section>
 
@@ -1508,11 +1615,12 @@ body { padding-bottom: 64px; }
     </div>
     <div class="card" id="budgetContainer">
       <div class="revolut-connect">
-        <p>Importe un relevé bancaire<br>pour visualiser tes dépenses du mois.</p>
-        <button class="revolut-connect-btn" onclick="importBudgetCSV()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Importer un relevé
-        </button>
+        <p>Prends une capture d'écran de Revolut<br>et Elie analyse tes budgets en un instant.</p>
+        <label class="budget-scan-btn" for="budgetPhotoInput">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Scanner une capture Revolut
+        </label>
+        <input type="file" id="budgetPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="importBudgetPhoto(this)">
       </div>
     </div>
   </section>
@@ -1901,6 +2009,7 @@ body { padding-bottom: 64px; }
       updateBadges();
       renderCurrentTab();
       updateUrgences();
+      renderRelances(data.blocked ?? []);
     } catch (err) {
       console.warn('[Elie] Tâches:', err.message);
       document.getElementById('tasksCard').innerHTML =
@@ -3417,11 +3526,17 @@ body { padding-bottom: 64px; }
     if (btn && inp) btn.classList.toggle('active', inp.value.trim().length > 0);
   }
 
-  async function openBrief() {
+  async function openBrief(mode = 'daily') {
     document.getElementById('briefOverlay').classList.add('open');
     document.getElementById('briefSheet').classList.add('open');
+    const isWeekly  = mode === 'weekly';
+    const titleEl   = document.querySelector('.brief-sheet-title');
+    if (titleEl) titleEl.textContent = isWeekly ? '✶ Récap de la semaine' : '✶ Brief du jour';
+    const briefMsg  = isWeekly
+      ? "Fais-moi le récap de la semaine : quelles tâches j'ai terminées, lesquelles sont bloquées depuis longtemps, quoi prévoir pour la semaine prochaine, et tes conseils concrets pour bien attaquer la semaine suivante."
+      : 'Brief-moi';
     document.getElementById('briefBody').innerHTML =
-      '<div class="brief-loading"><div class="brief-spinner"></div><span>Elie prépare ton brief…</span></div>';
+      `<div class="brief-loading"><div class="brief-spinner"></div><span>${isWeekly ? 'Elie prépare ton récap semaine…' : 'Elie prépare ton brief…'}</span></div>`;
     document.getElementById('briefThread').innerHTML = '';
     document.getElementById('briefInputRow').style.display = 'none';
 
@@ -3430,7 +3545,7 @@ body { padding-bottom: 64px; }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: 'Brief-moi',
+          message: briefMsg,
           history: CHAT_HISTORY.slice(-10),
           context: CHAT_CONTEXT,
         }),
@@ -3514,6 +3629,135 @@ body { padding-bottom: 64px; }
   function closeBrief() {
     document.getElementById('briefOverlay').classList.remove('open');
     document.getElementById('briefSheet').classList.remove('open');
+  }
+
+
+  // ── RELANCES INTELLIGENTES ──────────────────────────────
+  function renderRelances(blocked) {
+    const widget = document.getElementById('relancesWidget');
+    const list   = document.getElementById('relancesList');
+    const sub    = document.getElementById('relancesSubtitle');
+    if (!widget || !list) return;
+    if (!blocked || blocked.length === 0) { widget.style.display = 'none'; return; }
+
+    const now = Date.now();
+    widget.style.display = '';
+    sub.textContent = blocked.length + ' tâche' + (blocked.length > 1 ? 's' : '');
+
+    list.innerHTML = blocked.map(t => {
+      const days = t.lastEdited
+        ? Math.floor((now - new Date(t.lastEdited)) / 86400000) : null;
+      const daysText  = days !== null ? days + 'j' : '?';
+      const daysClass = days > 7 ? 'old' : days > 3 ? 'mid' : '';
+      return `
+        <div class="relance-item">
+          <span class="relance-days ${daysClass}">${escHtml(daysText)}</span>
+          <span class="relance-title-txt">${escHtml(t.title)}</span>
+          <button class="relance-btn" onclick="relanceTask('${escHtml(t.title).replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">Relancer</button>
+        </div>`;
+    }).join('');
+  }
+
+  function relanceTask(title) {
+    const text = `Aide-moi à relancer "${title}" — rédige un message de suivi court et professionnel`;
+    if (document.getElementById('briefSheet')?.classList.contains('open')) {
+      const inp = document.getElementById('briefInput');
+      if (inp) { inp.value = text; updateBriefSendBtn(); inp.focus(); }
+    } else {
+      sendQuick(text);
+    }
+  }
+
+  // ── RECAP HEBDO WEEKEND ─────────────────────────────────
+  function checkWeekendRecap() {
+    const day = new Date().getDay(); // 0=dim, 6=sam
+    if (day === 0 || day === 6) {
+      const el = document.getElementById('recapBanner');
+      if (el) el.style.display = 'flex';
+    }
+  }
+  checkWeekendRecap();
+
+  // ── BUDGET VISION (capture Revolut) ────────────────────
+  async function importBudgetPhoto(input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const container = document.getElementById('budgetContainer');
+    container.innerHTML = '<div class="brief-loading"><div class="brief-spinner"></div><span>Analyse de ta capture en cours…</span></div>';
+    try {
+      const base64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload  = e => res(e.target.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      const resp = await fetch('/api/budget-vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64, mimeType: file.type }),
+      });
+      const data = await resp.json();
+      renderBudgetVision(data);
+    } catch (e) {
+      container.innerHTML = '<div class="revolut-connect"><p style="color:var(--urgent)">Erreur lors de l'analyse. Réessaie.</p></div>';
+    }
+    input.value = '';
+  }
+
+  function renderBudgetVision(data) {
+    const container = document.getElementById('budgetContainer');
+    if (!data.categories?.length) {
+      container.innerHTML = `<div class="revolut-connect"><p>Impossible de lire la capture. Assure-toi que l'image montre bien les budgets Revolut.</p>
+        <label class="budget-scan-btn" for="budgetPhotoInput" style="cursor:pointer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Réessayer
+        </label>
+        <input type="file" id="budgetPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="importBudgetPhoto(this)">
+      </div>`;
+      return;
+    }
+    const totalSpent  = data.totalSpent  ?? data.categories.reduce((s,c) => s + (c.spent||0), 0);
+    const totalBudget = data.totalBudget ?? null;
+    const pct = totalBudget ? Math.round(totalSpent / totalBudget * 100) : null;
+    const barClass = pct > 90 ? 'over' : pct > 70 ? 'warn' : '';
+
+    let html = '<div class="budget-header">';
+    if (totalSpent) {
+      html += `<div class="budget-balance-row">
+        <div>
+          <div class="budget-balance-val"><span class="bsym">€</span>${totalSpent.toLocaleString('fr-FR')}</div>
+          <div class="budget-balance-label">dépensé${data.month ? ' en ' + data.month : ''}</div>
+        </div>
+        ${totalBudget ? `<div>
+          <div class="budget-month-spent">€${totalBudget.toLocaleString('fr-FR')}</div>
+          <div class="budget-month-label">budget total</div>
+        </div>` : ''}
+      </div>`;
+      if (pct !== null) html += `<div class="budget-global-bar"><div class="budget-global-fill ${barClass}" style="width:${Math.min(pct,100)}%"></div></div>`;
+    }
+    html += '</div><div class="budget-cats-list">';
+    for (const cat of data.categories) {
+      const cp = cat.budget ? Math.round((cat.spent||0)/cat.budget*100) : (cat.percentage??null);
+      const cc = cp > 90 ? 'over' : cp > 70 ? 'warn' : '';
+      html += `<div class="budget-cat-row">
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span>${escHtml(cat.name)}</span>
+          <span style="font-weight:600">€${(cat.spent||0).toLocaleString('fr-FR')}${cat.budget ? ' / €'+cat.budget.toLocaleString('fr-FR') : ''}</span>
+        </div>
+        ${cp !== null ? `<div class="budget-global-bar" style="height:5px"><div class="budget-global-fill ${cc}" style="width:${Math.min(cp,100)}%"></div></div>` : ''}
+      </div>`;
+    }
+    html += '</div>';
+    if (data.advice) html += `<div class="budget-advice"><div class="budget-advice-icon">💡</div><p>${escHtml(data.advice)}</p></div>`;
+    html += `<div style="padding:12px 16px 16px">
+      <label class="budget-scan-btn" for="budgetPhotoInput2" style="cursor:pointer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Nouvelle capture
+      </label>
+      <input type="file" id="budgetPhotoInput2" accept="image/*" capture="environment" style="display:none" onchange="importBudgetPhoto(this)">
+    </div>`;
+    container.innerHTML = html;
+    document.getElementById('budgetMeta').textContent = data.month ? 'Budget · ' + data.month : 'Budget · à jour';
   }
 
   loadChatStorage();
