@@ -8,7 +8,8 @@
 export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const token = process.env.NOTION_TOKEN;
@@ -16,6 +17,80 @@ export default async function handler(req, res) {
 
   if (!token || !dbId) {
     return res.status(500).json({ error: 'Variables d\'environnement manquantes' });
+  }
+
+  // ── NOTION CONFIG (push subscriptions) ──────────────────
+  const NOTION_API    = 'https://api.notion.com/v1';
+  const CONFIG_DB_ID  = process.env.NOTION_CONFIG_DB_ID;
+  const notionHeaders = () => ({
+    'Authorization':  `Bearer ${token}`,
+    'Notion-Version': '2022-06-28',
+    'Content-Type':   'application/json',
+  });
+
+  async function getConfig(key) {
+    if (!CONFIG_DB_ID) return null;
+    const r = await fetch(`${NOTION_API}/databases/${CONFIG_DB_ID}/query`, {
+      method: 'POST', headers: notionHeaders(),
+      body: JSON.stringify({ filter: { property: 'Clé', title: { equals: key } } }),
+    });
+    const d = await r.json();
+    return d.results?.[0]?.properties['Valeur']?.rich_text?.[0]?.plain_text ?? null;
+  }
+
+  async function setConfig(key, value) {
+    if (!CONFIG_DB_ID) throw new Error('NOTION_CONFIG_DB_ID manquant');
+    const search = await fetch(`${NOTION_API}/databases/${CONFIG_DB_ID}/query`, {
+      method: 'POST', headers: notionHeaders(),
+      body: JSON.stringify({ filter: { property: 'Clé', title: { equals: key } } }),
+    });
+    const found = await search.json();
+    const props = {
+      'Clé':    { title:     [{ text: { content: key   } }] },
+      'Valeur': { rich_text: [{ text: { content: value } }] },
+    };
+    if (found.results?.length > 0) {
+      await fetch(`${NOTION_API}/pages/${found.results[0].id}`, {
+        method: 'PATCH', headers: notionHeaders(),
+        body: JSON.stringify({ properties: { 'Valeur': props['Valeur'] } }),
+      });
+    } else {
+      await fetch(`${NOTION_API}/pages`, {
+        method: 'POST', headers: notionHeaders(),
+        body: JSON.stringify({ parent: { database_id: CONFIG_DB_ID }, properties: props }),
+      });
+    }
+  }
+
+  // ── POST : sauvegarder subscription push ────────────────
+  if (req.method === 'POST') {
+    const { action, subscription } = req.body ?? {};
+    if (action === 'subscribe' && subscription) {
+      await setConfig('push_subscription', JSON.stringify(subscription));
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(400).json({ error: 'action inconnue' });
+  }
+
+  // ── GET ?notify=1 : envoyer la notif push (cron) ────────
+  if (req.query?.notify === '1') {
+    const subStr = await getConfig('push_subscription');
+    if (!subStr) return res.status(200).json({ ok: false, msg: 'Pas de subscription' });
+
+    const webpush = await import('web-push');
+    webpush.default.setVapidDetails(
+      process.env.VAPID_SUBJECT   ?? 'mailto:aberthe22@gmail.com',
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY,
+    );
+    const sub = JSON.parse(subStr);
+    await webpush.default.sendNotification(sub, JSON.stringify({
+      title: '✦ Elie',
+      body:  'Ton brief du jour est prêt. Bonne journée !',
+      icon:  '/icon.svg',
+      data:  { url: '/' },
+    }));
+    return res.status(200).json({ ok: true, sent: true });
   }
 
   const today = new Date().toISOString().split('T')[0]; // "2026-04-23"
