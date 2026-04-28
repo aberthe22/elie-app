@@ -232,20 +232,60 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.brief-sheet-actions {
-  padding: 12px 20px 24px;
-  border-top: 1px solid var(--line-2);
+.brief-scroll {
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.brief-thread {
+  padding: 0 16px 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.brief-thread-sep {
+  margin: 4px 16px 12px;
+  border: none; border-top: 1px dashed var(--line-2);
+}
+.brief-msg {
+  max-width: 88%; padding: 9px 13px;
+  border-radius: 14px; font-size: 13px; line-height: 1.55;
+  word-break: break-word;
+}
+.brief-msg.user {
+  align-self: flex-end;
+  background: var(--navy); color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.brief-msg.elie {
+  align-self: flex-start;
+  background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-bottom-left-radius: 4px;
+}
+.brief-input-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
   flex-shrink: 0;
 }
-.brief-chat-btn {
-  width: 100%;
-  background: var(--navy); color: #fff;
-  border: none; border-radius: 12px;
-  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
-  padding: 13px; cursor: pointer;
-  transition: opacity .15s;
+.brief-input {
+  flex: 1; height: 40px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  padding: 0 14px;
+  font-family: var(--font-ui); font-size: 14px; color: var(--ink);
+  outline: none; transition: border-color .15s;
 }
-.brief-chat-btn:hover { opacity: .88; }
+.brief-input:focus { border-color: var(--navy); }
+.brief-input::placeholder { color: var(--ink-4); }
+.brief-send-btn {
+  width: 38px; height: 38px; flex-shrink: 0;
+  background: var(--navy); border: none; border-radius: 50%;
+  color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .15s; opacity: .4;
+}
+.brief-send-btn.active { opacity: 1; }
 
 /* ═══ HERO ═══ */
 .hero {
@@ -429,6 +469,13 @@ body {
   cursor: pointer; flex-shrink: 0;
   transition: background .15s, color .15s, border-color .15s;
 }
+.mail-btn-orig {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; flex-shrink: 0; border-radius: 7px;
+  background: var(--surface-2); color: var(--ink-3);
+  text-decoration: none; transition: background .15s, color .15s;
+}
+.mail-btn-orig:hover { background: var(--navy-bg); color: var(--navy); }
 .mail-btn-del { background: var(--surface-2); color: var(--ink-3); }
 .mail-btn-del:hover { background: var(--urgent-bg); color: var(--urgent); border-color: #e8bfb5; }
 .mail-btn-reply { background: var(--navy-bg); color: var(--navy); border-color: #c8d8ef; }
@@ -2119,6 +2166,9 @@ body { padding-bottom: 64px; }
           ${mail.label ? escHtml(mail.label) : '+ Label'}
         </span>
         <div class="mail-row-time">${escHtml(mail.date)}</div>
+        <a class="mail-btn mail-btn-orig" href="https://mail.google.com/mail/u/0/#all/${mail.id}" target="_blank" rel="noopener" title="Lire l'original">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
         <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
         <button class="mail-btn mail-btn-archive"
           data-id="${mail.id}" data-label="${escHtml(mail.label || '')}"
@@ -2146,6 +2196,9 @@ body { padding-bottom: 64px; }
             ${mail.reason ? `<div class="mail-row-reason">${escHtml(mail.reason)}</div>` : ''}
           </div>
           <div class="mail-row-time">${escHtml(mail.date)}</div>
+          <a class="mail-btn mail-btn-orig" href="https://mail.google.com/mail/u/0/#all/${mail.id}" target="_blank" rel="noopener" title="Lire l'original">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
           <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
           <button class="mail-btn mail-btn-del" onclick="deleteMailRow('${mail.id}',this)" title="Supprimer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
@@ -2163,6 +2216,9 @@ body { padding-bottom: 64px; }
             <div class="mail-row-subj">${escHtml(mail.subject)}</div>
           </div>
           <div class="mail-row-time">${escHtml(mail.date)}</div>
+          <a class="mail-btn mail-btn-orig" href="https://mail.google.com/mail/u/0/#all/${mail.id}" target="_blank" rel="noopener" title="Lire l'original">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
           <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
           <button class="mail-btn mail-btn-reply" onclick="openReplySheet('${mail.id}')" title="Voir le brouillon">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
@@ -3080,8 +3136,6 @@ body { padding-bottom: 64px; }
     }
   }
 
-  fetchMails();
-
   // ─── REVOLUT / BUDGET ───────────────────────────────────
 
   // Budgets locaux : { catégorie: montantMax }
@@ -3342,69 +3396,41 @@ body { padding-bottom: 64px; }
       CHAT_HISTORY.push({ role: 'assistant', content: data.reply });
       if (data.history) CHAT_HISTORY = data.history;
       saveChatStorage();
-      renderChatMessages();
-
-      // Rafraîchir les sections si des actions ont été effectuées
-      const actions = data.actions_taken ?? [];
-      if (actions.some(a => ['create_task','update_task'].includes(a))) fetchTasks();
-      if (actions.some(a => ['archive_emails'].includes(a))) fetchMails();
-      if (actions.some(a => ['create_event'].includes(a))) fetchCalendar();
-
-    } catch (err) {
+    } catch(err) {
       CHAT_HISTORY.push({ role: 'assistant', content: `Erreur : ${err.message}` });
       saveChatStorage();
-      renderChatMessages();
     } finally {
       if (typing) typing.classList.remove('visible');
-      if (input) { input.disabled = false; input.focus(); }
+      input.disabled = false;
+      updateSendBtn();
+      renderChatMessages();
     }
   }
 
-  // Fermer le panel si on clique en dehors
-  document.addEventListener('click', e => {
-    if (!chatOpen) return;
-    const bar   = document.getElementById('chatBar');
-    const panel = document.getElementById('chatPanel');
-    if (bar && panel && !bar.contains(e.target) && !panel.contains(e.target)) {
-      closeChatPanel();
-    }
-  }, { passive: true });
-
-  // Ajuster le panel quand le clavier mobile s'ouvre
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-      const bar = document.getElementById('chatBar');
-      if (!bar) return;
-      const kbH = Math.max(0,
-        window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop
-      );
-      bar.style.bottom = kbH > 20 ? kbH + 'px' : '';
-      const panel = document.getElementById('chatPanel');
-      if (panel) panel.style.bottom = kbH > 20 ? (kbH + 64) + 'px' : '';
-    });
-  }
-
-  // ── BRIEF MODAL ────────────────────────────────────────────
-  let briefLastReply = '';
+  // ── BRIEF MODAL + CHAT INTÉGRÉ ──────────────────────────────
 
   function formatBriefHtml(text) {
-    // Escape HTML
     let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    // Colorise checkmarks and warnings
     s = s.replace(/✓/g,'<span style="color:var(--done)">✓</span>');
     s = s.replace(/⚠|⚡/g,'<span style="color:var(--urgent)">$&</span>');
-    // Bold **...**
     s = s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-    // Emoji section headers (line starting with an emoji + bold)
-    s = s.replace(/^(📋|📅|📬|🎯|✅|🔴|🟡|🟢)(.+)$/gm,'<div class="brief-section-title">$1$2</div>');
-    // Bullet lines
+    s = s.replace(/^(\u{1F4CB}|\u{1F4C5}|\u{1F4EC}|\u{1F3AF}|✅|\u{1F534}|\u{1F7E1}|\u{1F7E2})(.+)$/gmu,'<div class="brief-section-title">$1$2</div>');
     s = s.replace(/^[•\-]\s+(.+)$/gm,'<li>$1</li>');
-    // Wrap consecutive <li> in <ul>
-    s = s.replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>');
-    // Double newlines → paragraph breaks
+    s = s.replace(/(<li>[\s\S]*?<\/li>\n?)+/g,'<ul>$&</ul>');
     s = s.replace(/\n\n/g,'</p><p>');
     s = s.replace(/\n/g,'<br>');
     return '<p>' + s + '</p>';
+  }
+
+  function scrollBriefBottom() {
+    const sc = document.getElementById('briefScroll');
+    if (sc) sc.scrollTop = sc.scrollHeight;
+  }
+
+  function updateBriefSendBtn() {
+    const btn = document.getElementById('briefSendBtn');
+    const inp = document.getElementById('briefInput');
+    if (btn && inp) btn.classList.toggle('active', inp.value.trim().length > 0);
   }
 
   async function openBrief() {
@@ -3412,8 +3438,8 @@ body { padding-bottom: 64px; }
     document.getElementById('briefSheet').classList.add('open');
     document.getElementById('briefBody').innerHTML =
       '<div class="brief-loading"><div class="brief-spinner"></div><span>Elie prépare ton brief…</span></div>';
-    document.getElementById('briefActions').style.display = 'none';
-    briefLastReply = '';
+    document.getElementById('briefThread').innerHTML = '';
+    document.getElementById('briefInputRow').style.display = 'none';
 
     try {
       const res = await fetch('/api/chat', {
@@ -3427,16 +3453,15 @@ body { padding-bottom: 64px; }
       });
       const data = await res.json();
       if (data.reply) {
-        briefLastReply = data.reply;
         document.getElementById('briefBody').innerHTML = formatBriefHtml(data.reply);
-        document.getElementById('briefActions').style.display = 'block';
-        // Persist to chat history
+        document.getElementById('briefInputRow').style.display = 'flex';
         CHAT_HISTORY = data.history || [
           ...CHAT_HISTORY,
           { role: 'user', content: 'Brief-moi' },
           { role: 'assistant', content: data.reply },
         ];
         saveChatStorage();
+        scrollBriefBottom();
       } else {
         document.getElementById('briefBody').innerHTML =
           '<p style="color:var(--ink-3);text-align:center">Erreur lors du brief. Réessaie.</p>';
@@ -3447,44 +3472,136 @@ body { padding-bottom: 64px; }
     }
   }
 
+  async function sendBriefMessage() {
+    const input  = document.getElementById('briefInput');
+    const thread = document.getElementById('briefThread');
+    const message = (input?.value ?? '').trim();
+    if (!message) return;
+
+    input.value = '';
+    updateBriefSendBtn();
+
+    // Separateur visuel avant le premier message
+    if (!thread.querySelector('.brief-msg')) {
+      thread.insertAdjacentHTML('beforebegin', '<hr class="brief-thread-sep">');
+    }
+
+    thread.insertAdjacentHTML('beforeend',
+      `<div class="brief-msg user">${escHtml(message)}</div>`);
+
+    const tid = 'bt_' + Date.now();
+    thread.insertAdjacentHTML('beforeend',
+      `<div class="brief-msg elie" id="${tid}"><span class="chat-typing" style="display:flex;background:none;border:none;padding:4px 0"><span></span><span></span><span></span></span></div>`);
+    scrollBriefBottom();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          history: CHAT_HISTORY.slice(-20),
+          context: CHAT_CONTEXT,
+        }),
+      });
+      const data = await res.json();
+      document.getElementById(tid)?.remove();
+      if (data.reply) {
+        const formatted = escHtml(data.reply)
+          .replace(/\n/g,'<br>')
+          .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+        thread.insertAdjacentHTML('beforeend',
+          `<div class="brief-msg elie">${formatted}</div>`);
+        CHAT_HISTORY = data.history || [
+          ...CHAT_HISTORY,
+          { role: 'user', content: message },
+          { role: 'assistant', content: data.reply },
+        ];
+        saveChatStorage();
+      }
+    } catch (e) {
+      document.getElementById(tid)?.remove();
+      thread.insertAdjacentHTML('beforeend',
+        `<div class="brief-msg elie" style="color:var(--ink-3)">Erreur réseau.</div>`);
+    }
+    scrollBriefBottom();
+  }
+
   function closeBrief() {
     document.getElementById('briefOverlay').classList.remove('open');
     document.getElementById('briefSheet').classList.remove('open');
   }
 
-  function briefToChat() {
-    closeBrief();
-    openChatPanel();
-  }
-  // ── FIN BRIEF MODAL ─────────────────────────────────────────
-
   loadChatStorage();
+
+  // Clavier mobile
+  if (window.visualViewport) {
+    const adjustForKeyboard = () => {
+      const kbH = Math.max(0,
+        window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop
+      );
+      const offset = kbH > 20 ? (kbH + 'px') : '';
+      const bar    = document.getElementById('chatBar');
+      const panel  = document.getElementById('chatPanel');
+      const sheet  = document.getElementById('replySheet');
+      const bsheet = document.getElementById('briefSheet');
+      if (bar)    bar.style.bottom    = offset;
+      if (panel)  panel.style.bottom  = kbH > 20 ? (kbH + 64) + 'px' : '';
+      if (sheet)  sheet.style.bottom  = offset;
+      if (bsheet) bsheet.style.bottom = offset;
+    };
+    window.visualViewport.addEventListener('resize', adjustForKeyboard);
+    window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+  }
+
+  // Fermer brief en cliquant dehors (ne pas fermer si clic sur input)
+  document.addEventListener('click', e => {
+    const overlay = document.getElementById('briefOverlay');
+    if (overlay && e.target === overlay) closeBrief();
+  });
+
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+
 </script>
 
 <!-- BRIEF OVERLAY + BOTTOM SHEET -->
-<div class="brief-overlay" id="briefOverlay" onclick="closeBrief()"></div>
+<div class="brief-overlay" id="briefOverlay"></div>
 <div class="brief-sheet" id="briefSheet">
   <div class="brief-sheet-drag"></div>
   <div class="brief-sheet-head">
-    <span class="brief-sheet-title">✦ Brief du jour</span>
+    <span class="brief-sheet-title">✶ Brief du jour</span>
     <button class="brief-close-btn" onclick="closeBrief()">✕</button>
   </div>
-  <div class="brief-body" id="briefBody">
-    <div class="brief-loading">
-      <div class="brief-spinner"></div>
-      <span>Elie prépare ton brief…</span>
+  <div class="brief-scroll" id="briefScroll">
+    <div class="brief-body" id="briefBody">
+      <div class="brief-loading">
+        <div class="brief-spinner"></div>
+        <span>Elie prépare ton brief…</span>
+      </div>
     </div>
+    <div class="brief-thread" id="briefThread"></div>
   </div>
-  <div class="brief-sheet-actions" id="briefActions" style="display:none">
-    <button class="brief-chat-btn" onclick="briefToChat()">💬 Continuer avec Elie</button>
+  <div class="brief-input-row" id="briefInputRow" style="display:none">
+    <input type="text" class="brief-input" id="briefInput"
+           placeholder="Demande à Elie…" autocomplete="off"
+           oninput="updateBriefSendBtn()"
+           onkeydown="if(event.key==='Enter')sendBriefMessage()">
+    <button class="brief-send-btn" id="briefSendBtn" onclick="sendBriefMessage()">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <path d="M14.5 8L1.5 2 4.5 8 1.5 14 14.5 8z" fill="currentColor"/>
+      </svg>
+    </button>
   </div>
 </div>
 
-<!-- CHAT PANEL (historique, slide-up) -->
+<!-- CHAT PANEL (slide-up depuis le bas) -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-panel-head">
-    <span class="chat-panel-title">✦ ELIE</span>
-    <button class="chat-panel-close" onclick="closeChatPanel()" aria-label="Fermer">×</button>
+    <span class="chat-panel-title">✶ ELIE</span>
+    <button class="chat-panel-close" onclick="closeChatPanel()">✕</button>
   </div>
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-typing" id="chatTyping">
@@ -3492,24 +3609,19 @@ body { padding-bottom: 64px; }
   </div>
 </div>
 
-<!-- CHAT BAR (barre fixe bas de page) -->
+<!-- CHAT BAR (barre fixe en bas) -->
 <div class="chat-bar" id="chatBar">
   <div class="chat-input-row">
-    <input
-      class="chat-input"
-      id="chatInput"
-      type="text"
-      placeholder="Demande à Elie…"
-      autocomplete="off"
-      onfocus="openChatPanel()"
-      oninput="updateSendBtn()"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"
-    >
-    <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()" aria-label="Envoyer">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    <input type="text" class="chat-input" id="chatInput"
+           placeholder="Dis à Elie quoi faire…" autocomplete="off"
+           oninput="updateSendBtn()"
+           onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendChatMessage()">
+    <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M14.5 8L1.5 2 4.5 8 1.5 14 14.5 8z" fill="currentColor"/>
+      </svg>
     </button>
   </div>
 </div>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
