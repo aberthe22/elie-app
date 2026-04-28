@@ -469,13 +469,6 @@ body {
   cursor: pointer; flex-shrink: 0;
   transition: background .15s, color .15s, border-color .15s;
 }
-.mail-btn-orig {
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; flex-shrink: 0; border-radius: 7px;
-  background: var(--surface-2); color: var(--ink-3);
-  text-decoration: none; transition: background .15s, color .15s;
-}
-.mail-btn-orig:hover { background: var(--navy-bg); color: var(--navy); }
 .mail-btn-del { background: var(--surface-2); color: var(--ink-3); }
 .mail-btn-del:hover { background: var(--urgent-bg); color: var(--urgent); border-color: #e8bfb5; }
 .mail-btn-reply { background: var(--navy-bg); color: var(--navy); border-color: #c8d8ef; }
@@ -2166,9 +2159,6 @@ body { padding-bottom: 64px; }
           ${mail.label ? escHtml(mail.label) : '+ Label'}
         </span>
         <div class="mail-row-time">${escHtml(mail.date)}</div>
-        <a class="mail-btn mail-btn-orig" href="https://mail.google.com/mail/u/0/#all/${mail.id}" target="_blank" rel="noopener" title="Lire l'original">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        </a>
         <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
         <button class="mail-btn mail-btn-archive"
           data-id="${mail.id}" data-label="${escHtml(mail.label || '')}"
@@ -2196,9 +2186,6 @@ body { padding-bottom: 64px; }
             ${mail.reason ? `<div class="mail-row-reason">${escHtml(mail.reason)}</div>` : ''}
           </div>
           <div class="mail-row-time">${escHtml(mail.date)}</div>
-          <a class="mail-btn mail-btn-orig" href="https://mail.google.com/mail/u/0/#all/${mail.id}" target="_blank" rel="noopener" title="Lire l'original">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
           <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
           <button class="mail-btn mail-btn-del" onclick="deleteMailRow('${mail.id}',this)" title="Supprimer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
@@ -2216,9 +2203,6 @@ body { padding-bottom: 64px; }
             <div class="mail-row-subj">${escHtml(mail.subject)}</div>
           </div>
           <div class="mail-row-time">${escHtml(mail.date)}</div>
-          <a class="mail-btn mail-btn-orig" href="https://mail.google.com/mail/u/0/#all/${mail.id}" target="_blank" rel="noopener" title="Lire l'original">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
           <button class="mail-correct-btn" onclick="toggleCorrectPicker('${mail.id}')" title="Mal classé ?">${CORRECT_ICON}</button>
           <button class="mail-btn mail-btn-reply" onclick="openReplySheet('${mail.id}')" title="Voir le brouillon">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
