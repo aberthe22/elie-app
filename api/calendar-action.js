@@ -1,19 +1,16 @@
 // ═══════════════════════════════════════════════════════════
 //  api/calendar-action.js  —  Vercel Serverless Function
-//
 //  Crée un événement dans Google Calendar (POST).
 //
 //  Body JSON attendu :
 //  {
-//    summary:     "Titre de l'événement",  (requis)
-//    date:        "2026-04-29",             (requis, YYYY-MM-DD)
-//    startTime:   "10:00",                  (optionnel — si absent = journée entière)
-//    endTime:     "11:00",                  (optionnel — si absent = startTime + 1h)
-//    description: "Notes…",                 (optionnel)
+//    summary:         "Titre",    (requis)
+//    date:            "2026-04-29", (requis, YYYY-MM-DD)
+//    startTime:       "10:00",    (optionnel)
+//    endTime:         "11:00",    (optionnel)
+//    description:     "Notes…",   (optionnel)
+//    reminderMinutes: 30,         (optionnel — null=défaut, -1=aucun, sinon minutes)
 //  }
-//
-//  Variables d'env requises :
-//    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN
 // ═══════════════════════════════════════════════════════════
 
 export default async function handler(req, res) {
@@ -36,7 +33,7 @@ export default async function handler(req, res) {
   if (!summary?.trim()) return res.status(400).json({ error: 'summary requis' });
   if (!date?.match(/^\d{4}-\d{2}-\d{2}$/)) return res.status(400).json({ error: 'date invalide (YYYY-MM-DD)' });
 
-  // reminderMinutes : null = défaut Google, -1 = aucun rappel, sinon nombre de minutes avant
+  // Bloc reminders : null=défaut Google, -1=aucun, sinon popup X min avant
   const remindersBlock = reminderMinutes == null
     ? { useDefault: true }
     : reminderMinutes === -1
@@ -49,16 +46,14 @@ export default async function handler(req, res) {
     let eventBody;
 
     if (!startTime) {
-      // ── Événement sur toute la journée
       eventBody = {
-        summary: summary.trim(),
+        summary:     summary.trim(),
         description: description ?? undefined,
-        start: { date },
-        end:   { date: nextDay(date) },
-        reminders: remindersBlock,
+        start:       { date },
+        end:         { date: nextDay(date) },
+        reminders:   remindersBlock,
       };
     } else {
-      // ── Événement avec heure précise
       const startDateTime = `${date}T${startTime}:00`;
       const endDateTime   = endTime
         ? `${date}T${endTime}:00`
@@ -67,21 +62,18 @@ export default async function handler(req, res) {
       eventBody = {
         summary:     summary.trim(),
         description: description ?? undefined,
-        start: { dateTime: startDateTime, timeZone: 'Europe/Paris' },
-        end:   { dateTime: endDateTime,   timeZone: 'Europe/Paris' },
-        reminders: remindersBlock,
+        start:       { dateTime: startDateTime, timeZone: 'Europe/Paris' },
+        end:         { dateTime: endDateTime,   timeZone: 'Europe/Paris' },
+        reminders:   remindersBlock,
       };
     }
 
     const createRes = await fetch(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events',
       {
-        method: 'POST',
-        headers: {
-          Authorization:  `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(eventBody),
+        method:  'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify(eventBody),
       }
     );
 
@@ -91,12 +83,7 @@ export default async function handler(req, res) {
     }
 
     const event = await createRes.json();
-    return res.status(201).json({
-      success:  true,
-      id:       event.id,
-      summary:  event.summary,
-      htmlLink: event.htmlLink,
-    });
+    return res.status(201).json({ success: true, id: event.id, summary: event.summary, htmlLink: event.htmlLink });
 
   } catch (error) {
     console.error('[api/calendar-action]', error.message);
@@ -108,9 +95,9 @@ export default async function handler(req, res) {
 
 async function getAccessToken(clientId, clientSecret, refreshToken) {
   const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
+    body:    new URLSearchParams({
       client_id:     clientId,
       client_secret: clientSecret,
       refresh_token: refreshToken,
@@ -131,5 +118,5 @@ function nextDay(dateStr) {
 function addOneHour(dateTimeStr) {
   const d = new Date(dateTimeStr);
   d.setHours(d.getHours() + 1);
-  return d.toISOString().slice(0, 19); // YYYY-MM-DDTHH:mm:ss
+  return d.toISOString().slice(0, 19);
 }
