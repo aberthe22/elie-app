@@ -4,6 +4,10 @@
     "api/gmail-action.js":  { "maxDuration": 30 },
     "api/chat.js":          { "maxDuration": 30 },
     "api/budget-vision.js": { "maxDuration": 30 },
+    "api/news.js":          { "maxDuration": 30 },
     "api/*.js":             { "maxDuration": 10 }
-  }
+  },
+  "crons": [
+    { "path": "/api/tasks?notify=1", "schedule": "30 7 * * 1-5" }
+  ]
 }

@@ -62,13 +62,48 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── POST : sauvegarder subscription push ────────────────
+  // ── POST : actions multiples ────────────────────────────
   if (req.method === 'POST') {
-    const { action, subscription } = req.body ?? {};
+    const { action, subscription, taskId, title } = req.body ?? {};
+
+    // Sauvegarder la subscription push
     if (action === 'subscribe' && subscription) {
       await setConfig('push_subscription', JSON.stringify(subscription));
       return res.status(200).json({ ok: true });
     }
+
+    // Marquer une tâche comme terminée
+    if (action === 'complete' && taskId) {
+      const notionRes = await fetch(`https://api.notion.com/v1/pages/${taskId}`, {
+        method: 'PATCH',
+        headers: notionHeaders(),
+        body: JSON.stringify({ properties: { 'État': { status: { name: 'Terminé' } } } }),
+      });
+      if (!notionRes.ok) throw new Error(`Notion ${notionRes.status}: ${await notionRes.text()}`);
+      return res.status(200).json({ success: true, taskId });
+    }
+
+    // Créer une nouvelle tâche
+    if (action === 'create' && title?.trim()) {
+      const today = new Date().toISOString().slice(0, 10);
+      const notionRes = await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST',
+        headers: notionHeaders(),
+        body: JSON.stringify({
+          parent: { database_id: dbId },
+          properties: {
+            'Tâche':   { title:  [{ text: { content: title.trim() } }] },
+            'État':    { status: { name: 'Pas commencé' } },
+            'Domaine': { select: { name: 'Inbox' } },
+            'Date':    { date:   { start: today } },
+          },
+        }),
+      });
+      if (!notionRes.ok) throw new Error(`Notion ${notionRes.status}: ${await notionRes.text()}`);
+      const page = await notionRes.json();
+      return res.status(201).json({ success: true, id: page.id, title: title.trim() });
+    }
+
     return res.status(400).json({ error: 'action inconnue' });
   }
 

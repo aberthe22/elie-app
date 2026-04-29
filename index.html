@@ -1224,6 +1224,59 @@ body {
   display: flex; align-items: center; justify-content: center; gap: 7px;
 }
 
+
+/* ═══ BELL BUTTON ═══ */
+.bell-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-3); padding: 4px; border-radius: 8px;
+  display: flex; align-items: center; transition: color .2s;
+}
+.bell-btn:hover { color: var(--navy); }
+.bell-btn.active { color: var(--done); }
+
+/* ═══ ACTUALITÉS ═══ */
+.news-tabs { display: flex; gap: 6px; }
+.news-tab {
+  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 20px; border: 1.5px solid var(--border);
+  background: none; cursor: pointer; color: var(--ink-3);
+  transition: all .2s;
+}
+.news-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+.news-domains { display: flex; flex-direction: column; gap: 18px; }
+.news-domain-block {}
+.news-domain-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--ink-4); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.news-domain-label .domain-icon { font-size: 14px; }
+
+.news-list { display: flex; flex-direction: column; gap: 8px; }
+.news-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+  text-decoration: none; display: block;
+  transition: border-color .2s, box-shadow .2s;
+}
+.news-item:hover { border-color: var(--navy); box-shadow: var(--shadow); }
+.news-item-title {
+  font-size: 13px; font-weight: 600; color: var(--ink-1);
+  line-height: 1.4; margin-bottom: 4px;
+}
+.news-item-meta {
+  font-size: 11px; color: var(--ink-4);
+  display: flex; align-items: center; gap: 6px;
+}
+.news-item-source { font-weight: 600; }
+.news-item-summary {
+  font-size: 12px; color: var(--ink-3); margin-top: 5px;
+  line-height: 1.5; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.news-loading { color: var(--ink-4); font-size: 13px; text-align: center; padding: 20px 0; }
+.news-empty { color: var(--ink-4); font-size: 13px; font-style: italic; padding: 8px 0; }
 /* ═══ BOTTOM SHEET (cartes apprendre) ═══ */
 .backdrop {
   position: fixed; inset: 0;
@@ -1444,6 +1497,9 @@ body { padding-bottom: 64px; }
       </div>
     </div>
     <div class="topbar-right">
+      <button class="bell-btn" id="bellBtn" onclick="requestNotifications()" title="Activer les notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
       <button class="brief-btn" onclick="openBrief()">✦ Brief</button>
       <div class="date-badge" id="dateBadge">—</div>
     </div>
@@ -1632,6 +1688,22 @@ body { padding-bottom: 64px; }
       <div class="section-meta" id="learnMeta">chargement…</div>
     </div>
     <div class="learn-scroll" id="learnScroll"></div>
+  </section>
+
+
+  <!-- ACTUALITÉS -->
+  <section class="section" id="newsSection">
+    <div class="section-head">
+      <div class="section-title">Actualités</div>
+      <div class="news-tabs">
+        <button class="news-tab active" onclick="switchNewsTab(this,0)" data-tab="0">Aujourd&#39;hui</button>
+        <button class="news-tab" onclick="switchNewsTab(this,1)" data-tab="1">Passées</button>
+      </div>
+    </div>
+    <!-- Domaines -->
+    <div class="news-domains" id="newsDomains">
+      <div class="news-loading">Chargement des actualités…</div>
+    </div>
   </section>
 
   <!-- RACCOURCIS -->
@@ -1931,9 +2003,9 @@ body { padding-bottom: 64px; }
     checkEl.classList.add('done');
     taskEl.classList.add('completing');
     await Promise.all([
-      fetch('/api/complete-task', {
+      fetch('/api/tasks', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ taskId })
+        body: JSON.stringify({ action: 'complete', taskId })
       }).catch(e => console.warn('[completeTask]', e)),
       new Promise(r => setTimeout(r, 350))
     ]);
@@ -1980,9 +2052,9 @@ body { padding-bottom: 64px; }
     row.style.opacity = '.4';
     row.style.pointerEvents = 'none';
     await Promise.all([
-      fetch('/api/complete-task', {
+      fetch('/api/tasks', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ taskId })
+        body: JSON.stringify({ action: 'complete', taskId })
       }).catch(e => console.warn('[completeUrgent]', e)),
       new Promise(r => setTimeout(r, 350))
     ]);
@@ -2045,9 +2117,9 @@ body { padding-bottom: 64px; }
     submit.textContent = 'Ajout en cours…';
     fb.textContent = '';
     try {
-      const res  = await fetch('/api/create-task', {
+      const res  = await fetch('/api/tasks', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ title })
+        body: JSON.stringify({ action: 'create', title })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
@@ -2734,9 +2806,9 @@ body { padding-bottom: 64px; }
     for (const mail of taskMails) {
       btn.textContent = `Création ${done + 1}/${total}…`;
       try {
-        await fetch('/api/create-task', {
+        await fetch('/api/tasks', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: mail.taskTitle }),
+          body: JSON.stringify({ action: 'create', title: mail.taskTitle }),
         });
       } catch { /* continue */ }
       done++;
@@ -3131,9 +3203,9 @@ body { padding-bottom: 64px; }
     const iconEl = btn.querySelector('.mail-task-chip-icon');
     if (iconEl) iconEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
     try {
-      const res = await fetch('/api/create-task', {
+      const res = await fetch('/api/tasks', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title })
+        body: JSON.stringify({ action: 'create', title })
       });
       if (!res.ok) throw new Error();
       btn.classList.remove('adding');
@@ -3384,6 +3456,147 @@ body { padding-bottom: 64px; }
     window.visualViewport.addEventListener('resize', adjustForKeyboard);
     window.visualViewport.addEventListener('scroll', adjustForKeyboard);
   }
+
+
+  // ═══════════════════════════════════════════════════════
+  //  ACTUALITÉS
+  // ═══════════════════════════════════════════════════════
+  let NEWS_DATA = null;
+  let NEWS_TAB  = 0; // 0 = aujourd'hui, 1 = passées
+
+  const DOMAIN_META = {
+    finance: { label: 'Finance & Marchés', icon: '📈' },
+    ia:      { label: 'Intelligence Artificielle', icon: '🤖' },
+    crypto:  { label: 'Cryptomonnaies', icon: '₿' },
+  };
+
+  async function fetchNews() {
+    try {
+      const res = await fetch('/api/news?days=3');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      NEWS_DATA = await res.json();
+      renderNews();
+    } catch (e) {
+      const el = document.getElementById('newsDomains');
+      if (el) el.innerHTML = '<div class="news-loading">Impossible de charger les actualités.</div>';
+    }
+  }
+
+  function switchNewsTab(btn, tab) {
+    NEWS_TAB = tab;
+    document.querySelectorAll('.news-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderNews();
+  }
+
+  function renderNews() {
+    const el = document.getElementById('newsDomains');
+    if (!el || !NEWS_DATA) return;
+
+    const now   = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    // "Aujourd'hui" = articles du jour ; "Passées" = les 2 jours précédents
+    const cutoff = NEWS_TAB === 0
+      ? new Date(todayStr + 'T00:00:00Z')
+      : null; // pour passées on filtre différemment
+
+    const html = Object.entries(DOMAIN_META).map(([key, meta]) => {
+      const items = (NEWS_DATA[key] ?? [])
+        .filter(item => {
+          const d = new Date(item.date);
+          if (NEWS_TAB === 0) return d >= cutoff;          // aujourd'hui
+          else                return d < cutoff;            // passées
+        })
+        .slice(0, 3);
+
+      const cards = items.length > 0
+        ? items.map(item => {
+            const d   = new Date(item.date);
+            const age = formatNewsAge(d);
+            const src = item.source?.replace('techcrunch','TechCrunch')
+              .replace('yahoo','Yahoo Finance').replace('reuters','Reuters')
+              .replace('mit','MIT Tech Review').replace('coindesk','CoinDesk')
+              .replace('cointelegraph','CoinTelegraph') ?? '';
+            return '<a class="news-item" href="' + escHtml(item.link) + '" target="_blank" rel="noopener">'
+              + '<div class="news-item-title">' + escHtml(item.title) + '</div>'
+              + (item.summary ? '<div class="news-item-summary">' + escHtml(item.summary) + '</div>' : '')
+              + '<div class="news-item-meta"><span class="news-item-source">' + escHtml(src) + '</span>· ' + age + '</div>'
+              + '</a>';
+          }).join('')
+        : '<div class="news-empty">Aucun article ' + (NEWS_TAB === 0 ? 'aujourd\u2019hui' : 'ces derniers jours') + '.</div>';
+
+      return '<div class="news-domain-block">'
+        + '<div class="news-domain-label"><span class="domain-icon">' + meta.icon + '</span>' + meta.label + '</div>'
+        + '<div class="news-list">' + cards + '</div>'
+        + '</div>';
+    }).join('');
+
+    el.innerHTML = html;
+  }
+
+  function formatNewsAge(date) {
+    const diffH = Math.round((Date.now() - date.getTime()) / 3600000);
+    if (diffH < 1)  return 'à l\u2019instant';
+    if (diffH < 24) return 'il y a ' + diffH + 'h';
+    const diffD = Math.floor(diffH / 24);
+    return 'il y a ' + diffD + ' j';
+  }
+
+  fetchNews();
+
+  // ═══════════════════════════════════════════════════════
+  //  PUSH NOTIFICATIONS
+  // ═══════════════════════════════════════════════════════
+  const VAPID_PUBLIC = 'AiKStA1IBIu828l-cdOAkAyl4R6TQ0WbC3z6KLK_cAvsoFqz8kDXfag-ZFse7SRgXtvANJvGGdc301TQt8iEEg';
+
+  function urlB64ToUint8Array(b64) {
+    const pad = '='.repeat((4 - b64.length % 4) % 4);
+    const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+  }
+
+  async function requestNotifications() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      alert('Les notifications ne sont pas supportées sur ce navigateur.\nInstalle Elie sur ton écran d\u2019accueil (iOS : Partager → Sur l\u2019écran d\u2019accueil).');
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC),
+        });
+      }
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'subscribe', subscription: sub.toJSON() }),
+      });
+      // Marquer le bouton comme actif
+      const btn = document.getElementById('bellBtn');
+      if (btn) btn.classList.add('active');
+    } catch (e) {
+      console.error('[push]', e);
+    }
+  }
+
+  // Si déjà abonné, marquer le bouton actif
+  (async () => {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const btn = document.getElementById('bellBtn');
+        if (btn) btn.classList.add('active');
+      }
+    } catch {}
+  })();
 
   // Service Worker
   if ('serviceWorker' in navigator) {
@@ -3699,7 +3912,7 @@ body { padding-bottom: 64px; }
       const data = await resp.json();
       renderBudgetVision(data);
     } catch (e) {
-      container.innerHTML = '<div class="revolut-connect"><p style="color:var(--urgent)">Erreur lors de l'analyse. Réessaie.</p></div>';
+      container.innerHTML = '<div class="revolut-connect"><p style="color:var(--urgent)">Erreur lors de l&#39;analyse. Réessaie.</p></div>';
     }
     input.value = '';
   }

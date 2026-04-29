@@ -1,6 +1,6 @@
-// Service Worker Elie — 20260428-03
+// Service Worker Elie — 20260428-04
 // Stratégie : Network First (réseau prioritaire, cache en fallback offline)
-const CACHE = 'elie-20260428-03';
+const CACHE = 'elie-20260428-04';
 
 self.addEventListener('install', e => {
   self.skipWaiting(); // prend le contrôle immédiatement
@@ -16,6 +16,33 @@ self.addEventListener('activate', e => {
   self.clients.claim(); // prend le contrôle des onglets ouverts
 });
 
+// ── Push notifications ──────────────────────────────────────────────────────
+self.addEventListener('push', e => {
+  let data = { title: '✦ Elie', body: 'Nouveau message.' };
+  try { data = e.data ? e.data.json() : data; } catch {}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icon.svg',
+      badge: '/icon.svg',
+      tag: 'elie-brief',
+      renotify: true,
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      const app = list.find(c => c.url.includes(self.location.origin));
+      if (app) return app.focus();
+      return clients.openWindow('/');
+    })
+  );
+});
+
+// ── Fetch (Network First) ───────────────────────────────────────────────────
 self.addEventListener('fetch', e => {
   // Les appels API ne sont jamais mis en cache
   if (e.request.url.includes('/api/')) {
