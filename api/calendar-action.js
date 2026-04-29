@@ -31,10 +31,17 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Variables Google manquantes' });
   }
 
-  const { summary, date, startTime, endTime, description } = req.body ?? {};
+  const { summary, date, startTime, endTime, description, reminderMinutes } = req.body ?? {};
 
   if (!summary?.trim()) return res.status(400).json({ error: 'summary requis' });
   if (!date?.match(/^\d{4}-\d{2}-\d{2}$/)) return res.status(400).json({ error: 'date invalide (YYYY-MM-DD)' });
+
+  // reminderMinutes : null = défaut Google, -1 = aucun rappel, sinon nombre de minutes avant
+  const remindersBlock = reminderMinutes == null
+    ? { useDefault: true }
+    : reminderMinutes === -1
+      ? { useDefault: false, overrides: [] }
+      : { useDefault: false, overrides: [{ method: 'popup', minutes: Number(reminderMinutes) }] };
 
   try {
     const accessToken = await getAccessToken(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN);
@@ -48,6 +55,7 @@ export default async function handler(req, res) {
         description: description ?? undefined,
         start: { date },
         end:   { date: nextDay(date) },
+        reminders: remindersBlock,
       };
     } else {
       // ── Événement avec heure précise
@@ -61,6 +69,7 @@ export default async function handler(req, res) {
         description: description ?? undefined,
         start: { dateTime: startDateTime, timeZone: 'Europe/Paris' },
         end:   { dateTime: endDateTime,   timeZone: 'Europe/Paris' },
+        reminders: remindersBlock,
       };
     }
 

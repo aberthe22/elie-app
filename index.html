@@ -419,54 +419,6 @@ body {
   cursor: pointer; white-space: nowrap;
 }
 
-/* ═══ RELANCES INTELLIGENTES ═══ */
-.relances-widget {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--soon);
-  border-radius: var(--r);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  margin-top: 12px;
-}
-.relances-head {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 16px 10px;
-  border-bottom: 1px solid var(--line-2);
-}
-.relances-icon {
-  width: 26px; height: 26px;
-  background: var(--soon-bg); border-radius: 7px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; flex-shrink: 0;
-}
-.relances-title { font-size: 13px; font-weight: 600; color: var(--soon); flex: 1; }
-.relances-subtitle { font-size: 11px; color: var(--ink-3); }
-.relance-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--line-2);
-}
-.relance-item:last-child { border-bottom: none; }
-.relance-days {
-  font-size: 11px; font-weight: 700; color: var(--soon);
-  background: var(--soon-bg); border-radius: 6px;
-  padding: 3px 7px; flex-shrink: 0;
-}
-.relance-days.mid { color: #C05E00; background: #FEF0DC; }
-.relance-days.old { color: var(--urgent); background: var(--urgent-bg); }
-.relance-title-txt {
-  flex: 1; font-size: 13px; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.relance-btn {
-  background: var(--navy-bg); color: var(--navy);
-  border: none; border-radius: 8px;
-  font-size: 11px; font-weight: 600; padding: 5px 10px;
-  cursor: pointer; flex-shrink: 0; transition: background .15s;
-}
-.relance-btn:hover { background: var(--navy); color: #fff; }
-
 /* ═══ BUDGET VISION ═══ */
 .budget-advice {
   display: flex; gap: 10px; align-items: flex-start;
@@ -1184,38 +1136,6 @@ body {
 .learn-step { font-size: 11px; font-weight: 600; color: var(--navy); }
 .learn-arrow { color: var(--ink-4); }
 
-/* ═══ RACCOURCIS ═══ */
-.shortcuts {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.shortcut {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 14px 10px;
-  text-align: center;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: border-color .15s, box-shadow .15s;
-}
-.shortcut:hover { border-color: var(--navy); box-shadow: var(--shadow); }
-.shortcut-icon {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 8px;
-  color: #fff;
-}
-.shortcut-icon.mail   { background: var(--navy); }
-.shortcut-icon.notion { background: #1a1a1a; }
-.shortcut-icon.cal    { background: var(--urgent); }
-.shortcut-icon.pay    { background: #2d6a4f; }
-.shortcut-icon.note   { background: var(--soon); }
-.shortcut-icon.call   { background: #4a1d96; }
-.shortcut-label { font-size: 11px; color: var(--ink-3); font-weight: 500; }
-
 /* ═══ FOOTER ═══ */
 .footer {
   margin-top: 40px; padding: 20px 8px;
@@ -1277,6 +1197,81 @@ body {
 }
 .news-loading { color: var(--ink-4); font-size: 13px; text-align: center; padding: 20px 0; }
 .news-empty { color: var(--ink-4); font-size: 13px; font-style: italic; padding: 8px 0; }
+
+/* ═══ SETTINGS MODAL ═══ */
+.settings-modal {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.settings-modal.open { opacity: 1; pointer-events: all; }
+.settings-sheet {
+  background: var(--card); border-radius: 22px 22px 0 0;
+  width: 100%; max-width: 480px; padding: 0 0 env(safe-area-inset-bottom);
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+  max-height: 90vh; overflow-y: auto;
+}
+.settings-modal.open .settings-sheet { transform: translateY(0); }
+.settings-handle {
+  width: 36px; height: 4px; background: var(--border);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.settings-title {
+  font-size: 17px; font-weight: 700; color: var(--ink-1);
+  padding: 16px 20px 0;
+}
+.settings-section {
+  padding: 16px 20px 0;
+}
+.settings-section-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--ink-4); margin-bottom: 10px;
+}
+.settings-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line-2);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row-icon {
+  font-size: 18px; width: 32px; text-align: center; flex-shrink: 0;
+}
+.settings-row-info { flex: 1; min-width: 0; }
+.settings-row-label { font-size: 13px; font-weight: 600; color: var(--ink-1); }
+.settings-row-sub   { font-size: 11px; color: var(--ink-4); margin-top: 1px; }
+.settings-toggle {
+  position: relative; width: 44px; height: 26px; flex-shrink: 0; cursor: pointer;
+}
+.settings-toggle input { opacity: 0; width: 0; height: 0; }
+.settings-toggle-track {
+  position: absolute; inset: 0; background: var(--border);
+  border-radius: 13px; transition: background .2s;
+}
+.settings-toggle input:checked + .settings-toggle-track { background: var(--navy); }
+.settings-toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; background: #fff;
+  border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  transition: transform .2s;
+}
+.settings-toggle input:checked ~ .settings-toggle-thumb { transform: translateX(18px); }
+.settings-hour-select {
+  font-size: 11px; font-weight: 600; color: var(--navy);
+  background: var(--navy-bg); border: none; border-radius: 6px;
+  padding: 2px 5px; cursor: pointer; outline: none;
+  -webkit-appearance: auto;
+}
+.settings-close-btn {
+  display: block; width: calc(100% - 40px); margin: 16px 20px;
+  padding: 12px; background: var(--navy); color: #fff;
+  border: none; border-radius: 12px; font-size: 14px;
+  font-weight: 600; cursor: pointer;
+}
+.settings-notif-hint {
+  font-size: 12px; color: var(--ink-4); text-align: center;
+  padding: 0 20px 4px; line-height: 1.5;
+}
 /* ═══ BOTTOM SHEET (cartes apprendre) ═══ */
 .backdrop {
   position: fixed; inset: 0;
@@ -1500,6 +1495,9 @@ body { padding-bottom: 64px; }
       <button class="bell-btn" id="bellBtn" onclick="requestNotifications()" title="Activer les notifications">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </button>
+      <button class="bell-btn" onclick="openSettings()" title="Paramètres">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
       <button class="brief-btn" onclick="openBrief()">✦ Brief</button>
       <div class="date-badge" id="dateBadge">—</div>
     </div>
@@ -1541,15 +1539,6 @@ body { padding-bottom: 64px; }
       </div>
     </div>
 
-    <!-- Relances intelligentes — tâches bloquées -->
-    <div class="relances-widget" id="relancesWidget" style="display:none">
-      <div class="relances-head">
-        <div class="relances-icon">⏳</div>
-        <div class="relances-title">En attente</div>
-        <div class="relances-subtitle" id="relancesSubtitle"></div>
-      </div>
-      <div id="relancesList"></div>
-    </div>
   </section>
 
   <!-- MAILS -->
@@ -1672,11 +1661,19 @@ body { padding-bottom: 64px; }
     <div class="card" id="budgetContainer">
       <div class="revolut-connect">
         <p>Prends une capture d'écran de Revolut<br>et Elie analyse tes budgets en un instant.</p>
-        <label class="budget-scan-btn" for="budgetPhotoInput">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Scanner une capture Revolut
-        </label>
-        <input type="file" id="budgetPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="importBudgetPhoto(this)">
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <label class="budget-scan-btn" for="budgetCameraInput" style="margin:0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="vertical-align:middle;margin-right:5px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Appareil photo
+          </label>
+          <label class="budget-scan-btn" for="budgetLibraryInput" style="margin:0;background:var(--navy-bg);color:var(--navy);border:1.5px solid var(--navy)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="vertical-align:middle;margin-right:5px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+            Photothèque
+          </label>
+        </div>
+        <input type="file" id="budgetCameraInput"  accept="image/*" capture="environment" style="display:none" onchange="importBudgetPhoto(this)">
+        <input type="file" id="budgetLibraryInput" accept="image/*" style="display:none" onchange="importBudgetPhoto(this)">
+
       </div>
     </div>
   </section>
@@ -1706,38 +1703,6 @@ body { padding-bottom: 64px; }
     </div>
   </section>
 
-  <!-- RACCOURCIS -->
-  <section class="section">
-    <div class="section-head">
-      <div class="section-title">Raccourcis</div>
-    </div>
-    <div class="shortcuts">
-      <div class="shortcut">
-        <div class="shortcut-icon mail"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-        <div class="shortcut-label">Gmail</div>
-      </div>
-      <div class="shortcut">
-        <div class="shortcut-icon notion"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><path d="M5 7h14M5 12h14M5 17h8"/></svg></div>
-        <div class="shortcut-label">Notion</div>
-      </div>
-      <div class="shortcut">
-        <div class="shortcut-icon cal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-        <div class="shortcut-label">Agenda</div>
-      </div>
-      <div class="shortcut">
-        <div class="shortcut-icon pay"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
-        <div class="shortcut-label">Budget</div>
-      </div>
-      <div class="shortcut">
-        <div class="shortcut-icon note"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></div>
-        <div class="shortcut-label">Note</div>
-      </div>
-      <div class="shortcut">
-        <div class="shortcut-icon call"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 015.13 12.8 19.79 19.79 0 012.06 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></div>
-        <div class="shortcut-label">Appeler</div>
-      </div>
-    </div>
-  </section>
 
   <div class="footer"><span class="dot"></span><em>Elie</em> · Assistante personnelle</div>
 
@@ -1791,6 +1756,14 @@ body { padding-bottom: 64px; }
     </div>
     <input class="modal-input" id="calEndTime" type="time" placeholder="Heure de fin (optionnel)" style="margin-top:8px">
     <input class="modal-input" id="calDesc" type="text" placeholder="Description (optionnel)" maxlength="300" style="margin-top:8px" autocomplete="off">
+    <select class="modal-input" id="calReminder" style="margin-top:8px;color:var(--ink-2)">
+      <option value="">🔔 Rappel par défaut</option>
+      <option value="-1">Aucun rappel</option>
+      <option value="10">10 minutes avant</option>
+      <option value="30">30 minutes avant</option>
+      <option value="60">1 heure avant</option>
+      <option value="1440">1 jour avant</option>
+    </select>
     <div class="modal-feedback" id="calFeedback"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeCalModal()">Annuler</button>
@@ -2081,7 +2054,6 @@ body { padding-bottom: 64px; }
       updateBadges();
       renderCurrentTab();
       updateUrgences();
-      renderRelances(data.blocked ?? []);
     } catch (err) {
       console.warn('[Elie] Tâches:', err.message);
       document.getElementById('tasksCard').innerHTML =
@@ -2238,6 +2210,7 @@ body { padding-bottom: 64px; }
     document.getElementById('calStartTime').value = '';
     document.getElementById('calEndTime').value   = '';
     document.getElementById('calDesc').value      = '';
+    document.getElementById('calReminder').value  = '';
     document.getElementById('calFeedback').textContent = '';
     document.getElementById('calFeedback').className   = 'modal-feedback';
     document.getElementById('calSubmit').disabled      = false;
@@ -2269,7 +2242,7 @@ body { padding-bottom: 64px; }
     try {
       const res = await fetch('/api/calendar-action', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ summary: title, date, startTime: startTime || null, endTime: endTime || null, description: desc || null })
+        body: JSON.stringify({ summary: title, date, startTime: startTime || null, endTime: endTime || null, description: desc || null, reminderMinutes: document.getElementById('calReminder').value === '' ? null : Number(document.getElementById('calReminder').value) })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
@@ -3598,6 +3571,49 @@ body { padding-bottom: 64px; }
     } catch {}
   })();
 
+
+  // ═══════════════════════════════════════════════════════
+  //  SETTINGS
+  // ═══════════════════════════════════════════════════════
+  async function openSettings() {
+    document.getElementById('settingsModal').classList.add('open');
+    try {
+      const res = await fetch('/api/tasks?config=1');
+      if (!res.ok) return;
+      const cfg = await res.json();
+      // Toggles (défaut activé)
+      for (const key of ['notif_morning','notif_weekly','notif_tasks','notif_budget','notif_invest']) {
+        const el = document.getElementById('toggle_' + key);
+        if (el) el.checked = (cfg[key] ?? '1') !== '0';
+      }
+      // Sélecteurs d'heure (défaut par notif)
+      const defaults = { notif_morning_hour:'7', notif_weekly_hour:'10',
+                         notif_tasks_hour:'17', notif_budget_hour:'10', notif_invest_hour:'9' };
+      for (const [key, def] of Object.entries(defaults)) {
+        const el = document.getElementById('hour_' + key);
+        if (el) el.value = cfg[key] ?? def;
+      }
+    } catch {}
+  }
+
+  function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('open');
+  }
+
+  async function saveNotifPref(key, val) {
+    // val peut être un booléen (toggle) ou une string (sélecteur heure)
+    const value = typeof val === 'boolean' ? (val ? '1' : '0') : String(val);
+    try {
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setConfig', key, value }),
+      });
+    } catch (e) {
+      console.warn('[settings]', e);
+    }
+  }
+
   // Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -3845,42 +3861,6 @@ body { padding-bottom: 64px; }
   }
 
 
-  // ── RELANCES INTELLIGENTES ──────────────────────────────
-  function renderRelances(blocked) {
-    const widget = document.getElementById('relancesWidget');
-    const list   = document.getElementById('relancesList');
-    const sub    = document.getElementById('relancesSubtitle');
-    if (!widget || !list) return;
-    if (!blocked || blocked.length === 0) { widget.style.display = 'none'; return; }
-
-    const now = Date.now();
-    widget.style.display = '';
-    sub.textContent = blocked.length + ' tâche' + (blocked.length > 1 ? 's' : '');
-
-    list.innerHTML = blocked.map(t => {
-      const days = t.lastEdited
-        ? Math.floor((now - new Date(t.lastEdited)) / 86400000) : null;
-      const daysText  = days !== null ? days + 'j' : '?';
-      const daysClass = days > 7 ? 'old' : days > 3 ? 'mid' : '';
-      return `
-        <div class="relance-item">
-          <span class="relance-days ${daysClass}">${escHtml(daysText)}</span>
-          <span class="relance-title-txt">${escHtml(t.title)}</span>
-          <button class="relance-btn" onclick="relanceTask('${escHtml(t.title).replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">Relancer</button>
-        </div>`;
-    }).join('');
-  }
-
-  function relanceTask(title) {
-    const text = `Aide-moi à relancer "${title}" — rédige un message de suivi court et professionnel`;
-    if (document.getElementById('briefSheet')?.classList.contains('open')) {
-      const inp = document.getElementById('briefInput');
-      if (inp) { inp.value = text; updateBriefSendBtn(); inp.focus(); }
-    } else {
-      sendQuick(text);
-    }
-  }
-
   // ── RECAP HEBDO WEEKEND ─────────────────────────────────
   function checkWeekendRecap() {
     const day = new Date().getDay(); // 0=dim, 6=sam
@@ -3921,7 +3901,7 @@ body { padding-bottom: 64px; }
     const container = document.getElementById('budgetContainer');
     if (!data.categories?.length) {
       container.innerHTML = `<div class="revolut-connect"><p>Impossible de lire la capture. Assure-toi que l'image montre bien les budgets Revolut.</p>
-        <label class="budget-scan-btn" for="budgetPhotoInput" style="cursor:pointer">
+        <label class="budget-scan-btn" for="budgetLibraryInput" style="cursor:pointer">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
           Réessayer
         </label>
@@ -4062,6 +4042,87 @@ body { padding-bottom: 64px; }
         <path d="M14.5 8L1.5 2 4.5 8 1.5 14 14.5 8z" fill="currentColor"/>
       </svg>
     </button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-sheet">
+    <div class="settings-handle"></div>
+    <div class="settings-title">⚙️ Paramètres</div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="settings-section">
+      <div class="settings-section-label">Notifications push</div>
+
+      <div class="settings-row">
+        <div class="settings-row-icon">☀️</div>
+        <div class="settings-row-info">
+          <div class="settings-row-label">Brief du matin</div>
+          <div class="settings-row-sub">Lun–Ven · <select class="settings-hour-select" id="hour_notif_morning" onchange="saveNotifPref('notif_morning_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7" selected>07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
+        </div>
+        <label class="settings-toggle">
+          <input type="checkbox" id="toggle_notif_morning" onchange="saveNotifPref('notif_morning',this.checked)">
+          <div class="settings-toggle-track"></div>
+          <div class="settings-toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-row-icon">🗓</div>
+        <div class="settings-row-info">
+          <div class="settings-row-label">Brief hebdo</div>
+          <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_weekly" onchange="saveNotifPref('notif_weekly_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
+        </div>
+        <label class="settings-toggle">
+          <input type="checkbox" id="toggle_notif_weekly" onchange="saveNotifPref('notif_weekly',this.checked)">
+          <div class="settings-toggle-track"></div>
+          <div class="settings-toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-row-icon">📋</div>
+        <div class="settings-row-info">
+          <div class="settings-row-label">Tâches en attente</div>
+          <div class="settings-row-sub">Lun–Ven · <select class="settings-hour-select" id="hour_notif_tasks" onchange="saveNotifPref('notif_tasks_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17" selected>17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
+        </div>
+        <label class="settings-toggle">
+          <input type="checkbox" id="toggle_notif_tasks" onchange="saveNotifPref('notif_tasks',this.checked)">
+          <div class="settings-toggle-track"></div>
+          <div class="settings-toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-row-icon">📸</div>
+        <div class="settings-row-info">
+          <div class="settings-row-label">Upload budget</div>
+          <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_budget" onchange="saveNotifPref('notif_budget_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
+        </div>
+        <label class="settings-toggle">
+          <input type="checkbox" id="toggle_notif_budget" onchange="saveNotifPref('notif_budget',this.checked)">
+          <div class="settings-toggle-track"></div>
+          <div class="settings-toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-row-icon">📈</div>
+        <div class="settings-row-info">
+          <div class="settings-row-label">Bilan investissements</div>
+          <div class="settings-row-sub">1er du mois · <select class="settings-hour-select" id="hour_notif_invest" onchange="saveNotifPref('notif_invest_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9" selected>09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
+        </div>
+        <label class="settings-toggle">
+          <input type="checkbox" id="toggle_notif_invest" onchange="saveNotifPref('notif_invest',this.checked)">
+          <div class="settings-toggle-track"></div>
+          <div class="settings-toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <p class="settings-notif-hint">Les notifications fonctionnent uniquement depuis l&#39;app installée sur ton écran d&#39;accueil.</p>
+    <button class="settings-close-btn" onclick="closeSettings()">Fermer</button>
   </div>
 </div>
 </body>

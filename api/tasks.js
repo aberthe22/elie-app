@@ -64,11 +64,17 @@ export default async function handler(req, res) {
 
   // ── POST : actions multiples ────────────────────────────
   if (req.method === 'POST') {
-    const { action, subscription, taskId, title } = req.body ?? {};
+    const { action, subscription, taskId, title, key, value } = req.body ?? {};
 
     // Sauvegarder la subscription push
     if (action === 'subscribe' && subscription) {
       await setConfig('push_subscription', JSON.stringify(subscription));
+      return res.status(200).json({ ok: true });
+    }
+
+    // Sauvegarder une clé de config (préférences notifs)
+    if (action === 'setConfig' && key) {
+      await setConfig(key, value ?? '');
       return res.status(200).json({ ok: true });
     }
 
@@ -107,10 +113,46 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'action inconnue' });
   }
 
-  // ── GET ?notify=1 : envoyer la notif push (cron) ────────
-  if (req.query?.notify === '1') {
+  // ── GET ?config=1 : lire toutes les préférences ──────────
+  if (req.query?.config === '1') {
+    const keys = [
+      'notif_morning','notif_morning_hour',
+      'notif_tasks','notif_tasks_hour',
+      'notif_budget','notif_budget_hour',
+      'notif_invest','notif_invest_hour',
+      'notif_weekly','notif_weekly_hour',
+    ];
+    const values = await Promise.all(keys.map(k => getConfig(k)));
+    const cfg = {};
+    keys.forEach((k, i) => { cfg[k] = values[i] ?? null; });
+    return res.status(200).json(cfg);
+  }
+
+  // ── GET ?notify=check : cron horaire — vérifie ce qui doit partir ──
+  if (req.query?.notify === 'check') {
     const subStr = await getConfig('push_subscription');
     if (!subStr) return res.status(200).json({ ok: false, msg: 'Pas de subscription' });
+
+    // Heure et jour courants en heure de Paris
+    const now    = new Date();
+    const parts  = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Europe/Paris',
+      hour: '2-digit', minute: '2-digit', weekday: 'short', day: 'numeric',
+    }).formatToParts(now);
+    const hour     = parseInt(parts.find(p => p.type === 'hour').value,   10);
+    const minute   = parseInt(parts.find(p => p.type === 'minute').value, 10);
+    const dayNum   = now.toLocaleDateString('fr-FR', { timeZone:'Europe/Paris', weekday:'short' });
+    const jsDay    = new Date(now.toLocaleString('en-US', { timeZone:'Europe/Paris' })).getDay(); // 0=dim
+    const monthDay = new Date(now.toLocaleString('en-US', { timeZone:'Europe/Paris' })).getDate();
+
+    // Définition des notifications
+    const NOTIFS = [
+      { key:'morning', defaultHour:7,  days:[1,2,3,4,5],   dayOfMonth:null,  body:'Ton brief du jour est prêt. Bonne journée ! ☀️' },
+      { key:'tasks',   defaultHour:17, days:[1,2,3,4,5],   dayOfMonth:null,  body:'Des tâches en attente t\'attendent encore. Dernier coup de collier ? 💪' },
+      { key:'budget',  defaultHour:10, days:[0],            dayOfMonth:null,  body:'Rappel : pense à uploader ta capture Revolut 📸' },
+      { key:'weekly',  defaultHour:10, days:[0],            dayOfMonth:null,  body:'C\'est le week-end — ton brief hebdo t\'attend dans Elie 🗓' },
+      { key:'invest',  defaultHour:9,  days:null,           dayOfMonth:1,     body:'C\'est le 1er du mois — fais le point sur tes investissements 📈' },
+    ];
 
     const webpush = await import('web-push');
     webpush.default.setVapidDetails(
@@ -118,14 +160,32 @@ export default async function handler(req, res) {
       process.env.VAPID_PUBLIC_KEY,
       process.env.VAPID_PRIVATE_KEY,
     );
-    const sub = JSON.parse(subStr);
-    await webpush.default.sendNotification(sub, JSON.stringify({
-      title: '✦ Elie',
-      body:  'Ton brief du jour est prêt. Bonne journée !',
-      icon:  '/icon.svg',
-      data:  { url: '/' },
-    }));
-    return res.status(200).json({ ok: true, sent: true });
+    const sub  = JSON.parse(subStr);
+    const sent = [];
+
+    for (const n of NOTIFS) {
+      // Activé ?
+      const enabled = await getConfig(`notif_${n.key}`);
+      if (enabled === '0') continue;
+
+      // Heure configurée (ou défaut)
+      const prefHour = parseInt(await getConfig(`notif_${n.key}_hour`) ?? n.defaultHour, 10);
+      if (hour !== prefHour) continue;
+
+      // Bon jour de semaine ?
+      if (n.days !== null && !n.days.includes(jsDay)) continue;
+
+      // Bon jour du mois ?
+      if (n.dayOfMonth !== null && monthDay !== n.dayOfMonth) continue;
+
+      // Envoyer
+      await webpush.default.sendNotification(sub, JSON.stringify({
+        title: '✶ Elie', body: n.body, icon: '/icon.svg', data: { url: '/' },
+      }));
+      sent.push(n.key);
+    }
+
+    return res.status(200).json({ ok: true, sent, hour, jsDay, monthDay });
   }
 
   const today = new Date().toISOString().split('T')[0]; // "2026-04-23"

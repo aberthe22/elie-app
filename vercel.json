@@ -8,6 +8,6 @@
     "api/*.js":             { "maxDuration": 10 }
   },
   "crons": [
-    { "path": "/api/tasks?notify=1", "schedule": "30 7 * * 1-5" }
+    { "path": "/api/tasks?notify=check", "schedule": "0 5-21 * * *" }
   ]
 }

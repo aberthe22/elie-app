@@ -1,29 +1,29 @@
 // ═══════════════════════════════════════════════════════════
 //  api/news.js  —  Vercel Serverless Function
-//  Agrège les actualités RSS par domaine :
-//  · finance  : Yahoo Finance (marchés), Reuters Biz
-//  · ia       : MIT Tech Review, TechCrunch AI
-//  · crypto   : CoinDesk, CoinTelegraph
-//  Renvoie top 3 par domaine + les articles des 3 derniers jours
+//  Agrège les actualités RSS françaises par domaine :
+//  · finance  : Les Échos, Le Figaro Économie
+//  · ia       : Le Monde IA, 01net
+//  · crypto   : Journal du Coin, Cryptoast
+//  Renvoie les articles des 3 derniers jours
 // ═══════════════════════════════════════════════════════════
 
 const FEEDS = {
   finance: [
-    'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US',
-    'https://feeds.reuters.com/reuters/businessNews',
+    'https://www.lefigaro.fr/rss/figaro_economie.xml',
+    'https://www.lemonde.fr/economie/rss_full.xml',
   ],
   ia: [
-    'https://www.technologyreview.com/feed/',
-    'https://techcrunch.com/feed/',
+    'https://www.lemonde.fr/intelligence-artificielle/rss_full.xml',
+    'https://www.01net.com/rss/actualites/',
   ],
   crypto: [
-    'https://www.coindesk.com/arc/outboundfeeds/rss/',
-    'https://cointelegraph.com/rss',
+    'https://journalducoin.com/feed/',
+    'https://cryptoast.fr/feed/',
   ],
 };
 
-// Mots-clés pour filtrer les articles IA dans le feed TechCrunch (généraliste)
-const AI_KEYWORDS = ['ai', 'artificial intelligence', 'machine learning', 'llm', 'gpt', 'openai', 'anthropic', 'google deepmind', 'mistral', 'model', 'neural'];
+// Mots-clés pour filtrer les articles IA dans le feed 01net (généraliste)
+const AI_KEYWORDS = ['ia', 'intelligence artificielle', 'machine learning', 'llm', 'chatgpt', 'openai', 'anthropic', 'gemini', 'mistral', 'modèle', 'algorithme', 'robot'];
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     const recent = allItems.filter(item => {
       if (!item.date || item.date < cutoff) return false;
       // Filtre IA sur TechCrunch
-      if (item.domain === 'ia' && item.source === 'techcrunch') {
+      if (item.domain === 'ia' && item.source === '01net') {
         const hay = (item.title + ' ' + item.summary).toLowerCase();
         if (!AI_KEYWORDS.some(kw => hay.includes(kw))) return false;
       }
@@ -106,12 +106,11 @@ async function fetchFeed(url, domain) {
 
 // ── Parser RSS minimal (pas de lib externe) ────────────────
 function parseRss(xml, domain, feedUrl) {
-  const source = feedUrl.includes('yahoo') ? 'yahoo'
-    : feedUrl.includes('reuters') ? 'reuters'
-    : feedUrl.includes('technologyreview') ? 'mit'
-    : feedUrl.includes('techcrunch') ? 'techcrunch'
-    : feedUrl.includes('coindesk') ? 'coindesk'
-    : feedUrl.includes('cointelegraph') ? 'cointelegraph'
+  const source = feedUrl.includes('lefigaro') ? 'lefigaro'
+    : feedUrl.includes('lemonde') ? 'lemonde'
+    : feedUrl.includes('01net') ? '01net'
+    : feedUrl.includes('journalducoin') ? 'journalducoin'
+    : feedUrl.includes('cryptoast') ? 'cryptoast'
     : 'unknown';
 
   const items = [];
