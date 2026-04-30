@@ -128,64 +128,59 @@ export default async function handler(req, res) {
     return res.status(200).json(cfg);
   }
 
-  // ── GET ?notify=check : cron horaire — vérifie ce qui doit partir ──
-  if (req.query?.notify === 'check') {
+  // ── GET ?notify=morning : brief du matin lun-ven (cron 7h30) ──
+  // ── GET ?notify=check   : dimanche + 1er du mois (cron 10h) ──
+  const notifyType = req.query?.notify;
+  if (notifyType === 'morning' || notifyType === 'check') {
     const subStr = await getConfig('push_subscription');
     if (!subStr) return res.status(200).json({ ok: false, msg: 'Pas de subscription' });
 
-    // Heure et jour courants en heure de Paris
-    const now    = new Date();
-    const parts  = new Intl.DateTimeFormat('fr-FR', {
-      timeZone: 'Europe/Paris',
-      hour: '2-digit', minute: '2-digit', weekday: 'short', day: 'numeric',
-    }).formatToParts(now);
-    const hour     = parseInt(parts.find(p => p.type === 'hour').value,   10);
-    const minute   = parseInt(parts.find(p => p.type === 'minute').value, 10);
-    const dayNum   = now.toLocaleDateString('fr-FR', { timeZone:'Europe/Paris', weekday:'short' });
-    const jsDay    = new Date(now.toLocaleString('en-US', { timeZone:'Europe/Paris' })).getDay(); // 0=dim
-    const monthDay = new Date(now.toLocaleString('en-US', { timeZone:'Europe/Paris' })).getDate();
-
-    // Définition des notifications
-    const NOTIFS = [
-      { key:'morning', defaultHour:7,  days:[1,2,3,4,5],   dayOfMonth:null,  body:'Ton brief du jour est prêt. Bonne journée ! ☀️' },
-      { key:'tasks',   defaultHour:17, days:[1,2,3,4,5],   dayOfMonth:null,  body:'Des tâches en attente t\'attendent encore. Dernier coup de collier ? 💪' },
-      { key:'budget',  defaultHour:10, days:[0],            dayOfMonth:null,  body:'Rappel : pense à uploader ta capture Revolut 📸' },
-      { key:'weekly',  defaultHour:10, days:[0],            dayOfMonth:null,  body:'C\'est le week-end — ton brief hebdo t\'attend dans Elie 🗓' },
-      { key:'invest',  defaultHour:9,  days:null,           dayOfMonth:1,     body:'C\'est le 1er du mois — fais le point sur tes investissements 📈' },
-    ];
+    const nowParis  = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+    const jsDay     = nowParis.getDay();   // 0=dim, 1=lun…
+    const monthDay  = nowParis.getDate();
 
     const webpush = await import('web-push');
     webpush.default.setVapidDetails(
-      process.env.VAPID_SUBJECT   ?? 'mailto:aberthe22@gmail.com',
+      process.env.VAPID_SUBJECT ?? 'mailto:aberthe22@gmail.com',
       process.env.VAPID_PUBLIC_KEY,
       process.env.VAPID_PRIVATE_KEY,
     );
     const sub  = JSON.parse(subStr);
     const sent = [];
 
-    for (const n of NOTIFS) {
-      // Activé ?
-      const enabled = await getConfig(`notif_${n.key}`);
-      if (enabled === '0') continue;
-
-      // Heure configurée (ou défaut)
-      const prefHour = parseInt(await getConfig(`notif_${n.key}_hour`) ?? n.defaultHour, 10);
-      if (hour !== prefHour) continue;
-
-      // Bon jour de semaine ?
-      if (n.days !== null && !n.days.includes(jsDay)) continue;
-
-      // Bon jour du mois ?
-      if (n.dayOfMonth !== null && monthDay !== n.dayOfMonth) continue;
-
-      // Envoyer
+    const send = async (key, body) => {
+      const enabled = await getConfig(`notif_${key}`);
+      if (enabled === '0') return;
       await webpush.default.sendNotification(sub, JSON.stringify({
-        title: '✶ Elie', body: n.body, icon: '/icon.svg', data: { url: '/' },
+        title: '✶ Elie', body, icon: '/icon.svg', data: { url: '/' },
       }));
-      sent.push(n.key);
+      sent.push(key);
+    };
+
+    if (notifyType === 'morning') {
+      // Lun-Ven : brief du matin
+      if ([1,2,3,4,5].includes(jsDay)) {
+        await send('morning', 'Ton brief du jour est prêt. Bonne journée ! ☀️');
+      }
     }
 
-    return res.status(200).json({ ok: true, sent, hour, jsDay, monthDay });
+    if (notifyType === 'check') {
+      // Dimanche : brief hebdo + rappel budget
+      if (jsDay === 0) {
+        await send('weekly', 'C\'est le week-end — ton brief hebdo t\'attend dans Elie 🗓');
+        await send('budget', 'Rappel : pense à uploader ta capture Revolut 📸');
+      }
+      // 1er du mois (tous les jours) : bilan investissements
+      if (monthDay === 1) {
+        await send('invest', 'C\'est le 1er du mois — fais le point sur tes investissements 📈');
+      }
+      // Tâches en attente : lun-ven (via le check de 10h, décalé mais fonctionnel)
+      if ([1,2,3,4,5].includes(jsDay)) {
+        await send('tasks', 'Des tâches en attente t\'attendent encore aujourd\'hui 💪');
+      }
+    }
+
+    return res.status(200).json({ ok: true, sent });
   }
 
   const today = new Date().toISOString().split('T')[0]; // "2026-04-23"
