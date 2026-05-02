@@ -1487,33 +1487,36 @@ body { padding-bottom: 64px; }
 @keyframes tabFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* ═══ ONGLET INVESTISSEMENTS ═══ */
-/* Hero balance */
-.invest-hero { padding: 6px 0 22px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
-.invest-hero-label { font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
-.invest-hero-value { font-size: 38px; font-weight: 800; color: var(--navy); letter-spacing: -.03em; line-height: 1; margin-bottom: 8px; }
-.invest-hero-meta { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
-.invest-hero-pnl { font-size: 14px; font-weight: 600; }
-.invest-hero-pnl.pos { color: #22a85a; }
-.invest-hero-pnl.neg { color: #e03030; }
-.invest-hero-invested { font-size: 13px; color: var(--ink-3); }
+/* Hero card — gradient dark */
+.invest-hero-card { background: linear-gradient(140deg, #0d1a36 0%, #1b3370 100%); border-radius: 20px; padding: 22px 20px 18px; margin-bottom: 20px; color: #fff; }
+.invest-hero-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+.invest-hero-value { font-size: 44px; font-weight: 800; color: #fff; letter-spacing: -.04em; line-height: 1; margin-bottom: 20px; }
+.invest-hero-row { display: flex; border-top: 1px solid rgba(255,255,255,.12); }
+.invest-hero-col { flex: 1; padding-top: 12px; }
+.invest-hero-col:first-child { padding-right: 16px; border-right: 1px solid rgba(255,255,255,.12); margin-right: 16px; }
+.invest-hero-sub { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+.invest-hero-invested-val { font-size: 17px; font-weight: 700; color: rgba(255,255,255,.85); }
+.invest-hero-pnl { font-size: 17px; font-weight: 700; }
+.invest-hero-pnl.pos { color: #4ade80; }
+.invest-hero-pnl.neg { color: #f87171; }
 
 /* Projection card */
-.proj-card { }
-.proj-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-.proj-title { font-size: 13px; font-weight: 600; color: var(--ink); }
-.proj-refresh { font-size: 11px; color: var(--ink-4); }
-.proj-main { font-size: 26px; font-weight: 800; color: var(--navy); letter-spacing: -.02em; margin-bottom: 2px; }
-.proj-sub { font-size: 12px; color: var(--ink-3); margin-bottom: 14px; }
-.proj-bar-wrap { height: 7px; background: var(--line); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
-.proj-bar-fill { height: 100%; background: linear-gradient(90deg, var(--navy), #4a7cc7); border-radius: 4px; transition: width .7s ease; min-width: 3px; }
-.proj-bar-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-bottom: 14px; }
-.proj-countdown { font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 10px 12px; background: var(--surface-2); border-radius: 8px; margin-bottom: 14px; }
-.proj-params { display: flex; gap: 10px; }
-.proj-param { flex: 1; }
-.proj-param label { display: block; font-size: 11px; color: var(--ink-3); margin-bottom: 4px; }
-.proj-param-row { display: flex; align-items: center; gap: 4px; }
-.proj-input { flex: 1; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 15px; font-weight: 600; text-align: right; background: var(--bg); color: var(--navy); width: 100%; box-sizing: border-box; }
-.proj-unit { font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+.proj-card { padding: 18px 16px; }
+.proj-obj-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--ink-3); margin-bottom: 7px; }
+.proj-obj-pct { font-weight: 800; color: var(--navy); font-size: 14px; }
+.proj-bar-wrap { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+.proj-bar-fill { height: 100%; background: linear-gradient(90deg, #1b3370, #4a7cc7); border-radius: 4px; transition: width .7s ease; min-width: 4px; }
+.proj-countdown { font-size: 13px; font-weight: 600; color: #1b3370; padding: 10px 14px; background: #eef2ff; border-radius: 10px; margin-bottom: 14px; text-align: center; border: 1px solid #c7d4ff; }
+.proj-horizon { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: var(--surface-2); border-radius: 10px; margin-bottom: 16px; }
+.proj-horizon-label { font-size: 12px; color: var(--ink-3); }
+.proj-main { font-size: 22px; font-weight: 800; color: var(--navy); letter-spacing: -.02em; }
+.proj-sliders { display: flex; flex-direction: column; gap: 16px; }
+.proj-slider-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.proj-slider-label { font-size: 12px; color: var(--ink-3); }
+.proj-slider-val { font-size: 14px; font-weight: 800; color: var(--navy); }
+.proj-slider { width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: var(--line); border-radius: 2px; outline: none; cursor: pointer; }
+.proj-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--navy); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.25); border: 3px solid #fff; }
+.proj-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--navy); cursor: pointer; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
 
 /* Holdings */
 .holding-card { cursor: pointer; padding: 14px 16px; }
@@ -1540,18 +1543,20 @@ body { padding-bottom: 64px; }
 .alloc-target-lbl.ok  { color: #22a85a; }
 .alloc-target-lbl.hi  { color: #f59e0b; }
 .alloc-target-lbl.lo  { color: #3b82f6; }
-.holding-foot { font-size: 11px; color: var(--ink-3); padding-top: 9px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; }
+.holding-foot { font-size: 11px; color: var(--ink-3); padding-top: 9px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px; }
 
 /* Rebalancing */
 .rebal-cash-wrap { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; }
 .rebal-cash-label { font-size: 14px; color: var(--ink-2); flex: 1; }
 .rebal-cash-input { width: 90px; padding: 6px 10px; border: 1.5px solid var(--navy); border-radius: 8px; font-size: 16px; font-weight: 700; text-align: right; background: var(--bg); color: var(--navy); }
+.rebal-reserve-note { font-size: 11px; color: var(--ink-3); text-align: center; margin-bottom: 10px; }
 .rebal-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; margin-bottom: 8px; background: var(--bg); }
 .rebal-item-left { flex: 1; }
 .rebal-item-name { font-size: 13px; font-weight: 700; color: var(--ink); }
 .rebal-item-ticker { font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+.rebal-item-right { text-align: right; }
 .rebal-item-amount { font-size: 18px; font-weight: 800; color: var(--navy); }
-.rebal-item-pct { font-size: 11px; color: var(--ink-3); text-align: right; }
+.rebal-item-pct { font-size: 11px; color: var(--ink-3); }
 .rebal-balanced { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #22a85a; font-weight: 600; padding: 10px 0; }
 
 /* Modal position */
@@ -1561,8 +1566,8 @@ body { padding-bottom: 64px; }
 .holding-modal-input:focus { outline: none; border-color: var(--navy); }
 .holding-modal-row { display: flex; gap: 10px; }
 .holding-modal-row .holding-modal-field { flex: 1; }
+.holding-modal-preview { padding: 10px 14px; background: #eef2ff; border-radius: 8px; font-size: 13px; color: #1b3370; margin-bottom: 12px; border: 1px solid #c7d4ff; }
 .holding-delete-btn { width: 100%; padding: 11px; margin-top: 8px; border: 1px solid #e03030; border-radius: 9px; background: none; color: #e03030; font-size: 14px; cursor: pointer; font-weight: 500; }
-</style>
 </head>
 <body>
 <div class="app">
@@ -1713,10 +1718,10 @@ body { padding-bottom: 64px; }
 
     <!-- Onglets -->
     <div class="tabs">
-      <button class="tab active" id="tabSuggested" onclick="switchTab('suggested')">
+      <button class="tab active" id="tabSuggested" onclick="switchTaskTab('suggested')">
         ✦ Elie choisit<span class="tab-badge" id="badgeSuggested">—</span>
       </button>
-      <button class="tab" id="tabToday" onclick="switchTab('today')">
+      <button class="tab" id="tabToday" onclick="switchTaskTab('today')">
         Aujourd'hui<span class="tab-badge" id="badgeToday">—</span>
       </button>
     </div>
@@ -1805,52 +1810,57 @@ body { padding-bottom: 64px; }
   <!-- ══ ONGLET 1 : INVESTISSEMENTS ══ -->
   <div class="tab-page" id="tabInvest">
 
-    <!-- Solde hero -->
-    <div class="invest-hero">
-      <div class="invest-hero-label">Portefeuille</div>
+    <!-- Hero portefeuille -->
+    <div class="invest-hero-card">
+      <div class="invest-hero-label">Valorisation</div>
       <div class="invest-hero-value" id="investTotal">—</div>
-      <div class="invest-hero-meta">
-        <span class="invest-hero-pnl" id="investPnl"></span>
-        <span class="invest-hero-invested" id="investInvested"></span>
+      <div class="invest-hero-row">
+        <div class="invest-hero-col">
+          <div class="invest-hero-sub">Investi</div>
+          <div class="invest-hero-invested-val" id="investInvested">—</div>
+        </div>
+        <div class="invest-hero-col">
+          <div class="invest-hero-sub">Performance</div>
+          <div class="invest-hero-pnl" id="investPnl">—</div>
+        </div>
       </div>
     </div>
 
-    <!-- Projection & objectif -->
+    <!-- Objectif 1 M€ -->
     <section class="section">
       <div class="section-head">
         <div class="section-title">Objectif 1 M€</div>
         <div class="section-meta" id="investPricesAge"></div>
       </div>
       <div class="card proj-card">
-        <div class="proj-top">
-          <div>
-            <div class="proj-title">Dans 20 ans</div>
-          </div>
-          <div class="proj-main" id="projValue20">—</div>
+        <div class="proj-obj-row">
+          <span>Progression vers 1 M€</span>
+          <span class="proj-obj-pct" id="projCurrentPct">0%</span>
         </div>
-        <div class="proj-sub" id="projAnnualRate">rendement annuel : —</div>
         <div class="proj-bar-wrap"><div class="proj-bar-fill" id="projBar" style="width:0%"></div></div>
-        <div class="proj-bar-labels">
-          <span id="projCurrentPct">0%</span>
-          <span>1 M€</span>
-        </div>
         <div class="proj-countdown" id="projCountdown">—</div>
-        <div class="proj-params">
-          <div class="proj-param">
-            <label>Taux annuel</label>
-            <div class="proj-param-row">
-              <input class="proj-input" type="number" id="investRateInput" min="1" max="30" step="0.5"
-                onchange="saveInvestSettings()" oninput="refreshProjection()">
-              <span class="proj-unit">%</span>
+        <div class="proj-horizon">
+          <span class="proj-horizon-label">Projection 20 ans</span>
+          <span class="proj-main" id="projValue20">—</span>
+        </div>
+        <div class="proj-sliders">
+          <div class="proj-slider-row">
+            <div class="proj-slider-info">
+              <span class="proj-slider-label">Rendement annuel</span>
+              <span class="proj-slider-val" id="investRateDisplay">8,0%</span>
             </div>
+            <input class="proj-slider" type="range" id="investRateInput" min="1" max="20" step="0.5" value="8"
+              oninput="document.getElementById('investRateDisplay').textContent=parseFloat(this.value).toFixed(1).replace('.',',')+'%'; refreshProjection()"
+              onchange="saveInvestSettings()">
           </div>
-          <div class="proj-param">
-            <label>Apport / mois</label>
-            <div class="proj-param-row">
-              <input class="proj-input" type="number" id="investMonthlyInput" min="0" step="50"
-                onchange="saveInvestSettings()" oninput="refreshProjection()">
-              <span class="proj-unit">€</span>
+          <div class="proj-slider-row">
+            <div class="proj-slider-info">
+              <span class="proj-slider-label">Apport mensuel</span>
+              <span class="proj-slider-val" id="investMonthlyDisplay">0 €</span>
             </div>
+            <input class="proj-slider" type="range" id="investMonthlyInput" min="0" max="3000" step="50" value="0"
+              oninput="document.getElementById('investMonthlyDisplay').textContent=parseInt(this.value)+' €'; refreshProjection()"
+              onchange="saveInvestSettings()">
           </div>
         </div>
       </div>
@@ -1867,17 +1877,18 @@ body { padding-bottom: 64px; }
       </div>
     </section>
 
-    <!-- Rebalancement -->
+    <!-- Prochain investissement -->
     <section class="section">
       <div class="section-head">
         <div class="section-title">Prochain investissement</div>
       </div>
       <div class="rebal-cash-wrap">
-        <span class="rebal-cash-label">Cash disponible</span>
+        <span class="rebal-cash-label">Cash à déployer</span>
         <input class="rebal-cash-input" type="number" id="rebalanceCash"
           placeholder="500" min="0" step="50" oninput="computeRebalance()">
         <span style="font-size:15px;color:var(--ink-3)">€</span>
       </div>
+      <div class="rebal-reserve-note" id="rebalReserveNote"></div>
       <div id="rebalanceResult"></div>
     </section>
 
@@ -1971,27 +1982,36 @@ body { padding-bottom: 64px; }
     <div class="modal-title" id="holdingModalTitle">Nouvelle position</div>
     <input type="hidden" id="holdingEditId">
 
-    <div class="holding-modal-field">
-      <label class="holding-modal-label">Symbole Yahoo Finance (ex: IWDA.AS, AAPL, MC.PA)</label>
-      <input class="holding-modal-input" id="holdingSymbol" type="text" placeholder="IWDA.AS" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
-    </div>
-    <div class="holding-modal-field">
-      <label class="holding-modal-label">Nom affiché</label>
-      <input class="holding-modal-input" id="holdingName" type="text" placeholder="iShares MSCI World">
+    <div class="holding-modal-row">
+      <div class="holding-modal-field">
+        <label class="holding-modal-label">Symbole Yahoo Finance</label>
+        <input class="holding-modal-input" id="holdingSymbol" type="text" placeholder="NVDA" autocomplete="off"
+          style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="holding-modal-field">
+        <label class="holding-modal-label">Nom affiché</label>
+        <input class="holding-modal-input" id="holdingName" type="text" placeholder="Nvidia">
+      </div>
     </div>
     <div class="holding-modal-row">
       <div class="holding-modal-field">
-        <label class="holding-modal-label">Montant investi (€)</label>
-        <input class="holding-modal-input" id="holdingInvested" type="number" placeholder="5000" min="0" step="100">
+        <label class="holding-modal-label">Prix moyen ($ ou € natif)</label>
+        <input class="holding-modal-input" id="holdingAvgPrice" type="number" placeholder="120.00"
+          min="0" step="0.01" oninput="updateInvestedPreview()">
       </div>
       <div class="holding-modal-field">
         <label class="holding-modal-label">Nombre de parts</label>
-        <input class="holding-modal-input" id="holdingShares" type="number" placeholder="32.5" min="0" step="0.001">
+        <input class="holding-modal-input" id="holdingShares" type="number" placeholder="10"
+          min="0" step="0.001" oninput="updateInvestedPreview()">
       </div>
     </div>
     <div class="holding-modal-field">
       <label class="holding-modal-label">Allocation cible (%)</label>
-      <input class="holding-modal-input" id="holdingTarget" type="number" placeholder="60" min="0" max="100" step="1">
+      <input class="holding-modal-input" id="holdingTarget" type="number" placeholder="25" min="0" max="100" step="1">
+    </div>
+    <div class="holding-modal-preview" id="holdingInvestedPreview" style="display:none">
+      💰 Investi estimé : <strong id="holdingInvestedValue">—</strong>
+      <span style="color:#8899cc;font-size:11px"> (devise native — converti € au chargement)</span>
     </div>
     <div class="modal-feedback" id="holdingFeedback"></div>
     <div class="modal-actions">
@@ -2146,7 +2166,7 @@ body { padding-bottom: 64px; }
   let COMPLETED  = new Set();
   let ACTIVE_TAB = 'suggested';
 
-  function switchTab(tab) {
+  function switchTaskTab(tab) {
     ACTIVE_TAB = tab;
     document.getElementById('tabSuggested').classList.toggle('active', tab === 'suggested');
     document.getElementById('tabToday').classList.toggle('active', tab === 'today');
@@ -4239,19 +4259,24 @@ body { padding-bottom: 64px; }
 
   async function fetchPortfolio() {
     try {
-      const [portRes] = await Promise.all([
-        fetch('/api/stocks?portfolio=1'),
-      ]);
+      const portRes = await fetch('/api/stocks?portfolio=1');
       portfolioData = await portRes.json();
 
-      // Initialise les inputs taux/apport
-      const s = portfolioData.settings;
+      // Initialise les sliders taux/apport + labels
+      const s  = portfolioData.settings;
       const ri = document.getElementById('investRateInput');
       const mi = document.getElementById('investMonthlyInput');
-      if (ri) ri.value = s.annualReturn   ?? 8;
-      if (mi) mi.value = s.monthlyContrib ?? 0;
+      if (ri) {
+        ri.value = s.annualReturn ?? 8;
+        const d = document.getElementById('investRateDisplay');
+        if (d) d.textContent = parseFloat(ri.value).toFixed(1).replace('.', ',') + '%';
+      }
+      if (mi) {
+        mi.value = s.monthlyContrib ?? 0;
+        const d = document.getElementById('investMonthlyDisplay');
+        if (d) d.textContent = parseInt(mi.value) + ' €';
+      }
 
-      // Fetch les cours si on a des positions
       if (portfolioData.holdings.length > 0) {
         await refreshPrices();
       } else {
@@ -4266,8 +4291,8 @@ body { padding-bottom: 64px; }
     if (!portfolioData || !portfolioData.holdings.length) return;
     const symbols = portfolioData.holdings.map(h => h.symbol).join(',');
     try {
-      const r   = await fetch(`/api/stocks?symbols=${encodeURIComponent(symbols)}`);
-      const d   = await r.json();
+      const r = await fetch('/api/stocks?symbols=' + encodeURIComponent(symbols));
+      const d = await r.json();
       stockPrices = d.prices ?? {};
       const age = document.getElementById('investPricesAge');
       if (age) age.textContent = 'cours mis à jour';
@@ -4275,20 +4300,36 @@ body { padding-bottom: 64px; }
     renderPortfolio();
   }
 
-  // Convertit un prix en EUR (les cours US sont en USD)
+  // Convertit un prix en EUR
   function toEur(price, currency) {
     if (!currency || currency === 'EUR' || currency === 'GBp') return price;
-    if (currency === 'GBP') return price; // London en GBP ≈ EUR pour simplifier
-    if (currency === 'USD' && stockPrices['EURUSD=X']) {
-      return price / stockPrices['EURUSD=X'].price;
-    }
-    return price; // fallback sans conversion
+    if (currency === 'GBP') return price;
+    if (currency === 'USD' && stockPrices['EURUSD=X']) return price / stockPrices['EURUSD=X'].price;
+    return price;
   }
 
+  // Valeur de marché actuelle en EUR
   function getHoldingCurrentValue(h) {
     const p = stockPrices[h.symbol];
-    if (!p || !h.shares) return h.investedEur;
-    return h.shares * toEur(p.price, p.currency);
+    if (p && h.shares) return h.shares * toEur(p.price, p.currency);
+    // Fallback : estimer depuis avgPrice si disponible
+    if (h.avgPrice && h.shares) {
+      const sym = h.symbol ?? '';
+      const assumeUSD = !sym.includes('.') && stockPrices['EURUSD=X'];
+      return h.shares * (assumeUSD ? h.avgPrice / stockPrices['EURUSD=X'].price : h.avgPrice);
+    }
+    return h.investedEur ?? 0;
+  }
+
+  // Montant investi en EUR : calculé depuis avgPrice×parts si disponible
+  function getInvestedEur(h) {
+    if (h.avgPrice && h.shares) {
+      const sym = h.symbol ?? '';
+      const assumeUSD = !sym.includes('.') && stockPrices['EURUSD=X'];
+      const raw = h.avgPrice * h.shares;
+      return assumeUSD ? raw / stockPrices['EURUSD=X'].price : raw;
+    }
+    return h.investedEur ?? 0;
   }
 
   // ─── Rendu principal ────────────────────────────────────
@@ -4299,43 +4340,39 @@ body { padding-bottom: 64px; }
     let totalInvested = 0;
     let totalCurrent  = 0;
     const enriched = holdings.map(h => {
-      const cv = getHoldingCurrentValue(h);
-      totalInvested += (h.investedEur ?? 0);
+      const cv       = getHoldingCurrentValue(h);
+      const invested = getInvestedEur(h);
+      totalInvested += invested;
       totalCurrent  += cv;
-      return { ...h, currentValue: cv };
+      return { ...h, currentValue: cv, investedEur: invested };
     });
 
-    // Carte résumé
     const pnl    = totalCurrent - totalInvested;
     const pnlPct = totalInvested > 0 ? pnl / totalInvested * 100 : 0;
     const sign   = pnl >= 0 ? '+' : '';
-    const el = id => document.getElementById(id);
+    const el     = id => document.getElementById(id);
 
-    if (el('investTotal'))    el('investTotal').textContent    = formatEurInvest(totalCurrent);
-    if (el('investInvested')) el('investInvested').textContent = 'Investi : ' + formatEurInvest(totalInvested);
+    if (el('investTotal'))
+      el('investTotal').textContent = formatEurInvest(totalCurrent);
+    if (el('investInvested'))
+      el('investInvested').textContent = formatEurInvest(totalInvested);
     if (el('investPnl')) {
       el('investPnl').textContent = sign + formatEurInvest(pnl) + ' (' + sign + pnlPct.toFixed(1) + '%)';
-      el('investPnl').className = 'invest-summary-pnl ' + (pnl >= 0 ? 'positive' : 'negative');
+      el('investPnl').className   = 'invest-hero-pnl ' + (pnl >= 0 ? 'pos' : 'neg');
     }
 
-    // Projection
     refreshProjection(totalCurrent, settings);
-
-    // Positions
     renderHoldings(enriched, totalCurrent, totalInvested);
-
-    // Rebalancement
     computeRebalance(enriched, totalCurrent);
   }
 
   function refreshProjection(totalCurrentArg, settingsArg) {
-    const settings   = settingsArg ?? portfolioData?.settings ?? {};
+    const settings = settingsArg ?? portfolioData?.settings ?? {};
     const ri = document.getElementById('investRateInput');
     const mi = document.getElementById('investMonthlyInput');
-    const r   = ((ri ? parseFloat(ri.value) : null) ?? settings.annualReturn ?? 8) / 100;
-    const pmt = (mi ? parseFloat(mi.value) : null) ?? settings.monthlyContrib ?? 0;
+    const r   = ((ri ? parseFloat(ri.value) : null) ?? settings.annualReturn   ?? 8) / 100;
+    const pmt = (mi ? parseFloat(mi.value) : null)  ?? settings.monthlyContrib ?? 0;
 
-    // Valeur courante (recalculer si pas fournie)
     let totalCurrent = totalCurrentArg ?? (() => {
       if (!portfolioData) return 0;
       return portfolioData.holdings.reduce((s, h) => s + getHoldingCurrentValue(h), 0);
@@ -4343,22 +4380,17 @@ body { padding-bottom: 64px; }
 
     const target = settings.targetValue ?? 1000000;
     const n = 20;
-
-    // Projection 20 ans : FV = PV*(1+r)^n + PMT*12*((1+r)^n - 1)/r
     const factor = Math.pow(1 + r, n);
-    const proj20 = totalCurrent * factor + (pmt > 0 ? pmt * 12 * (factor - 1) / r : 0);
+    const proj20  = totalCurrent * factor + (pmt > 0 ? pmt * 12 * (factor - 1) / r : 0);
 
-    if (document.getElementById('projValue20'))
-      document.getElementById('projValue20').textContent = formatEurInvest(proj20);
-    if (document.getElementById('projAnnualRate'))
-      document.getElementById('projAnnualRate').textContent = 'rendement annuel : ' + (r * 100).toFixed(1) + '%';
+    const el = id => document.getElementById(id);
+    if (el('projValue20'))    el('projValue20').textContent = formatEurInvest(proj20);
 
-    // Barre progression vers 1M
     const pct = Math.min(100, totalCurrent / target * 100);
-    if (document.getElementById('projBar'))
-      document.getElementById('projBar').style.width = pct.toFixed(1) + '%';
+    if (el('projBar'))        el('projBar').style.width     = pct.toFixed(1) + '%';
+    if (el('projCurrentPct')) el('projCurrentPct').textContent = pct.toFixed(1) + '%';
 
-    // Compte à rebours jusqu'à la cible
+    // Compte à rebours
     let yearsTo = null;
     if (totalCurrent < target) {
       if (pmt <= 0) {
@@ -4369,14 +4401,14 @@ body { padding-bottom: 64px; }
         yearsTo = val >= target ? yrs : null;
       }
     }
-    if (document.getElementById('projCountdown')) {
+    if (el('projCountdown')) {
       if (yearsTo === null && totalCurrent >= target) {
-        document.getElementById('projCountdown').textContent = 'Objectif atteint 🎉';
+        el('projCountdown').textContent = 'Objectif atteint 🎉';
       } else if (yearsTo !== null) {
         const y = Math.floor(yearsTo);
         const m = Math.round((yearsTo - y) * 12);
-        document.getElementById('projCountdown').textContent =
-          'Objectif ' + formatEurInvest(target) + ' dans ' + y + ' an' + (y > 1 ? 's' : '') + (m > 0 ? ' et ' + m + ' mois' : '');
+        el('projCountdown').textContent =
+          '🎯 ' + formatEurInvest(target) + ' dans ' + y + ' an' + (y > 1 ? 's' : '') + (m > 0 ? ' et ' + m + ' mois' : '');
       }
     }
   }
@@ -4391,54 +4423,69 @@ body { padding-bottom: 64px; }
     container.innerHTML = enriched.map(h => {
       const actualPct   = totalCurrent  > 0 ? h.currentValue / totalCurrent  * 100 : 0;
       const investedPct = totalInvested > 0 ? h.investedEur  / totalInvested * 100 : 0;
-      const pnl      = h.currentValue - (h.investedEur ?? 0);
-      const pnlPct   = h.investedEur > 0 ? pnl / h.investedEur * 100 : 0;
-      const p        = stockPrices[h.symbol];
-      const tgt      = h.targetPct ?? 0;
-      const diff2    = actualPct - tgt;
-      const diffLbl  = tgt > 0 ? 'cible ' + tgt + '% ' + (diff2 >= 0 ? '+' : '') + diff2.toFixed(1) + '%' : '';
-      const diffCls  = Math.abs(diff2) < 2 ? 'ok' : diff2 > 0 ? 'hi' : 'lo';
-      const dayChg   = p && p.change !== undefined ? (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%' : null;
-      return `<div class="card holding-card" onclick="openHoldingModal('${h.id}')">
-        <div class="holding-row1">
-          <div class="holding-name">${escHtml(h.name || h.symbol)}</div>
-          <div class="holding-cur-value">${formatEurInvest(h.currentValue)}</div>
-        </div>
-        <div class="holding-row2">
-          <div class="holding-ticker-row">
-            <span class="holding-ticker">${escHtml(h.symbol)}</span>
-            ${dayChg ? '<span class="holding-day-chg ' + (p.change >= 0 ? 'pos' : 'neg') + '">' + dayChg + '</span>' : ''}
-          </div>
-          <div class="holding-pnl-total ${pnl >= 0 ? 'pos' : 'neg'}">${pnl >= 0 ? '+' : ''}${formatEurInvest(pnl)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)</div>
-        </div>
-        <div class="alloc-bar-wrap">
-          <div class="alloc-bar-fill" style="width:${Math.min(100, actualPct).toFixed(1)}%"></div>
-          ${tgt > 0 ? '<div class="alloc-bar-target" style="left:' + Math.min(100, tgt).toFixed(1) + '%"></div>' : ''}
-        </div>
-        <div class="alloc-labels">
-          <span class="alloc-actual">${actualPct.toFixed(1)}%</span>
-          ${tgt > 0 ? '<span class="alloc-target-lbl ' + diffCls + '">' + diffLbl + '</span>' : ''}
-        </div>
-        <div class="holding-foot">
-          <span>Investi : ${formatEurInvest(h.investedEur ?? 0)} · ${investedPct.toFixed(1)}% du capital</span>
-          <span>${h.shares ? h.shares + ' parts' : ''}</span>
-        </div>
-      </div>`;
+      const pnl         = h.currentValue - h.investedEur;
+      const pnlPct      = h.investedEur  > 0 ? pnl / h.investedEur * 100 : 0;
+      const p           = stockPrices[h.symbol];
+      const tgt         = h.targetPct ?? 0;
+      const diff        = actualPct - tgt;
+      const diffLbl     = tgt > 0 ? 'cible ' + tgt + '% ' + (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%' : '';
+      const diffCls     = Math.abs(diff) < 2 ? 'ok' : diff > 0 ? 'hi' : 'lo';
+      const dayChg      = p && p.change !== undefined ? (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%' : null;
+      // Prix moyen + infos parts
+      const avgStr = h.avgPrice ? 'Moy. ' + h.avgPrice.toLocaleString('fr-FR', {maximumFractionDigits:2}) + (h.symbol && !h.symbol.includes('.') ? '$' : '€') : '';
+      const sharesStr = h.shares ? h.shares + ' parts' : '';
+      return '<div class="card holding-card" onclick="openHoldingModal(\'' + h.id + '\')">'
+        + '<div class="holding-row1">'
+        +   '<div class="holding-name">' + escHtml(h.name || h.symbol) + '</div>'
+        +   '<div class="holding-cur-value">' + formatEurInvest(h.currentValue) + '</div>'
+        + '</div>'
+        + '<div class="holding-row2">'
+        +   '<div class="holding-ticker-row">'
+        +     '<span class="holding-ticker">' + escHtml(h.symbol) + '</span>'
+        +     (dayChg ? '<span class="holding-day-chg ' + (p.change >= 0 ? 'pos' : 'neg') + '">' + dayChg + '</span>' : '')
+        +   '</div>'
+        +   '<div class="holding-pnl-total ' + (pnl >= 0 ? 'pos' : 'neg') + '">'
+        +     (pnl >= 0 ? '+' : '') + formatEurInvest(pnl) + ' (' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(1) + '%)'
+        +   '</div>'
+        + '</div>'
+        + '<div class="alloc-bar-wrap">'
+        +   '<div class="alloc-bar-fill" style="width:' + Math.min(100, actualPct).toFixed(1) + '%"></div>'
+        +   (tgt > 0 ? '<div class="alloc-bar-target" style="left:' + Math.min(100, tgt).toFixed(1) + '%"></div>' : '')
+        + '</div>'
+        + '<div class="alloc-labels">'
+        +   '<span class="alloc-actual">' + actualPct.toFixed(1) + '%</span>'
+        +   (tgt > 0 ? '<span class="alloc-target-lbl ' + diffCls + '">' + diffLbl + '</span>' : '')
+        + '</div>'
+        + '<div class="holding-foot">'
+        +   '<span>Investi ' + formatEurInvest(h.investedEur) + ' · ' + investedPct.toFixed(1) + '% du capital</span>'
+        +   '<span>' + [avgStr, sharesStr].filter(Boolean).join(' · ') + '</span>'
+        + '</div>'
+        + '</div>';
     }).join('');
   }
 
   function computeRebalance(enrichedArg, totalCurrentArg) {
     const result = document.getElementById('rebalanceResult');
+    const noteEl = document.getElementById('rebalReserveNote');
     if (!result) return;
-    const cash = parseFloat(document.getElementById('rebalanceCash')?.value ?? '0');
-    if (!portfolioData || !cash || cash <= 0) { result.innerHTML = ''; return; }
+    const cashRaw = parseFloat(document.getElementById('rebalanceCash')?.value ?? '0');
+    if (!portfolioData || !cashRaw || cashRaw <= 0) {
+      result.innerHTML = '';
+      if (noteEl) noteEl.textContent = '';
+      return;
+    }
 
-    // Utilise les données enrichies courantes ou les recalcule
-    const enriched    = enrichedArg ?? portfolioData.holdings.map(h => ({ ...h, currentValue: getHoldingCurrentValue(h) }));
+    // Réserve 15% pour renforcer sur les grosses baisses
+    const RESERVE_PCT = 0.15;
+    const reserve    = cashRaw * RESERVE_PCT;
+    const deployable = cashRaw - reserve;
+    if (noteEl) noteEl.textContent =
+      '💰 ' + formatEurInvest(reserve) + ' gardés en cash (15% réserve baisses) — ' + formatEurInvest(deployable) + ' à investir';
+
+    const enriched     = enrichedArg ?? portfolioData.holdings.map(h => ({ ...h, currentValue: getHoldingCurrentValue(h) }));
     const totalCurrent = totalCurrentArg ?? enriched.reduce((s, h) => s + h.currentValue, 0);
-    const newTotal    = totalCurrent + cash;
+    const newTotal     = totalCurrent + deployable;
 
-    // Calcule les deltas (seulement à l'achat, pas à la vente)
     const buys = [];
     let sumDelta = 0;
     for (const h of enriched) {
@@ -4453,34 +4500,37 @@ body { padding-bottom: 64px; }
       return;
     }
 
-    // Proportionnel si le total des deltas dépasse le cash disponible
-    const scale  = sumDelta > cash ? cash / sumDelta : 1;
-    const orders = buys.map(b => ({ ...b, amount: b.delta * scale })).filter(b => b.amount > 1);
-    const spent  = orders.reduce((s, b) => s + b.amount, 0);
-    const leftover = cash - spent;
+    const scale    = sumDelta > deployable ? deployable / sumDelta : 1;
+    const orders   = buys.map(b => ({ ...b, amount: b.delta * scale })).filter(b => b.amount > 1);
+    const spent    = orders.reduce((s, b) => s + b.amount, 0);
+    const leftover = deployable - spent;
 
     result.innerHTML = orders.map(b => {
-      const pctOfCash = (b.amount / cash * 100).toFixed(0);
-      return `<div class="rebal-item">
-        <div class="rebal-item-left">
-          <div class="rebal-item-name">${escHtml(b.name || b.symbol)}</div>
-          <div class="rebal-item-ticker">${escHtml(b.symbol)}</div>
-        </div>
-        <div class="rebal-item-right">
-          <div class="rebal-item-amount">${formatEurInvest(b.amount)}</div>
-          <div class="rebal-item-pct">${pctOfCash}% du cash</div>
-        </div>
-      </div>`;
-    }).join('') + (leftover > 1 ? `<div style="font-size:11px;color:var(--ink-3);margin-top:6px">Reste : ${formatEurInvest(leftover)} (portefeuille équilibré)</div>` : '');
+      const pctOfDeploy = (b.amount / deployable * 100).toFixed(0);
+      const curPrice = stockPrices[b.symbol];
+      const priceEur = curPrice ? toEur(curPrice.price, curPrice.currency) : null;
+      const sharesHint = priceEur && priceEur > 0
+        ? ' ≈ ' + (b.amount / priceEur).toFixed(2) + ' parts'
+        : '';
+      return '<div class="rebal-item">'
+        + '<div class="rebal-item-left">'
+        +   '<div class="rebal-item-name">' + escHtml(b.name || b.symbol) + '</div>'
+        +   '<div class="rebal-item-ticker">' + escHtml(b.symbol) + sharesHint + '</div>'
+        + '</div>'
+        + '<div class="rebal-item-right">'
+        +   '<div class="rebal-item-amount">' + formatEurInvest(b.amount) + '</div>'
+        +   '<div class="rebal-item-pct">' + pctOfDeploy + '% du déployable</div>'
+        + '</div>'
+        + '</div>';
+    }).join('')
+    + (leftover > 1 ? '<div style="font-size:11px;color:var(--ink-3);margin-top:6px">Reste : ' + formatEurInvest(leftover) + ' (portefeuille équilibré)</div>' : '');
   }
 
-  // ─── Sauvegarde des settings taux/apport ────────────────
+  // ─── Sauvegarde settings ─────────────────────────────────
   async function saveInvestSettings() {
     if (!portfolioData) return;
-    const ri = document.getElementById('investRateInput');
-    const mi = document.getElementById('investMonthlyInput');
-    portfolioData.settings.annualReturn   = parseFloat(ri.value) || 8;
-    portfolioData.settings.monthlyContrib = parseFloat(mi.value) || 0;
+    portfolioData.settings.annualReturn   = parseFloat(document.getElementById('investRateInput').value)   || 8;
+    portfolioData.settings.monthlyContrib = parseFloat(document.getElementById('investMonthlyInput').value) || 0;
     await fetch('/api/stocks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -4488,10 +4538,25 @@ body { padding-bottom: 64px; }
     });
   }
 
+  // ─── Prévisualisation montant investi dans le modal ────────
+  function updateInvestedPreview() {
+    const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value);
+    const shares   = parseFloat(document.getElementById('holdingShares').value);
+    const preview  = document.getElementById('holdingInvestedPreview');
+    const val      = document.getElementById('holdingInvestedValue');
+    if (preview && avgPrice > 0 && shares > 0) {
+      preview.style.display = 'block';
+      const total = avgPrice * shares;
+      val.textContent = total.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+    } else if (preview) {
+      preview.style.display = 'none';
+    }
+  }
+
   // ─── Modal ajout / édition de position ───────────────────
   function openHoldingModal(idOrNull) {
-    const modal = document.getElementById('holdingModal');
-    const title = document.getElementById('holdingModalTitle');
+    const modal  = document.getElementById('holdingModal');
+    const title  = document.getElementById('holdingModalTitle');
     const delBtn = document.getElementById('holdingDeleteBtn');
     document.getElementById('holdingEditId').value = idOrNull ?? '';
 
@@ -4499,18 +4564,21 @@ body { padding-bottom: 64px; }
       const h = portfolioData.holdings.find(x => x.id === idOrNull);
       if (h) {
         title.textContent = 'Modifier la position';
-        document.getElementById('holdingSymbol').value   = h.symbol   ?? '';
-        document.getElementById('holdingName').value     = h.name     ?? '';
-        document.getElementById('holdingInvested').value = h.investedEur ?? '';
-        document.getElementById('holdingShares').value   = h.shares   ?? '';
-        document.getElementById('holdingTarget').value   = h.targetPct ?? '';
+        document.getElementById('holdingSymbol').value   = h.symbol     ?? '';
+        document.getElementById('holdingName').value     = h.name       ?? '';
+        document.getElementById('holdingAvgPrice').value = h.avgPrice   ?? '';
+        document.getElementById('holdingShares').value   = h.shares     ?? '';
+        document.getElementById('holdingTarget').value   = h.targetPct  ?? '';
         delBtn.style.display = 'block';
+        updateInvestedPreview();
       }
     } else {
       title.textContent = 'Nouvelle position';
-      ['holdingSymbol','holdingName','holdingInvested','holdingShares','holdingTarget'].forEach(id => {
+      ['holdingSymbol','holdingName','holdingAvgPrice','holdingShares','holdingTarget'].forEach(id => {
         document.getElementById(id).value = '';
       });
+      const p = document.getElementById('holdingInvestedPreview');
+      if (p) p.style.display = 'none';
       delBtn.style.display = 'none';
     }
     document.getElementById('holdingFeedback').textContent = '';
@@ -4529,7 +4597,7 @@ body { padding-bottom: 64px; }
     const feedback = document.getElementById('holdingFeedback');
     const symbol   = document.getElementById('holdingSymbol').value.trim().toUpperCase();
     const name     = document.getElementById('holdingName').value.trim();
-    const invested = parseFloat(document.getElementById('holdingInvested').value) || 0;
+    const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value) || 0;
     const shares   = parseFloat(document.getElementById('holdingShares').value)   || 0;
     const target   = parseFloat(document.getElementById('holdingTarget').value)   || 0;
     const editId   = document.getElementById('holdingEditId').value;
@@ -4539,12 +4607,14 @@ body { padding-bottom: 64px; }
 
     if (!portfolioData) portfolioData = { holdings: [], settings: { annualReturn: 8, targetValue: 1000000, monthlyContrib: 0 } };
 
+    const holding = { symbol, name: name || symbol, avgPrice: avgPrice || null, shares: shares || null, targetPct: target || null };
+
     if (editId) {
       const idx = portfolioData.holdings.findIndex(x => x.id === editId);
-      if (idx >= 0) portfolioData.holdings[idx] = { id: editId, symbol, name: name || symbol, investedEur: invested, shares, targetPct: target };
+      if (idx >= 0) portfolioData.holdings[idx] = { id: editId, ...holding };
     } else {
       const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      portfolioData.holdings.push({ id, symbol, name: name || symbol, investedEur: invested, shares, targetPct: target });
+      portfolioData.holdings.push({ id, ...holding });
     }
 
     await fetch('/api/stocks', {
