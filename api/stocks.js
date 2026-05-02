@@ -1,9 +1,10 @@
 // ═══════════════════════════════════════════════════════════
 //  api/stocks.js  —  Vercel Serverless Function
 //  · GET ?symbols=AAPL,IWDA.AS → cours Yahoo Finance (cache 5 min)
-//  · GET ?portfolio=1           → holdings + settings depuis Notion Config
+//  · GET ?portfolio=1           → holdings + settings + history depuis Notion
 //  · POST action=saveHoldings   → sauvegarde les positions
 //  · POST action=saveSettings   → sauvegarde les paramètres
+//  · POST action=saveSnapshot   → snapshot journalier {date, value, qqq}
 // ═══════════════════════════════════════════════════════════
 
 export default async function handler(req, res) {
@@ -58,7 +59,7 @@ export default async function handler(req, res) {
 
   // ── POST ─────────────────────────────────────────────────
   if (req.method === 'POST') {
-    const { action, holdings, settings } = req.body ?? {};
+    const { action, holdings, settings, date, value, qqq } = req.body ?? {};
 
     if (action === 'saveHoldings' && holdings !== undefined) {
       await setConfig('portfolio_holdings', JSON.stringify(holdings));
@@ -70,14 +71,28 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // Snapshot journalier : upsert du jour, garde 400 points max
+    if (action === 'saveSnapshot' && date && value !== undefined) {
+      const histStr = await getConfig('portfolio_history');
+      const hist    = histStr ? JSON.parse(histStr) : [];
+      const idx     = hist.findIndex(p => p.date === date);
+      const entry   = { date, value: Math.round(value * 100) / 100, ...(qqq ? { qqq } : {}) };
+      if (idx >= 0) hist[idx] = entry;
+      else          hist.push(entry);
+      hist.sort((a, b) => a.date.localeCompare(b.date));
+      await setConfig('portfolio_history', JSON.stringify(hist.slice(-400)));
+      return res.status(200).json({ ok: true });
+    }
+
     return res.status(400).json({ error: 'action inconnue' });
   }
 
   // ── GET ?portfolio=1 ──────────────────────────────────────
   if (req.query?.portfolio === '1') {
-    const [holdingsStr, settingsStr] = await Promise.all([
+    const [holdingsStr, settingsStr, historyStr] = await Promise.all([
       getConfig('portfolio_holdings'),
       getConfig('portfolio_settings'),
+      getConfig('portfolio_history'),
     ]);
 
     const holdings = holdingsStr ? JSON.parse(holdingsStr) : [];
@@ -86,15 +101,17 @@ export default async function handler(req, res) {
       targetValue:    1000000,
       monthlyContrib: 0,
     };
+    const history = historyStr ? JSON.parse(historyStr) : [];
 
-    return res.status(200).json({ holdings, settings });
+    return res.status(200).json({ holdings, settings, history });
   }
 
   // ── GET ?symbols=AAPL,IWDA.AS ─────────────────────────────
   const symbolsParam = req.query?.symbols;
   if (symbolsParam) {
     const symbols    = symbolsParam.split(',').map(s => s.trim()).filter(Boolean);
-    const allSymbols = [...new Set([...symbols, 'EURUSD=X'])];
+    // Toujours inclure EURUSD=X et QQQ pour le benchmark
+    const allSymbols = [...new Set([...symbols, 'EURUSD=X', 'QQQ'])];
 
     const results = await Promise.allSettled(allSymbols.map(sym => fetchPrice(sym)));
 
