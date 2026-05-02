@@ -4836,6 +4836,20 @@ body { padding-bottom: 64px; }
     await refreshPrices();
   }
 
+  async function deleteHolding() {
+    const editId = document.getElementById('holdingEditId').value;
+    if (!editId || !portfolioData) return;
+    if (!confirm('Supprimer cette position ?')) return;
+    portfolioData.holdings = portfolioData.holdings.filter(h => h.id !== editId);
+    await fetch('/api/stocks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'saveHoldings', holdings: portfolioData.holdings }),
+    });
+    closeHoldingModal();
+    renderPortfolio();
+  }
+
   function formatEurInvest(n) {
     if (!isFinite(n)) return '—';
     const abs = Math.abs(n);
