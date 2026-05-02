@@ -1478,65 +1478,90 @@ body { padding-bottom: 64px; }
   30%          { transform: translateY(-4px); opacity: 1; }
 }
 
-/* ═══ NAVIGATION ONGLETS (swipe) ═══ */
-.tab-dots { display: flex; justify-content: center; gap: 6px; padding: 4px 0 10px; }
-.tab-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); cursor: pointer; transition: background .2s, transform .2s; }
-.tab-dot.active { background: var(--navy); transform: scale(1.2); }
-#tabsScroller { overflow: hidden; }
-.tabs-inner { display: flex; transition: transform .35s cubic-bezier(.4,0,.2,1); will-change: transform; }
-.tab-page { flex: 0 0 100%; min-width: 0; }
+/* ═══ NAVIGATION ONGLETS ═══ */
+.tab-dots { display: flex; justify-content: center; gap: 7px; padding: 2px 0 12px; }
+.tab-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); cursor: pointer; transition: background .25s, transform .25s; }
+.tab-dot.active { background: var(--navy); transform: scale(1.25); }
+.tab-page { display: none; }
+.tab-page.active { display: block; animation: tabFadeIn .22s ease; }
+@keyframes tabFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* ═══ ONGLET INVESTISSEMENTS ═══ */
-.invest-summary-card { background: var(--navy); color: #fff; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
-.invest-summary-label { font-size: 12px; opacity: .7; margin-bottom: 4px; }
-.invest-summary-total { font-size: 32px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
-.invest-summary-pnl { font-size: 14px; margin-top: 6px; opacity: .9; }
-.invest-summary-pnl.positive { color: #7fffb5; }
-.invest-summary-pnl.negative { color: #ff8f8f; }
-.invest-summary-sub { font-size: 12px; opacity: .55; margin-top: 4px; }
-.invest-proj-card { margin-bottom: 0; }
-.invest-proj-title { font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
-.invest-proj-main { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
-.invest-proj-sub { font-size: 12px; color: var(--ink-3); margin-bottom: 12px; }
-.invest-proj-bar-wrap { height: 6px; background: var(--line); border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
-.invest-proj-bar { height: 100%; background: var(--navy); border-radius: 3px; transition: width .6s ease; min-width: 2px; }
-.invest-proj-countdown { font-size: 13px; color: var(--ink-2); font-weight: 500; }
-.invest-rate-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); margin-top: 10px; }
-.invest-rate-input { width: 52px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; text-align: center; background: var(--bg); color: var(--ink); }
-.holding-card { cursor: pointer; }
-.holding-card:active { opacity: .85; }
-.holding-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-.holding-name { font-weight: 600; font-size: 14px; color: var(--ink); }
-.holding-symbol { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
-.holding-value-col { text-align: right; }
-.holding-value { font-weight: 700; font-size: 15px; color: var(--navy); }
-.holding-pnl { font-size: 11px; margin-top: 2px; }
-.holding-pnl.positive { color: #22a85a; }
-.holding-pnl.negative { color: #e03030; }
-.holding-bar-wrap { position: relative; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 6px; overflow: visible; }
-.holding-bar-actual { height: 100%; background: var(--navy); border-radius: 3px; transition: width .5s ease; min-width: 2px; }
-.holding-bar-target { position: absolute; top: -3px; width: 2px; height: 11px; background: #f59e0b; border-radius: 1px; transform: translateX(-50%); }
-.holding-alloc-labels { display: flex; justify-content: space-between; font-size: 11px; }
-.holding-alloc-actual { color: var(--ink-2); font-weight: 600; }
-.holding-alloc-target { color: var(--ink-3); }
-.holding-alloc-target.on-target { color: #22a85a; }
-.holding-alloc-target.over { color: #f59e0b; }
-.holding-alloc-target.under { color: #3b82f6; }
-.holding-invested-row { font-size: 11px; color: var(--ink-3); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
-.rebalance-cash-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
-.rebalance-cash-input { flex: 1; max-width: 100px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; font-size: 15px; font-weight: 600; text-align: right; background: var(--bg); color: var(--ink); }
-.rebalance-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; background: var(--bg); }
-.rebalance-name { font-size: 13px; font-weight: 600; color: var(--ink); }
-.rebalance-ticker { font-size: 11px; color: var(--ink-3); }
-.rebalance-amount { font-size: 15px; font-weight: 700; color: var(--navy); }
-.rebalance-pct { font-size: 11px; color: var(--ink-3); text-align: right; }
-.rebalance-balanced { font-size: 13px; color: #22a85a; font-weight: 500; padding: 8px 0; }
+/* Hero balance */
+.invest-hero { padding: 6px 0 22px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.invest-hero-label { font-size: 11px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+.invest-hero-value { font-size: 38px; font-weight: 800; color: var(--navy); letter-spacing: -.03em; line-height: 1; margin-bottom: 8px; }
+.invest-hero-meta { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+.invest-hero-pnl { font-size: 14px; font-weight: 600; }
+.invest-hero-pnl.pos { color: #22a85a; }
+.invest-hero-pnl.neg { color: #e03030; }
+.invest-hero-invested { font-size: 13px; color: var(--ink-3); }
+
+/* Projection card */
+.proj-card { }
+.proj-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.proj-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.proj-refresh { font-size: 11px; color: var(--ink-4); }
+.proj-main { font-size: 26px; font-weight: 800; color: var(--navy); letter-spacing: -.02em; margin-bottom: 2px; }
+.proj-sub { font-size: 12px; color: var(--ink-3); margin-bottom: 14px; }
+.proj-bar-wrap { height: 7px; background: var(--line); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.proj-bar-fill { height: 100%; background: linear-gradient(90deg, var(--navy), #4a7cc7); border-radius: 4px; transition: width .7s ease; min-width: 3px; }
+.proj-bar-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-bottom: 14px; }
+.proj-countdown { font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 10px 12px; background: var(--surface-2); border-radius: 8px; margin-bottom: 14px; }
+.proj-params { display: flex; gap: 10px; }
+.proj-param { flex: 1; }
+.proj-param label { display: block; font-size: 11px; color: var(--ink-3); margin-bottom: 4px; }
+.proj-param-row { display: flex; align-items: center; gap: 4px; }
+.proj-input { flex: 1; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 15px; font-weight: 600; text-align: right; background: var(--bg); color: var(--navy); width: 100%; box-sizing: border-box; }
+.proj-unit { font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+
+/* Holdings */
+.holding-card { cursor: pointer; padding: 14px 16px; }
+.holding-card:active { opacity: .8; }
+.holding-row1 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.holding-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.holding-cur-value { font-size: 15px; font-weight: 800; color: var(--navy); }
+.holding-row2 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.holding-ticker-row { display: flex; align-items: center; gap: 6px; }
+.holding-ticker { font-size: 11px; color: var(--ink-3); font-weight: 600; letter-spacing: .03em; }
+.holding-day-chg { font-size: 11px; font-weight: 600; padding: 1px 5px; border-radius: 4px; }
+.holding-day-chg.pos { background: #dcfce7; color: #15803d; }
+.holding-day-chg.neg { background: #fee2e2; color: #b91c1c; }
+.holding-pnl-total { font-size: 12px; }
+.holding-pnl-total.pos { color: #22a85a; }
+.holding-pnl-total.neg { color: #e03030; }
+/* allocation bar */
+.alloc-bar-wrap { position: relative; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 5px; }
+.alloc-bar-fill { height: 100%; background: var(--navy); border-radius: 3px; transition: width .5s; }
+.alloc-bar-target { position: absolute; top: -4px; width: 2px; height: 13px; background: #f59e0b; border-radius: 1px; transform: translateX(-50%); }
+.alloc-labels { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px; }
+.alloc-actual { font-weight: 700; color: var(--ink-2); }
+.alloc-target-lbl { color: var(--ink-3); }
+.alloc-target-lbl.ok  { color: #22a85a; }
+.alloc-target-lbl.hi  { color: #f59e0b; }
+.alloc-target-lbl.lo  { color: #3b82f6; }
+.holding-foot { font-size: 11px; color: var(--ink-3); padding-top: 9px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; }
+
+/* Rebalancing */
+.rebal-cash-wrap { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; }
+.rebal-cash-label { font-size: 14px; color: var(--ink-2); flex: 1; }
+.rebal-cash-input { width: 90px; padding: 6px 10px; border: 1.5px solid var(--navy); border-radius: 8px; font-size: 16px; font-weight: 700; text-align: right; background: var(--bg); color: var(--navy); }
+.rebal-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; margin-bottom: 8px; background: var(--bg); }
+.rebal-item-left { flex: 1; }
+.rebal-item-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+.rebal-item-ticker { font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+.rebal-item-amount { font-size: 18px; font-weight: 800; color: var(--navy); }
+.rebal-item-pct { font-size: 11px; color: var(--ink-3); text-align: right; }
+.rebal-balanced { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #22a85a; font-weight: 600; padding: 10px 0; }
+
+/* Modal position */
 .holding-modal-field { margin-bottom: 14px; }
-.holding-modal-label { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; display: block; }
+.holding-modal-label { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; display: block; font-weight: 500; }
 .holding-modal-input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; font-size: 15px; background: var(--bg); color: var(--ink); box-sizing: border-box; }
+.holding-modal-input:focus { outline: none; border-color: var(--navy); }
 .holding-modal-row { display: flex; gap: 10px; }
 .holding-modal-row .holding-modal-field { flex: 1; }
-.holding-delete-btn { width: 100%; padding: 11px; margin-top: 8px; border: 1px solid #e03030; border-radius: 9px; background: none; color: #e03030; font-size: 14px; cursor: pointer; }
+.holding-delete-btn { width: 100%; padding: 11px; margin-top: 8px; border: 1px solid #e03030; border-radius: 9px; background: none; color: #e03030; font-size: 14px; cursor: pointer; font-weight: 500; }
 </style>
 </head>
 <body>
@@ -1569,12 +1594,8 @@ body { padding-bottom: 64px; }
     <div class="tab-dot"        id="dot1" onclick="switchTab(1)" title="Investissements"></div>
   </div>
 
-  <!-- Conteneur swipe -->
-  <div id="tabsScroller">
-  <div class="tabs-inner" id="tabsInner">
-
   <!-- ══ ONGLET 0 : DASHBOARD ══ -->
-  <div class="tab-page" id="tabDashboard">
+  <div class="tab-page active" id="tabDashboard">
 
   <!-- HERO -->
   <section class="hero">
@@ -1784,43 +1805,62 @@ body { padding-bottom: 64px; }
   <!-- ══ ONGLET 1 : INVESTISSEMENTS ══ -->
   <div class="tab-page" id="tabInvest">
 
-    <!-- Résumé portefeuille -->
-    <div class="invest-summary-card" id="investSummaryCard">
-      <div class="invest-summary-label">Valeur portefeuille</div>
-      <div class="invest-summary-total" id="investTotal">—</div>
-      <div class="invest-summary-pnl" id="investPnl"></div>
-      <div class="invest-summary-sub" id="investInvested">Investi : —</div>
+    <!-- Solde hero -->
+    <div class="invest-hero">
+      <div class="invest-hero-label">Portefeuille</div>
+      <div class="invest-hero-value" id="investTotal">—</div>
+      <div class="invest-hero-meta">
+        <span class="invest-hero-pnl" id="investPnl"></span>
+        <span class="invest-hero-invested" id="investInvested"></span>
+      </div>
     </div>
 
-    <!-- Projection -->
+    <!-- Projection & objectif -->
     <section class="section">
       <div class="section-head">
-        <div class="section-title">Projection</div>
+        <div class="section-title">Objectif 1 M€</div>
         <div class="section-meta" id="investPricesAge"></div>
       </div>
-      <div class="card invest-proj-card">
-        <div class="invest-proj-title">Dans 20 ans au taux actuel</div>
-        <div class="invest-proj-main" id="projValue20">—</div>
-        <div class="invest-proj-sub" id="projAnnualRate">rendement annuel : —</div>
-        <div class="invest-proj-bar-wrap"><div class="invest-proj-bar" id="projBar" style="width:0%"></div></div>
-        <div class="invest-proj-countdown" id="projCountdown">—</div>
-        <div class="invest-rate-row">
-          Taux annuel :
-          <input class="invest-rate-input" type="number" id="investRateInput" min="1" max="30" step="0.5"
-            onchange="saveInvestSettings()" oninput="refreshProjection()">
-          % &nbsp;·&nbsp; Apport mensuel :
-          <input class="invest-rate-input" style="width:62px" type="number" id="investMonthlyInput" min="0" step="50"
-            onchange="saveInvestSettings()" oninput="refreshProjection()">
-          €
+      <div class="card proj-card">
+        <div class="proj-top">
+          <div>
+            <div class="proj-title">Dans 20 ans</div>
+          </div>
+          <div class="proj-main" id="projValue20">—</div>
+        </div>
+        <div class="proj-sub" id="projAnnualRate">rendement annuel : —</div>
+        <div class="proj-bar-wrap"><div class="proj-bar-fill" id="projBar" style="width:0%"></div></div>
+        <div class="proj-bar-labels">
+          <span id="projCurrentPct">0%</span>
+          <span>1 M€</span>
+        </div>
+        <div class="proj-countdown" id="projCountdown">—</div>
+        <div class="proj-params">
+          <div class="proj-param">
+            <label>Taux annuel</label>
+            <div class="proj-param-row">
+              <input class="proj-input" type="number" id="investRateInput" min="1" max="30" step="0.5"
+                onchange="saveInvestSettings()" oninput="refreshProjection()">
+              <span class="proj-unit">%</span>
+            </div>
+          </div>
+          <div class="proj-param">
+            <label>Apport / mois</label>
+            <div class="proj-param-row">
+              <input class="proj-input" type="number" id="investMonthlyInput" min="0" step="50"
+                onchange="saveInvestSettings()" oninput="refreshProjection()">
+              <span class="proj-unit">€</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Portefeuille / positions -->
+    <!-- Positions -->
     <section class="section">
       <div class="section-head">
         <div class="section-title">Positions</div>
-        <button class="section-add-btn" onclick="openHoldingModal(null)" title="Ajouter une position">+</button>
+        <button class="section-add-btn" onclick="openHoldingModal(null)" title="Ajouter">+</button>
       </div>
       <div id="holdingsContainer">
         <div class="tasks-empty">Aucune position — clique sur + pour commencer</div>
@@ -1832,20 +1872,17 @@ body { padding-bottom: 64px; }
       <div class="section-head">
         <div class="section-title">Prochain investissement</div>
       </div>
-      <div class="rebalance-cash-row">
-        <span>J&#39;ai</span>
-        <input class="rebalance-cash-input" type="number" id="rebalanceCash"
+      <div class="rebal-cash-wrap">
+        <span class="rebal-cash-label">Cash disponible</span>
+        <input class="rebal-cash-input" type="number" id="rebalanceCash"
           placeholder="500" min="0" step="50" oninput="computeRebalance()">
-        <span>€ disponibles</span>
+        <span style="font-size:15px;color:var(--ink-3)">€</span>
       </div>
       <div id="rebalanceResult"></div>
     </section>
 
     <div class="footer"><span class="dot"></span><em>Elie</em> · Investissements</div>
   </div><!-- /tab-page#tabInvest -->
-
-  </div><!-- /tabs-inner -->
-  </div><!-- /tabsScroller -->
 
 </div><!-- /.app -->
 
@@ -4166,31 +4203,28 @@ body { padding-bottom: 64px; }
   }
 
   // ═══════════════════════════════════════════════════════
-  //  NAVIGATION ONGLETS (swipe)
+  //  NAVIGATION ONGLETS
   // ═══════════════════════════════════════════════════════
   let currentTabIndex = 0;
 
   function switchTab(index) {
     currentTabIndex = index;
-    document.getElementById('tabsInner').style.transform = `translateX(${-index * 100}%)`;
+    document.querySelectorAll('.tab-page').forEach((p, i) => p.classList.toggle('active', i === index));
     document.querySelectorAll('.tab-dot').forEach((d, i) => d.classList.toggle('active', i === index));
-    // Charger les données invest au premier accès
     if (index === 1 && !portfolioData) fetchPortfolio();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Détection swipe horizontal
+  // Swipe horizontal sur le body
   (function () {
-    let startX = 0, startY = 0;
-    const scroller = document.getElementById('tabsScroller');
-    if (!scroller) return;
-    scroller.addEventListener('touchstart', e => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    }, { passive: true });
-    scroller.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - startX;
-      const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    let sx = 0, sy = 0;
+    document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    document.addEventListener('touchend', e => {
+      // Ne pas swiper si un modal/sheet est ouvert
+      if (document.querySelector('.modal-backdrop[style*="flex"],.settings-modal.open')) return;
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) {
         if (dx < 0 && currentTabIndex === 0) switchTab(1);
         if (dx > 0 && currentTabIndex === 1) switchTab(0);
       }
@@ -4278,9 +4312,9 @@ body { padding-bottom: 64px; }
     const el = id => document.getElementById(id);
 
     if (el('investTotal'))    el('investTotal').textContent    = formatEurInvest(totalCurrent);
-    if (el('investInvested')) el('investInvested').textContent = 'Investi : ' + formatEurInvest(totalInvested);
+    if (el('investInvested')) el('investInvested').textContent = 'Investi : ' + formatEurInvest(totalInvested);
     if (el('investPnl')) {
-      el('investPnl').textContent = sign + formatEurInvest(pnl) + ' (' + sign + pnlPct.toFixed(1) + '%)';
+      el('investPnl').textContent = sign + formatEurInvest(pnl) + ' (' + sign + pnlPct.toFixed(1) + '%)';
       el('investPnl').className = 'invest-summary-pnl ' + (pnl >= 0 ? 'positive' : 'negative');
     }
 
@@ -4317,14 +4351,14 @@ body { padding-bottom: 64px; }
     if (document.getElementById('projValue20'))
       document.getElementById('projValue20').textContent = formatEurInvest(proj20);
     if (document.getElementById('projAnnualRate'))
-      document.getElementById('projAnnualRate').textContent = 'rendement annuel : ' + (r * 100).toFixed(1) + '%';
+      document.getElementById('projAnnualRate').textContent = 'rendement annuel : ' + (r * 100).toFixed(1) + '%';
 
     // Barre progression vers 1M
     const pct = Math.min(100, totalCurrent / target * 100);
     if (document.getElementById('projBar'))
       document.getElementById('projBar').style.width = pct.toFixed(1) + '%';
 
-    // Compte à rebours jusqu’à la cible
+    // Compte à rebours jusqu'à la cible
     let yearsTo = null;
     if (totalCurrent < target) {
       if (pmt <= 0) {
@@ -4342,7 +4376,7 @@ body { padding-bottom: 64px; }
         const y = Math.floor(yearsTo);
         const m = Math.round((yearsTo - y) * 12);
         document.getElementById('projCountdown').textContent =
-          'Objectif ' + formatEurInvest(target) + ' dans ' + y + ' an' + (y > 1 ? 's' : '') + (m > 0 ? ' et ' + m + ' mois' : '');
+          'Objectif ' + formatEurInvest(target) + ' dans ' + y + ' an' + (y > 1 ? 's' : '') + (m > 0 ? ' et ' + m + ' mois' : '');
       }
     }
   }
@@ -4359,34 +4393,35 @@ body { padding-bottom: 64px; }
       const investedPct = totalInvested > 0 ? h.investedEur  / totalInvested * 100 : 0;
       const pnl      = h.currentValue - (h.investedEur ?? 0);
       const pnlPct   = h.investedEur > 0 ? pnl / h.investedEur * 100 : 0;
-      const target   = h.targetPct ?? 0;
-      const diff     = actualPct - target;
-      const diffStr  = target > 0 ? (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%' : '';
-      const diffClass = Math.abs(diff) < 2 ? 'on-target' : diff > 0 ? 'over' : 'under';
-      const p = stockPrices[h.symbol];
-      const changeStr = p ? (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '% aujourd’hui' : '';
+      const p        = stockPrices[h.symbol];
+      const tgt      = h.targetPct ?? 0;
+      const diff2    = actualPct - tgt;
+      const diffLbl  = tgt > 0 ? 'cible ' + tgt + '% ' + (diff2 >= 0 ? '+' : '') + diff2.toFixed(1) + '%' : '';
+      const diffCls  = Math.abs(diff2) < 2 ? 'ok' : diff2 > 0 ? 'hi' : 'lo';
+      const dayChg   = p && p.change !== undefined ? (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%' : null;
       return `<div class="card holding-card" onclick="openHoldingModal('${h.id}')">
-        <div class="holding-top">
-          <div>
-            <div class="holding-name">${escHtml(h.name || h.symbol)}</div>
-            <div class="holding-symbol">${escHtml(h.symbol)}${changeStr ? ' · <span style="color:' + (p.change >= 0 ? '#22a85a' : '#e03030') + '">' + changeStr + '</span>' : ''}</div>
+        <div class="holding-row1">
+          <div class="holding-name">${escHtml(h.name || h.symbol)}</div>
+          <div class="holding-cur-value">${formatEurInvest(h.currentValue)}</div>
+        </div>
+        <div class="holding-row2">
+          <div class="holding-ticker-row">
+            <span class="holding-ticker">${escHtml(h.symbol)}</span>
+            ${dayChg ? '<span class="holding-day-chg ' + (p.change >= 0 ? 'pos' : 'neg') + '">' + dayChg + '</span>' : ''}
           </div>
-          <div class="holding-value-col">
-            <div class="holding-value">${formatEurInvest(h.currentValue)}</div>
-            <div class="holding-pnl ${pnl >= 0 ? 'positive' : 'negative'}">${pnl >= 0 ? '+' : ''}${formatEurInvest(pnl)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)</div>
-          </div>
+          <div class="holding-pnl-total ${pnl >= 0 ? 'pos' : 'neg'}">${pnl >= 0 ? '+' : ''}${formatEurInvest(pnl)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)</div>
         </div>
-        <div class="holding-bar-wrap">
-          <div class="holding-bar-actual" style="width:${Math.min(100, actualPct).toFixed(1)}%"></div>
-          ${target > 0 ? `<div class="holding-bar-target" style="left:${Math.min(100, target).toFixed(1)}%"></div>` : ''}
+        <div class="alloc-bar-wrap">
+          <div class="alloc-bar-fill" style="width:${Math.min(100, actualPct).toFixed(1)}%"></div>
+          ${tgt > 0 ? '<div class="alloc-bar-target" style="left:' + Math.min(100, tgt).toFixed(1) + '%"></div>' : ''}
         </div>
-        <div class="holding-alloc-labels">
-          <span class="holding-alloc-actual">${actualPct.toFixed(1)}% actuel</span>
-          ${target > 0 ? `<span class="holding-alloc-target ${diffClass}">cible ${target}% ${diffStr}</span>` : ''}
+        <div class="alloc-labels">
+          <span class="alloc-actual">${actualPct.toFixed(1)}%</span>
+          ${tgt > 0 ? '<span class="alloc-target-lbl ' + diffCls + '">' + diffLbl + '</span>' : ''}
         </div>
-        <div class="holding-invested-row">
-          Investi : ${formatEurInvest(h.investedEur ?? 0)} · ${investedPct.toFixed(1)}% du capital déposé
-          ${h.shares ? ' · ' + h.shares + ' parts' : ''}
+        <div class="holding-foot">
+          <span>Investi : ${formatEurInvest(h.investedEur ?? 0)} · ${investedPct.toFixed(1)}% du capital</span>
+          <span>${h.shares ? h.shares + ' parts' : ''}</span>
         </div>
       </div>`;
     }).join('');
@@ -4403,7 +4438,7 @@ body { padding-bottom: 64px; }
     const totalCurrent = totalCurrentArg ?? enriched.reduce((s, h) => s + h.currentValue, 0);
     const newTotal    = totalCurrent + cash;
 
-    // Calcule les deltas (seulement à l’achat, pas à la vente)
+    // Calcule les deltas (seulement à l'achat, pas à la vente)
     const buys = [];
     let sumDelta = 0;
     for (const h of enriched) {
@@ -4414,7 +4449,7 @@ body { padding-bottom: 64px; }
     }
 
     if (!buys.length) {
-      result.innerHTML = '<div class="rebalance-balanced">🎯 Portefeuille déjà équilibré !</div>';
+      result.innerHTML = '<div class="rebal-balanced">🎯 Portefeuille déjà équilibré !</div>';
       return;
     }
 
@@ -4426,11 +4461,17 @@ body { padding-bottom: 64px; }
 
     result.innerHTML = orders.map(b => {
       const pctOfCash = (b.amount / cash * 100).toFixed(0);
-      return `<div class="rebalance-item">
-        <div><div class="rebalance-name">${escHtml(b.name || b.symbol)}</div><div class="rebalance-ticker">${escHtml(b.symbol)}</div></div>
-        <div style="text-align:right"><div class="rebalance-amount">${formatEurInvest(b.amount)}</div><div class="rebalance-pct">${pctOfCash}% du cash</div></div>
+      return `<div class="rebal-item">
+        <div class="rebal-item-left">
+          <div class="rebal-item-name">${escHtml(b.name || b.symbol)}</div>
+          <div class="rebal-item-ticker">${escHtml(b.symbol)}</div>
+        </div>
+        <div class="rebal-item-right">
+          <div class="rebal-item-amount">${formatEurInvest(b.amount)}</div>
+          <div class="rebal-item-pct">${pctOfCash}% du cash</div>
+        </div>
       </div>`;
-    }).join('') + (leftover > 1 ? `<div style="font-size:11px;color:var(--ink-3);margin-top:6px">Reste : ${formatEurInvest(leftover)} (portefeuille équilibré)</div>` : '');
+    }).join('') + (leftover > 1 ? `<div style="font-size:11px;color:var(--ink-3);margin-top:6px">Reste : ${formatEurInvest(leftover)} (portefeuille équilibré)</div>` : '');
   }
 
   // ─── Sauvegarde des settings taux/apport ────────────────
@@ -4535,9 +4576,9 @@ body { padding-bottom: 64px; }
   function formatEurInvest(n) {
     if (!isFinite(n)) return '—';
     const abs = Math.abs(n);
-    if (abs >= 1000000) return (n / 1000000).toFixed(2) + ' M€';
-    if (abs >= 1000)    return (n / 1000).toFixed(1)    + ' k€';
-    return Math.round(n) + ' €';
+    if (abs >= 1000000) return (n / 1000000).toFixed(2) + ' M€';
+    if (abs >= 1000)    return (n / 1000).toFixed(1)    + ' k€';
+    return Math.round(n) + ' €';
   }
 
 </script>
@@ -4623,7 +4664,7 @@ body { padding-bottom: 64px; }
       </div>
 
       <div class="settings-row">
-        <div class="settings-row-icon">🗓</div>
+        <div class="settings-row-icon">\U0001f5d3</div>
         <div class="settings-row-info">
           <div class="settings-row-label">Brief hebdo</div>
           <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_weekly" onchange="saveNotifPref('notif_weekly_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
@@ -4636,7 +4677,7 @@ body { padding-bottom: 64px; }
       </div>
 
       <div class="settings-row">
-        <div class="settings-row-icon">📋</div>
+        <div class="settings-row-icon">\U0001f4cb</div>
         <div class="settings-row-info">
           <div class="settings-row-label">Tâches en attente</div>
           <div class="settings-row-sub">Lun–Ven · <select class="settings-hour-select" id="hour_notif_tasks" onchange="saveNotifPref('notif_tasks_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17" selected>17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
@@ -4649,7 +4690,7 @@ body { padding-bottom: 64px; }
       </div>
 
       <div class="settings-row">
-        <div class="settings-row-icon">📸</div>
+        <div class="settings-row-icon">\U0001f4f8</div>
         <div class="settings-row-info">
           <div class="settings-row-label">Upload budget</div>
           <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_budget" onchange="saveNotifPref('notif_budget_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
@@ -4662,7 +4703,7 @@ body { padding-bottom: 64px; }
       </div>
 
       <div class="settings-row">
-        <div class="settings-row-icon">📈</div>
+        <div class="settings-row-icon">\U0001f4c8</div>
         <div class="settings-row-info">
           <div class="settings-row-label">Bilan investissements</div>
           <div class="settings-row-sub">1er du mois · <select class="settings-hour-select" id="hour_notif_invest" onchange="saveNotifPref('notif_invest_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9" selected>09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
