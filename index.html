@@ -4421,15 +4421,16 @@ body { padding-bottom: 64px; }
     benchEl.style.display = 'flex';
 
     const fmtChg = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
-    if (el('benchPortef') && portChgPct !== null)
-      el('benchPortef').textContent = fmtChg(portChgPct);
-    if (el('benchQQQ') && qqqChg !== null)
-      el('benchQQQ').textContent = fmtChg(qqqChg);
+    const gi = id => document.getElementById(id);
+    if (gi('benchPortef') && portChgPct !== null)
+      gi('benchPortef').textContent = fmtChg(portChgPct);
+    if (gi('benchQQQ') && qqqChg !== null)
+      gi('benchQQQ').textContent = fmtChg(qqqChg);
 
-    if (el('benchVerdict') && portChgPct !== null && qqqChg !== null) {
+    if (gi('benchVerdict') && portChgPct !== null && qqqChg !== null) {
       const beat = portChgPct > qqqChg;
-      el('benchVerdict').textContent = beat ? '✓ Tu bats le marché' : '↓ Sous QQQ';
-      el('benchVerdict').style.color = beat ? '#4ade80' : '#f87171';
+      gi('benchVerdict').textContent = beat ? '✓ Tu bats le marché' : '↓ Sous QQQ';
+      gi('benchVerdict').style.color = beat ? '#4ade80' : '#f87171';
     }
   }
 
