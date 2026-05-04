@@ -152,7 +152,7 @@ export default async function handler(req, res) {
       const enabled = await getConfig(`notif_${key}`);
       if (enabled === '0') return;
       await webpush.default.sendNotification(sub, JSON.stringify({
-        title: '✶ Elie', body, icon: '/icon.svg', data: { url: '/' },
+        title: '✶ Elie', body, icon: '/icon-192.png', data: { url: '/' },
       }));
       sent.push(key);
     };

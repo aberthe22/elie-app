@@ -1,6 +1,6 @@
-// Service Worker Elie — 20260429-01
+// Service Worker Elie — 20260504-01
 // Stratégie : Network First (réseau prioritaire, cache en fallback offline)
-const CACHE = 'elie-20260429-01';
+const CACHE = 'elie-20260504-01';
 
 self.addEventListener('install', e => {
   self.skipWaiting(); // prend le contrôle immédiatement
@@ -22,11 +22,12 @@ self.addEventListener('push', e => {
   try { data = e.data ? e.data.json() : data; } catch {}
   e.waitUntil(
     self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/icon.svg',
-      badge: '/icon.svg',
-      tag: 'elie-brief',
-      renotify: true,
+      body:      data.body,
+      icon:      '/icon-192.png',   // PNG requis iOS
+      badge:     '/icon-192.png',
+      tag:       'elie-brief',
+      renotify:  true,
+      data:      { url: data.url || '/' },
     })
   );
 });

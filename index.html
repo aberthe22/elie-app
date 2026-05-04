@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Elie">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>Elie</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3796,9 +3798,19 @@ body { padding-bottom: 64px; }
       alert('Les notifications ne sont pas supportées sur ce navigateur.\nInstalle Elie sur ton écran d\u2019accueil (iOS : Partager → Sur l\u2019écran d\u2019accueil).');
       return;
     }
+    const isIos        = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone === true;
+    if (isIos && !isStandalone) {
+      alert('Sur iPhone, les notifications n’arrivent que depuis l’app installée.\n\nSafari → ⧆ Partager → « Sur l’écran d’accueil », puis réouvre Elie depuis l’icône.');
+      return;
+    }
     try {
       const perm = await Notification.requestPermission();
-      if (perm !== 'granted') return;
+      if (perm !== 'granted') {
+        alert('Permission refusée. Vérifie les réglages dans Réglages → Notifications.');
+        return;
+      }
 
       const reg = await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
@@ -3808,16 +3820,19 @@ body { padding-bottom: 64px; }
           applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC),
         });
       }
-      await fetch('/api/tasks', {
+      const r = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'subscribe', subscription: sub.toJSON() }),
       });
-      // Marquer le bouton comme actif
-      const btn = document.getElementById('bellBtn');
-      if (btn) btn.classList.add('active');
+      if (r.ok) {
+        const btn = document.getElementById('bellBtn');
+        if (btn) btn.classList.add('active');
+        alert('🔔 Notifications activées !');
+      }
     } catch (e) {
       console.error('[push]', e);
+      alert('Erreur lors de l’activation : ' + e.message);
     }
   }
 
@@ -4691,15 +4706,28 @@ body { padding-bottom: 64px; }
       return;
     }
 
-    const RESERVE_PCT = 0.15;
-    const reserve    = cashRaw * RESERVE_PCT;
-    const deployable = cashRaw - reserve;
-    if (noteEl) noteEl.textContent =
-      '💰 ' + formatEurInvest(reserve) + ' gardés cash (réserve 15%) — ' + formatEurInvest(deployable) + ' à investir';
-
+    const RESERVE_PCT  = 0.15;
     const enriched     = enrichedArg ?? portfolioData.holdings.map(h => ({ ...h, currentValue: getHoldingCurrentValue(h) }));
     const totalCurrent = totalCurrentArg ?? enriched.reduce((s, h) => s + h.currentValue, 0);
-    const newTotal     = totalCurrent + deployable;
+
+    // Réserve = 15 % du PORTEFEUILLE TOTAL (stocks + tout le cash apporté)
+    // → garantit qu'après déploiement, 15 % du total reste liquide
+    const portfolioWithCash = totalCurrent + cashRaw;
+    const targetReserve     = portfolioWithCash * RESERVE_PCT;
+    const reserve           = Math.min(cashRaw, targetReserve);   // ne peut pas réserver plus que l'apport
+    const deployable        = Math.max(0, cashRaw - reserve);
+
+    if (noteEl) {
+      const missingReserve = Math.max(0, targetReserve - cashRaw);  // cash qu'il faudrait encore garder au total
+      let note = '💰 Réserve cible : ' + formatEurInvest(targetReserve)
+               + ' (15 % de ' + formatEurInvest(portfolioWithCash) + ')'
+               + ' — ' + formatEurInvest(reserve) + ' gardés · ' + formatEurInvest(deployable) + ' déployables';
+      if (deployable < 1)
+        note = '⚠️ Apport insuffisant pour la réserve cible (' + formatEurInvest(targetReserve) + ') — garde tout en cash';
+      noteEl.textContent = note;
+    }
+
+    const newTotal = totalCurrent + deployable;
 
     const buys = [];
     let sumDelta = 0;
