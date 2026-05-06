@@ -394,4 +394,10 @@ function extractMailBody(payload) {
       }
     }
     // Fallback récursif (multipart/alternative, etc.)
-    for (const part of paylo
+    for (const part of payload.parts) {
+      const text = extractMailBody(part);
+      if (text) return text;
+    }
+  }
+  return '';
+}

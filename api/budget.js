@@ -145,4 +145,61 @@ export default async function handler(req, res) {
         if (catMap[c.name]) {
           // Prendre le montant le plus élevé (le screenshot peut être partiel)
           catMap[c.name].spent = Math.max(catMap[c.name].spent || c.spent || 0, c.spent || 0);
-     
+        } else {
+          catMap[c.name] = { name: c.name, spent: c.spent || 0 };
+        }
+      });
+      existing.categories   = Object.values(catMap);
+      existing.totalSpent   = data.totalSpent   ?? existing.totalSpent;
+      existing.balance      = data.balance      ?? existing.balance;
+      existing.month        = data.month        ?? existing.month;
+      existing.uploadedAt   = new Date().toISOString();
+      await saveMonth(existing);
+      return res.status(200).json({ ok: true, data: existing });
+    }
+
+    // addExpense : ajoute une dépense manuelle
+    if (action === 'addExpense' && category && amount) {
+      const m = await loadMonth();
+      m.manualExpenses = m.manualExpenses || [];
+      m.manualExpenses.unshift({
+        id:       Date.now().toString(),
+        category: category.slice(0, 60),
+        amount:   Math.round(Number(amount) * 100) / 100,
+        note:     (note || '').slice(0, 100),
+        date:     new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
+      });
+      await saveMonth(m);
+      return res.status(200).json({ ok: true, data: m });
+    }
+
+    // removeExpense : supprime par id
+    if (action === 'removeExpense' && id) {
+      const m = await loadMonth();
+      m.manualExpenses = (m.manualExpenses || []).filter(e => e.id !== String(id));
+      await saveMonth(m);
+      return res.status(200).json({ ok: true, data: m });
+    }
+
+    // setCatBudget : plafond d'une catégorie
+    if (action === 'setCatBudget' && category) {
+      const m = await loadMonth();
+      m.catBudgets = m.catBudgets || {};
+      m.catBudgets[category] = Number(catBudget) || 0;
+      await saveMonth(m);
+      return res.status(200).json({ ok: true });
+    }
+
+    // setGlobalBudget : budget mensuel global
+    if (action === 'setGlobalBudget') {
+      const m = await loadMonth();
+      m.globalBudget = Number(globalBudget) || 0;
+      await saveMonth(m);
+      return res.status(200).json({ ok: true });
+    }
+
+    return res.status(400).json({ error: 'action inconnue' });
+  }
+
+  return res.status(405).json({ error: 'Méthode non autorisée' });
+}

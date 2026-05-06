@@ -10,4 +10,6 @@
   },
   "crons": [
     { "path": "/api/tasks?notify=morning", "schedule": "30 6 * * 1-5" },
-    { "path": "/api/tasks?n
+    { "path": "/api/tasks?notify=check",   "schedule": "0 8 * * *"    }
+  ]
+}
