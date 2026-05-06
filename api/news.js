@@ -34,7 +34,19 @@ export default async function handler(req, res) {
   // Cache côté Vercel CDN : 1h (les news ne changent pas à la seconde)
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=300');
 
-  const days = parseInt(req.query?.days ?? '3', 10); // nb de jours d'historique
+  const days    = parseInt(req.query?.days ?? '3', 10);
+  const symbols = req.query?.symbols ? req.query.symbols.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  // ── Mode stock news (portefeuille investissements) ───────
+  if (symbols.length > 0) {
+    try {
+      const articles = await fetchStockNews(symbols, days);
+      return res.status(200).json({ articles, fetchedAt: new Date().toISOString() });
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   const cutoff = new Date(Date.now() - days * 86_400_000);
 
   try {
@@ -146,4 +158,43 @@ function extractTag(xml, tag) {
 
 function stripHtml(str) {
   return str.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// ── STOCK NEWS via Yahoo Finance (appelé si ?symbols=NVDA,META...) ──
+async function fetchStockNews(symbols, days) {
+  const cutoff = new Date(Date.now() - days * 86_400_000);
+  const results = await Promise.allSettled(
+    symbols.slice(0, 6).map(sym => fetchYahooNews(sym))
+  );
+  const seen = new Set();
+  return results
+    .filter(r => r.status === 'fulfilled')
+    .flatMap(r => r.value)
+    .filter(a => {
+      if (a.date && a.date < cutoff) return false;
+      const key = a.title.slice(0, 50).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => (b.date || 0) - (a.date || 0));
+}
+
+async function fetchYahooNews(symbol) {
+  const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=6&enableFuzzyQuery=false`;
+  try {
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Elie-PWA/1.0)' },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.news ?? []).map(n => ({
+      title:     n.title ?? '',
+      url:       n.link  ?? '',
+      source:    n.publisher ?? '',
+      symbol,
+      date:      n.providerPublishTime ? new Date(n.providerPublishTime * 1000) : null,
+    })).filter(n => n.title);
+  } catch { return []; }
 }
