@@ -5,11 +5,9 @@
     "api/chat.js":          { "maxDuration": 60 },
     "api/tasks.js":         { "maxDuration": 30 },
     "api/budget-vision.js": { "maxDuration": 30 },
+    "api/budget.js":        { "maxDuration": 30 },
     "api/news.js":          { "maxDuration": 30 },
     "api/*.js":             { "maxDuration": 10 }
   },
   "crons": [
-    { "path": "/api/tasks?notify=morning", "schedule": "30 6 * * 1-5" },
-    { "path": "/api/tasks?notify=check",   "schedule": "0 8 * * *"    }
-  ]
-}
+    { "path": "/api/tasks?notify=morning", "sched
