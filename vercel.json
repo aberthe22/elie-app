@@ -10,4 +10,7 @@
     "api/*.js":             { "maxDuration": 10 }
   },
   "crons": [
-    { "path": "/api/tasks?notify=morning", "sched
+    { "path": "/api/tasks?notify=morning", "schedule": "30 6 * * 1-5" },
+    { "path": "/api/tasks?notify=check",   "schedule": "0 8 * * *"    }
+  ]
+}
