@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
   // ── POST ─────────────────────────────────────────────────
   if (req.method === 'POST') {
-    const { action, holdings, settings, date, value, qqq } = req.body ?? {};
+    const { action, holdings, settings, date, value, qqq, cash } = req.body ?? {};
 
     if (action === 'saveHoldings' && holdings !== undefined) {
       await setConfig('portfolio_holdings', JSON.stringify(holdings));
@@ -68,6 +68,11 @@ export default async function handler(req, res) {
 
     if (action === 'saveSettings' && settings !== undefined) {
       await setConfig('portfolio_settings', JSON.stringify(settings));
+      return res.status(200).json({ ok: true });
+    }
+
+    if (action === 'saveCash' && cash !== undefined) {
+      await setConfig('portfolio_cash', String(Number(cash)));
       return res.status(200).json({ ok: true });
     }
 
@@ -89,10 +94,11 @@ export default async function handler(req, res) {
 
   // ── GET ?portfolio=1 ──────────────────────────────────────
   if (req.query?.portfolio === '1') {
-    const [holdingsStr, settingsStr, historyStr] = await Promise.all([
+    const [holdingsStr, settingsStr, historyStr, cashStr] = await Promise.all([
       getConfig('portfolio_holdings'),
       getConfig('portfolio_settings'),
       getConfig('portfolio_history'),
+      getConfig('portfolio_cash'),
     ]);
 
     const holdings = holdingsStr ? JSON.parse(holdingsStr) : [];
@@ -101,9 +107,10 @@ export default async function handler(req, res) {
       targetValue:    1000000,
       monthlyContrib: 0,
     };
-    const history = historyStr ? JSON.parse(historyStr) : [];
+    const history      = historyStr ? JSON.parse(historyStr) : [];
+    const cashPosition = cashStr ? Number(cashStr) : 0;
 
-    return res.status(200).json({ holdings, settings, history });
+    return res.status(200).json({ holdings, settings, history, cashPosition });
   }
 
   // ── GET ?symbols=AAPL,IWDA.AS ─────────────────────────────
@@ -140,12 +147,4 @@ async function fetchPrice(symbol) {
   if (!r.ok) throw new Error(`Yahoo ${r.status} for ${symbol}`);
   const data = await r.json();
   const meta = data.chart?.result?.[0]?.meta;
-  if (!meta) throw new Error(`No data for ${symbol}`);
-  return {
-    symbol,
-    price:    meta.regularMarketPrice    ?? meta.previousClose,
-    currency: meta.currency              ?? 'USD',
-    change:   meta.regularMarketChangePercent ?? 0,
-    name:     meta.longName ?? meta.shortName ?? symbol,
-  };
-}
+  if (!met

@@ -263,9 +263,10 @@ async function analyzeWithHaiku(emails, apiKey, corrections = []) {
 
   const catLabel = c => ({ delete: 'toDelete', reply: 'toReply', task: 'toTask', archive: 'toArchive' })[c] || c;
   const correctionsBlock = corrections.length > 0
-    ? `\nCORRECTIONS PASSÉES D'ALEXIS (exemples réels, à respecter absolument) :
+    ? `\nCORRECTIONS (règles absolues basées sur les corrections passées d'Alexis) :
+⚠️ Ces règles sont PRIORITAIRES sur tes inférences. Respecte-les strictement.
 ${corrections.map(c =>
-  `- "${c.from}" · "${c.subject}" → était en ${catLabel(c.fromCat)}, Alexis a corrigé en ${catLabel(c.toCat)}.`
+  `→ Tout mail de "${c.from}" : classer en "${catLabel(c.toCat)}" (Alexis a corrigé ${catLabel(c.fromCat)} → ${catLabel(c.toCat)})`
 ).join('\n')}\n`
     : '';
 
@@ -393,10 +394,4 @@ function extractMailBody(payload) {
       }
     }
     // Fallback récursif (multipart/alternative, etc.)
-    for (const part of payload.parts) {
-      const text = extractMailBody(part);
-      if (text) return text;
-    }
-  }
-  return '';
-}
+    for (const part of paylo

@@ -282,6 +282,24 @@ const TOOLS = [
       required: ['title', 'date'],
     },
   },
+  {
+    name: 'get_budget',
+    description: 'Récupère les données budget actuelles (catégories, montants, dépenses)',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'add_expense',
+    description: 'Ajoute une dépense manuelle à une catégorie budget',
+    input_schema: {
+      type: 'object',
+      properties: {
+        category: { type: 'string' },
+        amount:   { type: 'number' },
+        note:     { type: 'string' },
+      },
+      required: ['category', 'amount'],
+    },
+  },
 ];
 
 // ── Handler principal ────────────────────────────────────────────────
@@ -296,8 +314,10 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY manquant' });
 
-  const { message, history = [], context = '' } = req.body ?? {};
+  const { message, history = [], context = '', image } = req.body ?? {};
   if (!message?.trim()) return res.status(400).json({ error: 'message requis' });
+
+  try {
 
   const now      = new Date();
   const datetime = now.toLocaleDateString('fr-FR', {
@@ -327,9 +347,16 @@ ${context || '(aucun contexte encore)'}
 Date et heure : ${datetime}`;
 
   // Construire les messages pour Claude
+  const userContent = image
+    ? [
+        { type: 'image', source: { type: 'base64', media_type: image.mimeType, data: image.base64 } },
+        { type: 'text', text: message },
+      ]
+    : message;
+
   const messages = [
     ...history.slice(-20).map(m => ({ role: m.role, content: m.content })),
-    { role: 'user', content: message },
+    { role: 'user', content: userContent },
   ];
 
   const actionsTaken = [];
@@ -387,32 +414,10 @@ Date et heure : ${datetime}`;
           let result;
           try {
             switch (tb.name) {
-              case 'get_tasks':      result = await toolGetTasks();          break;
-              case 'create_task':    result = await toolCreateTask(tb.input);    break;
-              case 'update_task':    result = await toolUpdateTask(tb.input);    break;
-              case 'get_emails':     result = await toolGetEmails(tb.input);     break;
-              case 'archive_emails': result = await toolArchiveEmails(tb.input); break;
-              case 'get_calendar':   result = await toolGetCalendar(tb.input);   break;
-              case 'create_event':   result = await toolCreateEvent(tb.input);   break;
-              default:               result = { error: `Outil inconnu: ${tb.name}` };
-            }
-            actionsTaken.push(tb.name);
-          } catch (e) {
-            result = { error: e.message };
-            console.error(`[chat/${tb.name}]`, e.message);
-          }
-          return { type: 'tool_result', tool_use_id: tb.id, content: JSON.stringify(result) };
-        })
-      );
-
-      currentMessages.push({ role: 'user', content: toolResults });
-    }
-  }
-
-  // Sécurité : max itérations atteint
-  return res.status(200).json({
-    reply: 'J\'ai traité ta demande mais ai atteint la limite de traitement. Reformule si besoin.',
-    history: [...history.slice(-28), { role: 'user', content: message }],
-    actions_taken: actionsTaken,
-  });
-}
+              case 'get_tasks':      result = await toolGetTasks();                   break;
+              case 'create_task':    result = await toolCreateTask(tb.input);         break;
+              case 'update_task':    result = await toolUpdateTask(tb.input);         break;
+              case 'get_emails':     result = await toolGetEmails(tb.input);          break;
+              case 'archive_emails': result = await toolArchiveEmails(tb.input);      break;
+              case 'get_calendar':   result = await toolGetCalendar(tb.input);        break;
+              case 'create_event':   result = await tool
