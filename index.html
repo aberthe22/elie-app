@@ -4447,10 +4447,10 @@ body { padding-bottom: 64px; }
       });
 
       // 2. Analyser avec Claude vision
-      const visionResp = await fetch('/api/budget-vision', {
+      const visionResp = await fetch('/api/budget', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64, mimeType: file.type }),
+        body: JSON.stringify({ action: 'vision', image: base64, mimeType: file.type }),
       });
       const visionData = await visionResp.json();
 
@@ -5445,5 +5445,4 @@ body { padding-bottom: 64px; }
     <button class="settings-close-btn" onclick="closeSettings()">Fermer</button>
   </div>
 </div>
-</body>
-</html>
+</bo

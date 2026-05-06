@@ -87,7 +87,35 @@ export default async function handler(req, res) {
 
   // ── POST ─────────────────────────────────────────────────
   if (req.method === 'POST') {
-    const { action, month: reqMonth, data, category, amount, note, id, budget: catBudget, globalBudget } = req.body ?? {};
+    const { action, month: reqMonth, data, category, amount, note, id, budget: catBudget, globalBudget, image, mimeType } = req.body ?? {};
+
+    // ── action=vision : analyse capture Revolut via Claude Haiku ──
+    if (action === 'vision') {
+      if (!image) return res.status(400).json({ error: 'image (base64) requis' });
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY manquant' });
+      try {
+        const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001', max_tokens: 1024,
+            messages: [{ role: 'user', content: [
+              { type: 'image', source: { type: 'base64', media_type: mimeType || 'image/jpeg', data: image } },
+              { type: 'text', text: `Tu analyses une capture d'écran de l'application Revolut (budgets ou dépenses) d'un entrepreneur français.\n\nExtrais toutes les informations visibles. Réponds UNIQUEMENT avec un JSON valide sans texte autour :\n{\n  "month": "mois/période visible ou null",\n  "totalSpent": montant_total_dépensé_nombre_ou_null,\n  "totalBudget": budget_total_nombre_ou_null,\n  "categories": [\n    { "name": "nom", "spent": montant_nombre, "budget": budget_nombre_ou_null, "percentage": pourcentage_utilisé_ou_null }\n  ],\n  "advice": "2-3 lignes de conseils concrets et personnalisés sur la gestion du budget visible, en français"\n}\n\nSi les chiffres ne sont pas lisibles, retourne categories:[] et explique dans advice.` },
+            ]}],
+          }),
+        });
+        if (!aiRes.ok) throw new Error(`Claude ${aiRes.status}`);
+        const aiData = await aiRes.json();
+        const text   = aiData.content?.[0]?.text ?? '';
+        const match  = text.match(/\{[\s\S]*\}/);
+        if (!match) return res.status(500).json({ error: 'Parsing échoué', raw: text.slice(0, 300) });
+        return res.status(200).json(JSON.parse(match[0]));
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+    }
     const month = reqMonth || currentMonth();
 
     // Helpers
@@ -117,61 +145,4 @@ export default async function handler(req, res) {
         if (catMap[c.name]) {
           // Prendre le montant le plus élevé (le screenshot peut être partiel)
           catMap[c.name].spent = Math.max(catMap[c.name].spent || c.spent || 0, c.spent || 0);
-        } else {
-          catMap[c.name] = { name: c.name, spent: c.spent || 0 };
-        }
-      });
-      existing.categories   = Object.values(catMap);
-      existing.totalSpent   = data.totalSpent   ?? existing.totalSpent;
-      existing.balance      = data.balance      ?? existing.balance;
-      existing.month        = data.month        ?? existing.month;
-      existing.uploadedAt   = new Date().toISOString();
-      await saveMonth(existing);
-      return res.status(200).json({ ok: true, data: existing });
-    }
-
-    // addExpense : ajoute une dépense manuelle
-    if (action === 'addExpense' && category && amount) {
-      const m = await loadMonth();
-      m.manualExpenses = m.manualExpenses || [];
-      m.manualExpenses.unshift({
-        id:       Date.now().toString(),
-        category: category.slice(0, 60),
-        amount:   Math.round(Number(amount) * 100) / 100,
-        note:     (note || '').slice(0, 100),
-        date:     new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
-      });
-      await saveMonth(m);
-      return res.status(200).json({ ok: true, data: m });
-    }
-
-    // removeExpense : supprime par id
-    if (action === 'removeExpense' && id) {
-      const m = await loadMonth();
-      m.manualExpenses = (m.manualExpenses || []).filter(e => e.id !== String(id));
-      await saveMonth(m);
-      return res.status(200).json({ ok: true, data: m });
-    }
-
-    // setCatBudget : plafond d'une catégorie
-    if (action === 'setCatBudget' && category) {
-      const m = await loadMonth();
-      m.catBudgets = m.catBudgets || {};
-      m.catBudgets[category] = Number(catBudget) || 0;
-      await saveMonth(m);
-      return res.status(200).json({ ok: true });
-    }
-
-    // setGlobalBudget : budget mensuel global
-    if (action === 'setGlobalBudget') {
-      const m = await loadMonth();
-      m.globalBudget = Number(globalBudget) || 0;
-      await saveMonth(m);
-      return res.status(200).json({ ok: true });
-    }
-
-    return res.status(400).json({ error: 'action inconnue' });
-  }
-
-  return res.status(405).json({ error: 'Méthode non autorisée' });
-}
+     

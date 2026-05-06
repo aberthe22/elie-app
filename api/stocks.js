@@ -147,12 +147,4 @@ async function fetchPrice(symbol) {
   if (!r.ok) throw new Error(`Yahoo ${r.status} for ${symbol}`);
   const data = await r.json();
   const meta = data.chart?.result?.[0]?.meta;
-  if (!meta) throw new Error(`No data for ${symbol}`);
-  return {
-    symbol,
-    price:    meta.regularMarketPrice    ?? meta.previousClose,
-    currency: meta.currency              ?? 'USD',
-    change:   meta.regularMarketChangePercent ?? 0,
-    name:     meta.longName ?? meta.shortName ?? symbol,
-  };
-}
+  if (!met
