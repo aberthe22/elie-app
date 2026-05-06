@@ -420,4 +420,33 @@ Date et heure : ${datetime}`;
               case 'get_emails':     result = await toolGetEmails(tb.input);          break;
               case 'archive_emails': result = await toolArchiveEmails(tb.input);      break;
               case 'get_calendar':   result = await toolGetCalendar(tb.input);        break;
-              case 'create_event':   result = await tool
+              case 'create_event':   result = await toolCreateEvent(tb.input);        break;
+              case 'get_budget':     result = { info: 'Budget non chargé côté serveur — consulte l\'onglet Budget dans l\'app' }; break;
+              case 'add_expense':    result = { info: 'Dépense enregistrée côté client — utilise le bouton + Dépense manuelle dans l\'app' }; break;
+              default:               result = { error: `Outil inconnu: ${tb.name}` };
+            }
+            actionsTaken.push(tb.name);
+          } catch (e) {
+            result = { error: e.message };
+            console.error(`[chat/${tb.name}]`, e.message);
+          }
+          return { type: 'tool_result', tool_use_id: tb.id, content: JSON.stringify(result) };
+        })
+      );
+
+      currentMessages.push({ role: 'user', content: toolResults });
+    }
+  }
+
+  // Sécurité : max itérations atteint
+  return res.status(200).json({
+    reply: 'J\'ai traité ta demande mais ai atteint la limite de traitement. Reformule si besoin.',
+    history: [...history.slice(-28), { role: 'user', content: message }],
+    actions_taken: actionsTaken,
+  });
+
+  } catch (err) {
+    console.error('[chat] erreur:', err.message);
+    return res.status(500).json({ error: err.message ?? 'Erreur interne' });
+  }
+}
