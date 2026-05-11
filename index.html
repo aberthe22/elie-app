@@ -5462,4 +5462,30 @@ body { padding-bottom: 64px; }
         <div class="settings-row-icon">\U0001f4f8</div>
         <div class="settings-row-info">
           <div class="settings-row-label">Upload budget</div>
-          <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_budget" onchange="saveNotifPref('notif_budget_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value
+          <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_budget" onchange="saveNotifPref('notif_budget_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
+        </div>
+        <label class="settings-toggle">
+          <input type="checkbox" id="toggle_notif_budget" onchange="saveNotifPref('notif_budget',this.checked)">
+          <div class="settings-toggle-track"></div>
+          <div class="settings-toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div class="settings-row-icon">\U0001f4c8</div>
+        <div class="settings-row-info">
+          <div class="settings-row-label">Bilan investissements</div>
+          <div class="settings-row-sub">1er du mois · <select class="settings-hour-select" id="hour_notif_invest" onchange="saveNotifPref('notif_invest_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9" selected>09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
+        </div>
+        <label class="settings-toggle">
+          <div class="settings-toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <p class="settings-notif-hint">Les notifications fonctionnent uniquement depuis l&#39;app installée sur ton écran d&#39;accueil.</p>
+    <button class="settings-close-btn" onclick="closeSettings()">Fermer</button>
+  </div>
+</div>
+</body>
+</html>

@@ -325,4 +325,77 @@ export default async function handler(req, res) {
   }
 }
 
-// ── HELPERS ─────�
+// ── HELPERS ───────────────────────────────────────────────
+
+function headers(token) {
+  return {
+    'Authorization':  `Bearer ${token}`,
+    'Notion-Version': '2022-06-28',
+    'Content-Type':   'application/json',
+  };
+}
+
+function parsePage(page, today) {
+  const p = page.properties;
+  const dateRaw    = p['Date']?.date?.start ?? null;
+  const importance = p['Importance']?.select?.name ?? null;
+  const status     = p['État']?.status?.name ?? 'Pas commencé';
+
+  // Tag affiché dans la carte
+  let tag = null, tagClass = null;
+  if (dateRaw && dateRaw < today) {
+    tag = 'En retard'; tagClass = 'urgent';
+  } else if (importance === 'Haute') {
+    tag = 'Urgent'; tagClass = 'urgent';
+  } else if (dateRaw === today) {
+    tag = 'Aujourd\'hui'; tagClass = 'today';
+  } else if (dateRaw) {
+    const label = new Date(dateRaw + 'T12:00:00')
+      .toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
+    tag = label.charAt(0).toUpperCase() + label.slice(1);
+    tagClass = 'soon';
+  } else if (importance === 'Moyenne') {
+    tag = 'Moyenne'; tagClass = 'soon';
+  }
+
+  return {
+    id:         page.id,
+    title:      p['Tâche']?.title?.[0]?.plain_text ?? 'Sans titre',
+    status,
+    done:       status === 'Terminé',
+    importance,
+    domain:     p['Domaine']?.select?.name ?? null,
+    date:       dateRaw,
+    tag,
+    tagClass,
+    url:        page.url,
+    lastEdited: page.last_edited_time ?? null,
+  };
+}
+
+function scoreTask(task, today) {
+  let score = 0;
+
+  // Score par date
+  if (task.date) {
+    if (task.date < today)  score += 40;  // en retard
+    else if (task.date === today) score += 25;  // aujourd'hui
+    else {
+      const days = Math.ceil(
+        (new Date(task.date) - new Date(today)) / 86400000
+      );
+      if (days <= 3) score += 15;
+      else if (days <= 7) score += 10;
+    }
+  }
+
+  // Score par importance
+  if (task.importance === 'Haute')   score += 30;
+  if (task.importance === 'Moyenne') score += 15;
+
+  // Score par statut
+  if (task.status === 'En cours') score += 20;
+  if (task.status === 'Bloqué')   score += 10;
+
+  return score;
+}
