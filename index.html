@@ -4678,7 +4678,9 @@ body { padding-bottom: 64px; }
 
   async function refreshPrices() {
     if (!portfolioData || !portfolioData.holdings.length) return;
-    const symbols = portfolioData.holdings.map(h => h.symbol).join(',');
+    // Toujours inclure QQQ (benchmark) et EURUSD=X (conversion USD→EUR)
+    const holdingSymbols = portfolioData.holdings.map(h => h.symbol).filter(Boolean);
+    const symbols = [...new Set([...holdingSymbols, 'QQQ', 'EURUSD=X'])].join(',');
     try {
       const r = await fetch('/api/stocks?symbols=' + encodeURIComponent(symbols));
       const d = await r.json();
@@ -4730,11 +4732,13 @@ body { padding-bottom: 64px; }
       return { ...h, currentValue: cv, investedEur: invested };
     });
 
-    // Include cash position in total
-    const cashPos = portfolioData.cashPosition ?? 0;
+    // Include cash position in total (affichage seulement)
+    const cashPos    = portfolioData.cashPosition ?? 0;
+    const stocksOnly = totalCurrent; // valeur des positions avant ajout du cash
     totalCurrent += cashPos;
 
-    const pnl    = totalCurrent - totalInvested;
+    // PnL = gain/perte sur positions investies uniquement (cash exclu)
+    const pnl    = stocksOnly - totalInvested;
     const pnlPct = totalInvested > 0 ? pnl / totalInvested * 100 : 0;
     const sign   = pnl >= 0 ? '+' : '';
     const el     = id => document.getElementById(id);
@@ -5131,7 +5135,12 @@ body { padding-bottom: 64px; }
     const curCrossX  = crossingX(curYrs);
     const baseCrossX = crossingX(baseYrs);
 
-    const yTicks = [0, target * 0.25, target * 0.5, target * 0.75, target].filter(v => v <= maxVal);
+    // Ticks Y : jusqu'à 1M inclus + au-delà si les courbes montent plus haut
+    const yTickBase = [0, target * 0.25, target * 0.5, target * 0.75, target];
+    if (maxVal > target * 1.3) yTickBase.push(target * 1.5);
+    if (maxVal > target * 1.8) yTickBase.push(target * 2);
+    if (maxVal > target * 2.5) yTickBase.push(target * 3);
+    const yTicks = yTickBase.filter(v => v <= maxVal * 1.05);
 
     let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">`;
     s += `<defs><linearGradient id="impactGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1b3370" stop-opacity="0.20"/><stop offset="100%" stop-color="#1b3370" stop-opacity="0"/></linearGradient></defs>`;
@@ -5221,16 +5230,17 @@ body { padding-bottom: 64px; }
       const yBefore = yearsTo(before, true);
       const yAfter  = yearsTo(after,  true);
       const gain    = (yBefore !== null && yAfter !== null) ? Math.round((yBefore - yAfter) * 12) : null;
-      const label   = idx === 0 ? 'Dernier versement' : 'Avant-dernier';
-      const emoji   = gain > 0 ? (gain >= 12 ? '🔥' : '✅') : '➕';
-      const gainTxt = gain !== null && gain > 0 ? `+${gain} mois` : '—';
+      const label   = idx === 0 ? 'Dernier versement' : 'Avant-dernier versement';
+      const gainTxt = gain !== null && gain > 0
+        ? (gain >= 12 ? '🔥 ' : '') + '+' + gain + ' mois'
+        : (gain === 0 ? '~0 mois' : '—');
       const color   = gain > 0 ? '#1b8c47' : 'var(--ink-3)';
       return `<div class="dep-impact-row">
         <div class="dep-impact-left">
           <span class="dep-impact-label">${label}</span>
           <span class="dep-impact-amount">+${fmtK(dep.amount)}</span>
         </div>
-        <div class="dep-impact-right" style="color:${color}">${emoji} ${gainTxt}</div>
+        <div class="dep-impact-right" style="color:${color}">${gainTxt}</div>
       </div>`;
     }).filter(Boolean);
 
@@ -5450,277 +5460,4 @@ body { padding-bottom: 64px; }
         + '</div>'
         + '<div class="rebal-item-right">'
         +   '<div class="rebal-item-amount">' + formatEurInvest(b.amount) + '</div>'
-        +   '<div class="rebal-item-pct">' + pctOfDeploy + '% du déployable</div>'
-        + '</div>'
-        + '</div>';
-    }).join('')
-    + (leftover > 1 ? '<div style="font-size:11px;color:var(--ink-3);margin-top:6px">Reste : ' + formatEurInvest(leftover) + ' (portefeuille équilibré)</div>' : '');
-  }
-
-  // ─── Settings ────────────────────────────────────────────
-  async function saveInvestSettings() {
-    if (!portfolioData) return;
-    portfolioData.settings.annualReturn   = parseFloat(document.getElementById('investRateInput').value)   || 8;
-    portfolioData.settings.monthlyContrib = parseFloat(document.getElementById('investMonthlyInput').value) || 0;
-    portfolioData.settings.initialValue   = parseFloat(document.getElementById('investInitialInput')?.value) || 2000;
-    await fetch('/api/stocks', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saveSettings', settings: portfolioData.settings }),
-    });
-  }
-
-  // ─── Modal prévisualisation ───────────────────────────────
-  function updateInvestedPreview() {
-    const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value);
-    const shares   = parseFloat(document.getElementById('holdingShares').value);
-    const preview  = document.getElementById('holdingInvestedPreview');
-    const val      = document.getElementById('holdingInvestedValue');
-    if (preview && avgPrice > 0 && shares > 0) {
-      preview.style.display = 'block';
-      val.textContent = (avgPrice * shares).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
-    } else if (preview) {
-      preview.style.display = 'none';
-    }
-  }
-
-  // ─── Modal ajout / édition ────────────────────────────────
-  function openHoldingModal(idOrNull) {
-    const modal  = document.getElementById('holdingModal');
-    const title  = document.getElementById('holdingModalTitle');
-    const delBtn = document.getElementById('holdingDeleteBtn');
-    document.getElementById('holdingEditId').value = idOrNull ?? '';
-
-    if (idOrNull && portfolioData) {
-      const h = portfolioData.holdings.find(x => x.id === idOrNull);
-      if (h) {
-        title.textContent = 'Modifier la position';
-        document.getElementById('holdingSymbol').value   = h.symbol    ?? '';
-        document.getElementById('holdingName').value     = h.name      ?? '';
-        document.getElementById('holdingAvgPrice').value = h.avgPrice  ?? '';
-        document.getElementById('holdingShares').value   = h.shares    ?? '';
-        document.getElementById('holdingTarget').value   = h.targetPct ?? '';
-        delBtn.style.display = 'block';
-        updateInvestedPreview();
-      }
-    } else {
-      title.textContent = 'Nouvelle position';
-      ['holdingSymbol','holdingName','holdingAvgPrice','holdingShares','holdingTarget'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
-      const p = document.getElementById('holdingInvestedPreview');
-      if (p) p.style.display = 'none';
-      delBtn.style.display = 'none';
-    }
-    document.getElementById('holdingFeedback').textContent = '';
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('open'), 10);
-  }
-
-  function closeHoldingModal() {
-    const modal = document.getElementById('holdingModal');
-    modal.classList.remove('open');
-    setTimeout(() => modal.style.display = 'none', 300);
-  }
-
-  async function submitHolding() {
-    const btn      = document.getElementById('holdingSubmit');
-    const feedback = document.getElementById('holdingFeedback');
-    const symbol   = document.getElementById('holdingSymbol').value.trim().toUpperCase();
-    const name     = document.getElementById('holdingName').value.trim();
-    const avgPrice = parseFloat(document.getElementById('holdingAvgPrice').value) || 0;
-    const shares   = parseFloat(document.getElementById('holdingShares').value)   || 0;
-    const target   = parseFloat(document.getElementById('holdingTarget').value)   || 0;
-    const editId   = document.getElementById('holdingEditId').value;
-
-    if (!symbol) { feedback.textContent = 'Symbole requis'; return; }
-    btn.disabled = true; btn.textContent = 'Enregistrement…';
-
-    if (!portfolioData) portfolioData = { holdings: [], settings: { annualReturn: 8, targetValue: 1000000, monthlyContrib: 0 } };
-
-    const holding = { symbol, name: name || symbol, avgPrice: avgPrice || null, shares: shares || null, targetPct: target || null };
-    if (editId) {
-      const idx = portfolioData.holdings.findIndex(x => x.id === editId);
-      if (idx >= 0) portfolioData.holdings[idx] = { id: editId, ...holding };
-    } else {
-      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      portfolioData.holdings.push({ id, ...holding });
-    }
-
-    await fetch('/api/stocks', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saveHoldings', holdings: portfolioData.holdings }),
-    });
-    closeHoldingModal();
-    btn.disabled = false; btn.textContent = 'Enregistrer';
-    await refreshPrices();
-  }
-
-  async function deleteHolding() {
-    const editId = document.getElementById('holdingEditId').value;
-    if (!editId || !portfolioData) return;
-    if (!confirm('Supprimer cette position ?')) return;
-    portfolioData.holdings = portfolioData.holdings.filter(h => h.id !== editId);
-    await fetch('/api/stocks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saveHoldings', holdings: portfolioData.holdings }),
-    });
-    closeHoldingModal();
-    renderPortfolio();
-  }
-
-  function formatEurInvest(n) {
-    if (!isFinite(n)) return '—';
-    const abs = Math.abs(n);
-    if (abs >= 1000000) return (n / 1000000).toFixed(2) + ' M€';
-    if (abs >= 1000)    return (n / 1000).toFixed(1)    + ' k€';
-    return Math.round(n) + ' €';
-  }
-
-</script>
-
-<!-- BRIEF OVERLAY + BOTTOM SHEET -->
-<div class="brief-overlay" id="briefOverlay"></div>
-<div class="brief-sheet" id="briefSheet">
-  <div class="brief-sheet-drag"></div>
-  <div class="brief-sheet-head">
-    <span class="brief-sheet-title">✶ Brief du jour</span>
-    <button class="brief-close-btn" onclick="closeBrief()">✕</button>
-  </div>
-  <div class="brief-scroll" id="briefScroll">
-    <div class="brief-body" id="briefBody">
-      <div class="brief-loading">
-        <div class="brief-spinner"></div>
-        <span>Elie prépare ton brief…</span>
-      </div>
-    </div>
-    <div class="brief-thread" id="briefThread"></div>
-  </div>
-  <div class="brief-input-row" id="briefInputRow" style="display:none">
-    <input type="text" class="brief-input" id="briefInput"
-           placeholder="Demande à Elie…" autocomplete="off"
-           oninput="updateBriefSendBtn()"
-           onkeydown="if(event.key==='Enter')sendBriefMessage()">
-    <button class="brief-send-btn" id="briefSendBtn" onclick="sendBriefMessage()">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-        <path d="M14.5 8L1.5 2 4.5 8 1.5 14 14.5 8z" fill="currentColor"/>
-      </svg>
-    </button>
-  </div>
-</div>
-
-<!-- CHAT PANEL (slide-up depuis le bas) -->
-<div class="chat-panel" id="chatPanel">
-  <div class="chat-panel-head">
-    <span class="chat-panel-title">✶ ELIE</span>
-    <button class="chat-panel-close" onclick="closeChatPanel()">✕</button>
-  </div>
-  <div class="chat-messages" id="chatMessages"></div>
-  <div class="chat-typing" id="chatTyping">
-    <span></span><span></span><span></span>
-  </div>
-</div>
-
-<!-- CHAT BAR (barre fixe en bas) -->
-<div class="chat-bar" id="chatBar">
-  <div id="chatImagePreview" style="display:none;margin:6px 8px 0;position:relative">
-    <img id="chatPreviewImg" style="max-height:60px;border-radius:6px;border:1px solid var(--line)">
-    <button onclick="clearChatImage()" style="position:absolute;top:-6px;right:-6px;background:var(--ink);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer;line-height:1">✕</button>
-  </div>
-  <div class="chat-input-row">
-    <label for="chatImageInput" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;cursor:pointer;color:var(--ink-3);flex-shrink:0" title="Joindre une image">
-      📎
-      <input type="file" id="chatImageInput" accept="image/*" style="display:none" onchange="if(this.files[0])attachChatImage(this.files[0]);this.value=''">
-    </label>
-    <input type="text" class="chat-input" id="chatInput"
-           placeholder="Dis à Elie quoi faire…" autocomplete="off"
-           oninput="updateSendBtn()"
-           onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendChatMessage()">
-    <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M14.5 8L1.5 2 4.5 8 1.5 14 14.5 8z" fill="currentColor"/>
-      </svg>
-    </button>
-  </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
-  <div class="settings-sheet">
-    <div class="settings-handle"></div>
-    <div class="settings-title">⚙️ Paramètres</div>
-
-    <!-- NOTIFICATIONS -->
-    <div class="settings-section">
-      <div class="settings-section-label">Notifications push</div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">☀️</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Brief du matin</div>
-          <div class="settings-row-sub">Lun–Ven · <select class="settings-hour-select" id="hour_notif_morning" onchange="saveNotifPref('notif_morning_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7" selected>07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <input type="checkbox" id="toggle_notif_morning" onchange="saveNotifPref('notif_morning',this.checked)">
-          <div class="settings-toggle-track"></div>
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">\U0001f5d3</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Brief hebdo</div>
-          <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_weekly" onchange="saveNotifPref('notif_weekly_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <input type="checkbox" id="toggle_notif_weekly" onchange="saveNotifPref('notif_weekly',this.checked)">
-          <div class="settings-toggle-track"></div>
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">\U0001f4cb</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Tâches en attente</div>
-          <div class="settings-row-sub">Lun–Ven · <select class="settings-hour-select" id="hour_notif_tasks" onchange="saveNotifPref('notif_tasks_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17" selected>17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <input type="checkbox" id="toggle_notif_tasks" onchange="saveNotifPref('notif_tasks',this.checked)">
-          <div class="settings-toggle-track"></div>
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">\U0001f4f8</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Upload budget</div>
-          <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_budget" onchange="saveNotifPref('notif_budget_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <input type="checkbox" id="toggle_notif_budget" onchange="saveNotifPref('notif_budget',this.checked)">
-          <div class="settings-toggle-track"></div>
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">\U0001f4c8</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Bilan investissements</div>
-          <div class="settings-row-sub">1er du mois · <select class="settings-hour-select" id="hour_notif_invest" onchange="saveNotifPref('notif_invest_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9" selected>09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-    </div>
-
-    <p class="settings-notif-hint">Les notifications fonctionnent uniquement depuis l&#39;app installée sur ton écran d&#39;accueil.</p>
-    <button class="settings-close-btn" onclick="closeSettings()">Fermer</button>
-  </div>
-</div>
-</body>
-</html>
+        +   '<div class="rebal-item-pct">' + p
