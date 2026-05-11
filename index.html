@@ -1568,6 +1568,81 @@ body { padding-bottom: 64px; }
 .rebal-item-pct { font-size: 11px; color: var(--ink-3); }
 .rebal-balanced { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #22a85a; font-weight: 600; padding: 10px 0; }
 
+/* ── Investir aujourd'hui ── */
+.invest-btn {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  width: 100%; margin-top: 16px;
+  padding: 15px 20px;
+  background: var(--navy); color: #fff;
+  border: none; border-radius: 14px;
+  font-family: var(--font-ui); font-size: 15px; font-weight: 700;
+  cursor: pointer; letter-spacing: -.01em;
+  box-shadow: 0 4px 16px rgba(30,61,110,.35);
+  transition: opacity .15s, transform .1s;
+}
+.invest-btn:active { opacity: .88; transform: scale(.98); }
+
+/* Invest modal */
+.invest-modal-backdrop {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(26,23,20,.45);
+  backdrop-filter: blur(4px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.invest-modal-backdrop.open { display: flex; }
+.invest-modal-sheet {
+  width: 100%; max-width: 480px;
+  background: var(--surface); border-radius: 24px 24px 0 0;
+  padding: 0 20px 36px;
+  max-height: 90dvh; overflow-y: auto;
+}
+.invest-modal-handle { width: 40px; height: 4px; background: var(--line); border-radius: 2px; margin: 12px auto 20px; }
+.invest-modal-title { font-size: 20px; font-weight: 800; color: var(--ink); margin-bottom: 18px; }
+.invest-amount-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface-2); border: 1.5px solid var(--navy);
+  border-radius: 12px; padding: 12px 16px; margin-bottom: 10px;
+}
+.invest-amount-label { font-size: 14px; color: var(--ink-2); flex: 1; }
+.invest-amount-input {
+  width: 110px; padding: 6px 10px;
+  border: none; background: transparent;
+  font-size: 20px; font-weight: 800; text-align: right;
+  color: var(--navy); font-family: var(--font-ui);
+}
+.invest-amount-input:focus { outline: none; }
+.invest-reserve-note { font-size: 11px; color: var(--ink-3); margin-bottom: 14px; text-align: center; min-height: 16px; }
+.invest-plan-title { font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.invest-plan-list { margin-bottom: 16px; }
+.invest-plan-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border: 1px solid var(--line);
+  border-radius: 11px; margin-bottom: 7px; background: var(--bg);
+}
+.invest-plan-left { flex: 1; }
+.invest-plan-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+.invest-plan-ticker { font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+.invest-plan-right { text-align: right; }
+.invest-plan-amount { font-size: 17px; font-weight: 800; color: var(--navy); }
+.invest-plan-shares { font-size: 11px; color: var(--ink-3); }
+.invest-plan-empty { font-size: 13px; color: #22a85a; font-weight: 600; padding: 8px 0; }
+.invest-modal-actions { display: flex; gap: 10px; }
+.invest-confirm-btn {
+  flex: 1; padding: 15px; background: #1b8c47; color: #fff;
+  border: none; border-radius: 12px;
+  font-family: var(--font-ui); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: opacity .15s;
+}
+.invest-confirm-btn:active { opacity: .85; }
+.invest-confirm-btn:disabled { opacity: .45; cursor: not-allowed; }
+.invest-cancel-btn {
+  flex: 0 0 auto; padding: 15px 20px; background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 12px;
+  font-family: var(--font-ui); font-size: 15px; color: var(--ink-2);
+  cursor: pointer; transition: opacity .15s;
+}
+.invest-leftover { font-size: 11px; color: var(--ink-3); text-align: center; margin-bottom: 14px; }
+
 /* Modal position */
 .holding-modal-field { margin-bottom: 14px; }
 .holding-modal-label { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; display: block; font-weight: 500; }
@@ -1945,6 +2020,10 @@ body { padding-bottom: 64px; }
           <span id="projPrevLegend"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#aaa" stroke-width="1.5" stroke-dasharray="5 3"/></svg><span id="projPrevLegendLabel">Sans versements</span></span>
         </div>
         <div id="projDepositImpact"></div>
+        <button class="invest-btn" onclick="openInvestModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Investir aujourd'hui
+        </button>
       </div>
     </section>
 
@@ -1960,20 +2039,6 @@ body { padding-bottom: 64px; }
       </div>
     </section>
 
-    <!-- Prochain investissement -->
-    <section class="section">
-      <div class="section-head">
-        <div class="section-title">Prochain investissement</div>
-      </div>
-      <div class="rebal-cash-wrap">
-        <span class="rebal-cash-label">Cash à déployer</span>
-        <input class="rebal-cash-input" type="number" id="rebalanceCash"
-          placeholder="500" min="0" step="50" oninput="computeRebalance()">
-        <span style="font-size:15px;color:var(--ink-3)">€</span>
-      </div>
-      <div class="rebal-reserve-note" id="rebalReserveNote"></div>
-      <div id="rebalanceResult"></div>
-    </section>
 
     <!-- Actualités portefeuille -->
     <section class="section">
@@ -2117,6 +2182,33 @@ body { padding-bottom: 64px; }
       <button class="modal-submit" id="holdingSubmit" onclick="submitHolding()">Enregistrer</button>
     </div>
     <button class="holding-delete-btn" id="holdingDeleteBtn" style="display:none" onclick="deleteHolding()">Supprimer cette position</button>
+  </div>
+</div>
+
+<!-- MODALE INVESTIR AUJOURD'HUI -->
+<div class="invest-modal-backdrop" id="investModal" onclick="handleInvestModalBgClick(event)">
+  <div class="invest-modal-sheet">
+    <div class="invest-modal-handle"></div>
+    <div class="invest-modal-title">Investir aujourd'hui 📈</div>
+
+    <div class="invest-amount-row">
+      <span class="invest-amount-label">Montant à investir</span>
+      <input class="invest-amount-input" id="investAmountInput" type="number" min="1" step="50"
+        placeholder="500" oninput="computeInvestPlan()">
+      <span style="font-size:15px;color:var(--ink-3)">€</span>
+    </div>
+    <div class="invest-reserve-note" id="investReserveNote"></div>
+
+    <div class="invest-plan-title" id="investPlanTitle" style="display:none">Répartition suggérée</div>
+    <div class="invest-plan-list" id="investPlanList"></div>
+    <div class="invest-leftover" id="investLeftover"></div>
+
+    <div class="invest-modal-actions">
+      <button class="invest-cancel-btn" onclick="closeInvestModal()">Annuler</button>
+      <button class="invest-confirm-btn" id="investConfirmBtn" onclick="confirmInvestment()" disabled>
+        Investissement fait ✓
+      </button>
+    </div>
   </div>
 </div>
 
@@ -4759,7 +4851,6 @@ body { padding-bottom: 64px; }
 
     refreshProjection(totalCurrent, settings);
     renderHoldings(enriched, totalCurrent, totalInvested);
-    computeRebalance(enriched, totalCurrent);
     loadInvestNews();
   }
 
@@ -5104,14 +5195,19 @@ body { padding-bottom: 64px; }
 
     const maxVal = Math.max(target * 1.08, curPts[STEPS], basePts[STEPS]);
 
-    // Détection des versements depuis l'historique (sauts > croissance attendue + 100€)
-    const deposits = [];
-    for (let i = 1; i < historyData.length; i++) {
-      const prev = historyData[i - 1], curr = historyData[i];
-      const daysDiff = (new Date(curr.date) - new Date(prev.date)) / 86400000;
-      const expectedGrowth = prev.value * (Math.pow(1 + r, daysDiff / 365) - 1);
-      const deposit = (curr.value - prev.value) - expectedGrowth;
-      if (deposit > 150) deposits.push({ date: curr.date, amount: Math.round(deposit) });
+    // Versements depuis portfolioData.deposits (sauvegardés via API)
+    // Fallback : détection depuis l'historique si pas encore de deposits enregistrés
+    let deposits = (portfolioData.deposits && portfolioData.deposits.length > 0)
+      ? portfolioData.deposits.map(d => ({ date: d.date, amount: Math.round(d.amount) }))
+      : [];
+    if (deposits.length === 0) {
+      for (let i = 1; i < historyData.length; i++) {
+        const prev = historyData[i - 1], curr = historyData[i];
+        const daysDiff = (new Date(curr.date) - new Date(prev.date)) / 86400000;
+        const expectedGrowth = prev.value * (Math.pow(1 + r, daysDiff / 365) - 1);
+        const deposit = (curr.value - prev.value) - expectedGrowth;
+        if (deposit > 150) deposits.push({ date: curr.date, amount: Math.round(deposit) });
+      }
     }
 
     // Dimensions SVG
@@ -5222,11 +5318,25 @@ body { padding-bottom: 64px; }
     if (deposits.length === 0) { depImpactEl.innerHTML = ''; return; }
 
     const lastDeps = deposits.slice(-2).reverse(); // [dernier, avant-dernier]
-    const impactRows = lastDeps.map((dep, idx) => {
+
+    // Trouver la valeur du portefeuille avant/après chaque versement
+    // Priorité : portfolioValueBefore/After stockés dans l'API ; fallback : snapshot historique
+    function getDepositValues(dep) {
+      // Depuis l'API (deposits enregistrés via confirmInvestment)
+      const apiDep = (portfolioData.deposits ?? []).find(d => d.date === dep.date && d.amount === dep.amount);
+      if (apiDep?.portfolioValueBefore && apiDep?.portfolioValueAfter) {
+        return { before: apiDep.portfolioValueBefore, after: apiDep.portfolioValueAfter };
+      }
+      // Fallback : snapshot journalier
       const snapIdx = historyData.findIndex(h => h.date === dep.date);
       if (snapIdx < 1) return null;
-      const before = historyData[snapIdx - 1].value;
-      const after  = historyData[snapIdx].value;
+      return { before: historyData[snapIdx - 1].value, after: historyData[snapIdx].value };
+    }
+
+    const impactRows = lastDeps.map((dep, idx) => {
+      const vals = getDepositValues(dep);
+      if (!vals) return null;
+      const { before, after } = vals;
       const yBefore = yearsTo(before, true);
       const yAfter  = yearsTo(after,  true);
       const gain    = (yBefore !== null && yAfter !== null) ? Math.round((yBefore - yAfter) * 12) : null;
@@ -5465,6 +5575,187 @@ body { padding-bottom: 64px; }
         + '</div>';
     }).join('')
     + (leftover > 1 ? '<div style="font-size:11px;color:var(--ink-3);margin-top:6px">Reste : ' + formatEurInvest(leftover) + ' (portefeuille équilibré)</div>' : '');
+  }
+
+  // ─── Investir aujourd'hui ─────────────────────────────────
+  function openInvestModal() {
+    const modal = document.getElementById('investModal');
+    if (!modal) return;
+    // Pré-remplir avec le cash disponible
+    const cashPos = portfolioData?.cashPosition ?? 0;
+    const input = document.getElementById('investAmountInput');
+    if (input) input.value = cashPos > 0 ? cashPos : '';
+    modal.classList.add('open');
+    computeInvestPlan();
+  }
+
+  function closeInvestModal() {
+    document.getElementById('investModal')?.classList.remove('open');
+  }
+
+  function handleInvestModalBgClick(e) {
+    if (e.target === document.getElementById('investModal')) closeInvestModal();
+  }
+
+  function computeInvestPlan() {
+    const cashRaw     = parseFloat(document.getElementById('investAmountInput')?.value ?? '0');
+    const noteEl      = document.getElementById('investReserveNote');
+    const planList    = document.getElementById('investPlanList');
+    const planTitle   = document.getElementById('investPlanTitle');
+    const leftoverEl  = document.getElementById('investLeftover');
+    const confirmBtn  = document.getElementById('investConfirmBtn');
+    const fmtEur      = v => v.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+
+    if (!portfolioData || !cashRaw || cashRaw <= 0) {
+      if (planList)   planList.innerHTML = '';
+      if (planTitle)  planTitle.style.display = 'none';
+      if (noteEl)     noteEl.textContent = '';
+      if (leftoverEl) leftoverEl.textContent = '';
+      if (confirmBtn) confirmBtn.disabled = true;
+      return;
+    }
+
+    const RESERVE_PCT    = 0.15;
+    const enriched       = portfolioData.holdings.map(h => ({ ...h, currentValue: getHoldingCurrentValue(h) }));
+    const stocksVal      = enriched.reduce((s, h) => s + h.currentValue, 0);
+    const cashPosition   = portfolioData.cashPosition ?? 0;
+    const totalCurrent   = stocksVal + cashPosition;
+
+    const totalAvailCash    = cashPosition + cashRaw;
+    const portfolioWithCash = totalCurrent + cashRaw;
+    const targetReserve     = portfolioWithCash * RESERVE_PCT;
+    const deployable        = Math.max(0, totalAvailCash - targetReserve);
+    const reserve           = totalAvailCash - deployable;
+
+    if (noteEl) {
+      if (deployable < 1) {
+        noteEl.textContent = '⚠️ Cash total (' + fmtEur(totalAvailCash) + ') insuffisant pour la réserve cible (' + fmtEur(targetReserve) + ')';
+      } else {
+        noteEl.textContent = '🏦 Réserve gardée : ' + fmtEur(reserve) + '  ·  Déployable : ' + fmtEur(deployable);
+      }
+    }
+
+    // Calcul des ordres
+    const newTotal = portfolioWithCash;
+    const buys = [];
+    let sumDelta = 0;
+    for (const h of enriched) {
+      if (!h.targetPct) continue;
+      const ideal = newTotal * h.targetPct / 100;
+      const delta = ideal - h.currentValue;
+      if (delta > 1) { buys.push({ ...h, delta }); sumDelta += delta; }
+    }
+
+    if (!buys.length || deployable < 1) {
+      if (planList)   planList.innerHTML = '<div class="invest-plan-empty">🎯 Portefeuille déjà équilibré !</div>';
+      if (planTitle)  planTitle.style.display = '';
+      if (leftoverEl) leftoverEl.textContent = '';
+      if (confirmBtn) confirmBtn.disabled = deployable < 1;
+      return;
+    }
+
+    const scale   = sumDelta > deployable ? deployable / sumDelta : 1;
+    const orders  = buys.map(b => ({ ...b, amount: b.delta * scale })).filter(b => b.amount > 1);
+    const spent   = orders.reduce((s, b) => s + b.amount, 0);
+    const leftover = deployable - spent;
+
+    // Stocker les ordres pour confirmInvestment
+    window._investOrders = orders;
+    window._investDeployable = deployable;
+    window._investCashRaw = cashRaw;
+
+    if (planTitle) planTitle.style.display = '';
+    if (planList) {
+      planList.innerHTML = orders.map(b => {
+        const curPrice  = stockPrices[b.symbol];
+        const priceEur  = curPrice ? toEur(curPrice.price, curPrice.currency) : null;
+        const sharesStr = priceEur && priceEur > 0 ? '+' + (b.amount / priceEur).toFixed(2) + ' parts' : '';
+        return '<div class="invest-plan-item">'
+          + '<div class="invest-plan-left">'
+          +   '<div class="invest-plan-name">' + escHtml(b.name || b.symbol) + '</div>'
+          +   '<div class="invest-plan-ticker">' + escHtml(b.symbol) + (sharesStr ? ' · ' + sharesStr : '') + '</div>'
+          + '</div>'
+          + '<div class="invest-plan-right">'
+          +   '<div class="invest-plan-amount">' + fmtEur(Math.round(b.amount)) + '</div>'
+          +   '<div class="invest-plan-shares">' + (b.targetPct ?? 0) + '% cible</div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+    if (leftoverEl) leftoverEl.textContent = leftover > 1 ? 'Reste non déployé : ' + fmtEur(Math.round(leftover)) : '';
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
+
+  async function confirmInvestment() {
+    const confirmBtn = document.getElementById('investConfirmBtn');
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = '⏳ Enregistrement…'; }
+
+    const orders    = window._investOrders ?? [];
+    const cashRaw   = window._investCashRaw ?? 0;
+    const deployable = window._investDeployable ?? 0;
+
+    if (!portfolioData || !cashRaw) { closeInvestModal(); return; }
+
+    const portfolioValueBefore = portfolioData.holdings.reduce((s, h) => s + getHoldingCurrentValue(h), 0)
+      + (portfolioData.cashPosition ?? 0);
+
+    // 1. Mettre à jour les parts de chaque position selon le plan
+    for (const order of orders) {
+      const h = portfolioData.holdings.find(x => x.id === order.id);
+      if (!h) continue;
+      const curPrice = stockPrices[h.symbol];
+      const priceEur = curPrice ? toEur(curPrice.price, curPrice.currency) : null;
+      if (priceEur && priceEur > 0) {
+        const newShares = (parseFloat(h.shares) || 0) + order.amount / priceEur;
+        h.shares = Math.round(newShares * 10000) / 10000;
+        // Recalculer le prix moyen pondéré
+        const prevInvested = (parseFloat(h.avgPrice) || 0) * ((parseFloat(h.shares) || 0) - order.amount / priceEur);
+        const totalInvested = prevInvested + order.amount;
+        h.avgPrice = Math.round(totalInvested / h.shares * 100) / 100;
+      }
+    }
+
+    // 2. Mettre à jour le cash : on retire le versement entier (le surplus reste en réserve)
+    const newCash = Math.max(0, (portfolioData.cashPosition ?? 0) + cashRaw - deployable);
+    portfolioData.cashPosition = Math.round(newCash * 100) / 100;
+
+    const portfolioValueAfter = portfolioData.holdings.reduce((s, h) => s + getHoldingCurrentValue(h), 0)
+      + portfolioData.cashPosition;
+
+    // 3. Sauvegarder deposit + holdings + cash en parallèle
+    const today = new Date().toISOString().slice(0, 10);
+    const depositRecord = {
+      date:                 today,
+      amount:               Math.round(cashRaw * 100) / 100,
+      portfolioValueBefore: Math.round(portfolioValueBefore * 100) / 100,
+      portfolioValueAfter:  Math.round(portfolioValueAfter  * 100) / 100,
+    };
+
+    try {
+      await Promise.all([
+        fetch('/api/stocks', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'saveDeposit', deposit: depositRecord }),
+        }),
+        fetch('/api/stocks', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'saveHoldings', holdings: portfolioData.holdings }),
+        }),
+        fetch('/api/stocks', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'saveCash', cash: portfolioData.cashPosition }),
+        }),
+      ]);
+      // Ajouter le deposit localement pour la mise à jour immédiate du graphe
+      portfolioData.deposits = portfolioData.deposits ?? [];
+      portfolioData.deposits.push(depositRecord);
+      portfolioData.deposits.sort((a, b) => a.date.localeCompare(b.date));
+    } catch (e) {
+      console.error('[invest]', e);
+    }
+
+    closeInvestModal();
+    renderPortfolio(); // re-render avec nouvelles positions
   }
 
   // ─── Settings ────────────────────────────────────────────

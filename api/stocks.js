@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
   // ── POST ─────────────────────────────────────────────────
   if (req.method === 'POST') {
-    const { action, holdings, settings, date, value, qqq, cash } = req.body ?? {};
+    const { action, holdings, settings, date, value, qqq, cash, deposit } = req.body ?? {};
 
     if (action === 'saveHoldings' && holdings !== undefined) {
       await setConfig('portfolio_holdings', JSON.stringify(holdings));
@@ -89,16 +89,27 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // Sauvegarde d'un versement : {date, amount, portfolioValueBefore, portfolioValueAfter}
+    if (action === 'saveDeposit' && deposit) {
+      const depositsStr = await getConfig('portfolio_deposits');
+      const deposits    = depositsStr ? JSON.parse(depositsStr) : [];
+      deposits.push({ ...deposit, savedAt: new Date().toISOString() });
+      deposits.sort((a, b) => a.date.localeCompare(b.date));
+      await setConfig('portfolio_deposits', JSON.stringify(deposits.slice(-100)));
+      return res.status(200).json({ ok: true });
+    }
+
     return res.status(400).json({ error: 'action inconnue' });
   }
 
   // ── GET ?portfolio=1 ──────────────────────────────────────
   if (req.query?.portfolio === '1') {
-    const [holdingsStr, settingsStr, historyStr, cashStr] = await Promise.all([
+    const [holdingsStr, settingsStr, historyStr, cashStr, depositsStr] = await Promise.all([
       getConfig('portfolio_holdings'),
       getConfig('portfolio_settings'),
       getConfig('portfolio_history'),
       getConfig('portfolio_cash'),
+      getConfig('portfolio_deposits'),
     ]);
 
     const holdings = holdingsStr ? JSON.parse(holdingsStr) : [];
@@ -107,10 +118,11 @@ export default async function handler(req, res) {
       targetValue:    1000000,
       monthlyContrib: 0,
     };
-    const history      = historyStr ? JSON.parse(historyStr) : [];
-    const cashPosition = cashStr ? Number(cashStr) : 0;
+    const history      = historyStr  ? JSON.parse(historyStr)  : [];
+    const cashPosition = cashStr     ? Number(cashStr)          : 0;
+    const deposits     = depositsStr ? JSON.parse(depositsStr)  : [];
 
-    return res.status(200).json({ holdings, settings, history, cashPosition });
+    return res.status(200).json({ holdings, settings, history, cashPosition, deposits });
   }
 
   // ── GET ?symbols=AAPL,IWDA.AS ─────────────────────────────
