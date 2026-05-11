@@ -1512,6 +1512,13 @@ body { padding-bottom: 64px; }
 .proj-slider { width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: var(--line); border-radius: 2px; outline: none; cursor: pointer; }
 .proj-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--navy); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.25); border: 3px solid #fff; }
 .proj-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--navy); cursor: pointer; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+/* Impact projection chart */
+.proj-impact-card { padding: 16px 16px 12px; }
+.proj-impact-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.proj-impact-title { font-size: 12px; font-weight: 700; color: var(--navy); }
+.proj-impact-gain { font-size: 13px; font-weight: 800; color: #1b8c47; }
+.proj-impact-legend { display: flex; gap: 14px; justify-content: center; margin-top: 6px; font-size: 11px; color: var(--ink-3); }
+.proj-impact-legend span { display: flex; align-items: center; gap: 5px; }
 
 /* Holdings */
 .holding-card { cursor: pointer; padding: 14px 16px; }
@@ -1908,6 +1915,18 @@ body { padding-bottom: 64px; }
               oninput="document.getElementById('investMonthlyDisplay').textContent=parseInt(this.value)+' €'; refreshProjection()"
               onchange="saveInvestSettings()">
           </div>
+        </div>
+      </div>
+      <!-- Impact versement -->
+      <div class="card proj-impact-card">
+        <div class="proj-impact-header">
+          <span class="proj-impact-title">📈 Trajectoire vers 1 M€</span>
+          <span class="proj-impact-gain" id="projImpactGain"></span>
+        </div>
+        <div id="projImpactSvg"></div>
+        <div class="proj-impact-legend">
+          <span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#1b3370" stroke-width="2.5" stroke-linecap="round"/></svg>Aujourd'hui</span>
+          <span id="projPrevLegend" style="display:none"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#888" stroke-width="1.5" stroke-dasharray="5 3"/></svg>Avant versement</span>
         </div>
       </div>
     </section>
@@ -5004,6 +5023,147 @@ body { padding-bottom: 64px; }
     if (el('projStartLabel')) {
       el('projStartLabel').textContent = 'Départ : ' + formatEurInvest(totalCurrent) + ' · Objectif : ' + formatEurInvest(target);
     }
+    renderProjectionChart(totalCurrent, r, pmt, target);
+  }
+
+  // ─── Courbe d'impact versement ───────────────────────────
+  function renderProjectionChart(currentValArg, rArg, pmtArg, targetArg) {
+    const svgWrap = document.getElementById('projImpactSvg');
+    if (!svgWrap || !portfolioData) return;
+
+    const settings    = portfolioData.settings ?? {};
+    const ri = document.getElementById('investRateInput');
+    const mi = document.getElementById('investMonthlyInput');
+    const r      = rArg   ?? ((ri ? parseFloat(ri.value) : null) ?? settings.annualReturn   ?? 8) / 100;
+    const pmt    = pmtArg ?? ((mi ? parseFloat(mi.value) : null) ?? settings.monthlyContrib ?? 0);
+    const target = targetArg ?? settings.targetValue ?? 1000000;
+
+    const stocksVal  = portfolioData.holdings.reduce((s, h) => s + getHoldingCurrentValue(h), 0);
+    const currentVal = currentValArg ?? (stocksVal + (portfolioData.cashPosition ?? 0));
+
+    // Valeur "avant" = avant-dernier snapshot (si diff > 50€)
+    const prevSnap = historyData.length >= 2
+      ? historyData[historyData.length - 2].value
+      : (historyData.length === 1 ? historyData[0].value : null);
+    const hasPrev  = prevSnap !== null && Math.abs(prevSnap - currentVal) > 50;
+    const prevVal  = prevSnap ?? currentVal;
+
+    // Années jusqu'à target
+    function yearsTo(startVal) {
+      if (startVal >= target) return 0;
+      if (pmt <= 0) return Math.log(target / Math.max(startVal, 1)) / Math.log(1 + r);
+      let val = startVal, yrs = 0;
+      while (val < target && yrs < 300) { val = val * (1 + r) + pmt * 12; yrs++; }
+      return val >= target ? yrs : null;
+    }
+    const curYrs = yearsTo(currentVal);
+    const prvYrs = hasPrev ? yearsTo(prevVal) : null;
+
+    // Horizon graphe : jusqu'à la croisée 1M + marge, max 25 ans
+    const maxYrs = Math.min(25, Math.max(20,
+      (curYrs ?? 0) + 3,
+      (prvYrs ?? 0) + 3
+    ));
+
+    // Projection
+    function projV(startVal, t) {
+      return startVal * Math.pow(1 + r, t) + (pmt > 0 ? pmt * 12 * (Math.pow(1 + r, t) - 1) / r : 0);
+    }
+    const STEPS = 80;
+    const curPts = Array.from({length: STEPS + 1}, (_, i) => projV(currentVal, i / STEPS * maxYrs));
+    const prvPts = hasPrev ? Array.from({length: STEPS + 1}, (_, i) => projV(prevVal, i / STEPS * maxYrs)) : [];
+
+    const maxVal = Math.max(target * 1.08, curPts[STEPS], hasPrev ? prvPts[STEPS] : 0);
+
+    // Dimensions SVG
+    const W = 320, H = 190, PL = 46, PR = 14, PT = 14, PB = 26;
+    const CW = W - PL - PR, CH = H - PT - PB;
+    const toX = t  => PL + (t / maxYrs) * CW;
+    const toY = v  => PT + (1 - Math.min(v, maxVal) / maxVal) * CH;
+
+    function makePath(pts) {
+      return pts.map((v, i) => (i === 0 ? 'M' : 'L') + toX(i / STEPS * maxYrs).toFixed(1) + ' ' + toY(v).toFixed(1)).join(' ');
+    }
+
+    function fmtK(v) {
+      if (v >= 1e6) return (v/1e6).toFixed(v % 1e6 === 0 ? 0 : 1) + 'M€';
+      if (v >= 1000) return Math.round(v / 1000) + 'k€';
+      return Math.round(v) + '€';
+    }
+
+    const millionY = toY(target);
+    const nowYear  = new Date().getFullYear();
+
+    function crossingX(yrs) { return (yrs !== null && yrs <= maxYrs) ? toX(yrs) : null; }
+    const curCrossX = crossingX(curYrs);
+    const prvCrossX = crossingX(prvYrs);
+
+    // Y-axis ticks
+    const yTicks = [0, target * 0.25, target * 0.5, target * 0.75, target].filter(v => v <= maxVal);
+    // X-axis ticks
+    const xStep = maxYrs <= 15 ? 5 : 5;
+
+    let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">`;
+    s += `<defs><linearGradient id="impactGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1b3370" stop-opacity="0.18"/><stop offset="100%" stop-color="#1b3370" stop-opacity="0"/></linearGradient></defs>`;
+
+    // Grid horizontales
+    yTicks.forEach(v => {
+      const y = toY(v).toFixed(1);
+      const isM = v === target;
+      s += `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="${isM ? '#1b3370' : 'var(--line)'}" stroke-width="${isM ? 1 : 0.7}" stroke-dasharray="${isM ? '5 3' : 'none'}" opacity="${isM ? 0.55 : 0.6}"/>`;
+      s += `<text x="${PL-4}" y="${(parseFloat(y)+3.5).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--ink-3)" font-family="system-ui,sans-serif">${fmtK(v)}</text>`;
+    });
+
+    // X-axis labels
+    for (let yr = 0; yr <= maxYrs; yr += xStep) {
+      s += `<text x="${toX(yr).toFixed(1)}" y="${H-PB+14}" text-anchor="middle" font-size="9" fill="var(--ink-3)" font-family="system-ui,sans-serif">${nowYear + yr}</text>`;
+    }
+
+    // Courbe "avant" pointillée grise
+    if (hasPrev && prvPts.length) {
+      s += `<path d="${makePath(prvPts)}" fill="none" stroke="#999" stroke-width="1.6" stroke-dasharray="5 3" opacity="0.55"/>`;
+      if (prvCrossX) {
+        s += `<circle cx="${prvCrossX.toFixed(1)}" cy="${millionY.toFixed(1)}" r="3.5" fill="#999" opacity="0.6"/>`;
+        s += `<text x="${(prvCrossX - 3).toFixed(1)}" y="${(millionY - 7).toFixed(1)}" text-anchor="middle" font-size="8.5" fill="#888" font-family="system-ui,sans-serif">${nowYear + Math.ceil(prvYrs)}</text>`;
+      }
+    }
+
+    // Remplissage sous courbe actuelle
+    s += `<path d="${makePath(curPts)} L${toX(maxYrs).toFixed(1)} ${(PT+CH).toFixed(1)} L${PL} ${(PT+CH).toFixed(1)} Z" fill="url(#impactGrad)"/>`;
+    // Courbe actuelle
+    s += `<path d="${makePath(curPts)}" fill="none" stroke="#1b3370" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+    // Marqueur croisée 1M€ courbe actuelle
+    if (curCrossX) {
+      s += `<circle cx="${curCrossX.toFixed(1)}" cy="${millionY.toFixed(1)}" r="5" fill="#1b3370"/>`;
+      s += `<circle cx="${curCrossX.toFixed(1)}" cy="${millionY.toFixed(1)}" r="8" fill="#1b3370" opacity="0.15"/>`;
+      const lblX = Math.min(parseFloat(curCrossX.toFixed(1)), W - PR - 14);
+      s += `<text x="${lblX}" y="${(millionY - 11).toFixed(1)}" text-anchor="middle" font-size="9.5" fill="#1b3370" font-weight="700" font-family="system-ui,sans-serif">${nowYear + Math.ceil(curYrs)}</text>`;
+    }
+
+    // Label 1M€
+    s += `<text x="${(W-PR+2).toFixed(1)}" y="${(millionY+4).toFixed(1)}" font-size="8" fill="#1b3370" font-weight="700" font-family="system-ui,sans-serif">1M€</text>`;
+
+    s += '</svg>';
+    svgWrap.innerHTML = s;
+
+    // Gain en mois
+    const gainEl  = document.getElementById('projImpactGain');
+    const prevLeg = document.getElementById('projPrevLegend');
+    if (prevLeg) prevLeg.style.display = hasPrev ? '' : 'none';
+    if (gainEl) {
+      if (!hasPrev) {
+        gainEl.textContent = '';
+      } else {
+        const gainMonths = (curYrs !== null && prvYrs !== null) ? Math.round((prvYrs - curYrs) * 12) : null;
+        if (gainMonths !== null && gainMonths > 0)
+          gainEl.textContent = '+' + gainMonths + ' mois d\'avance 🚀';
+        else if (gainMonths !== null && gainMonths < 0)
+          gainEl.innerHTML = '<span style="color:var(--ink-3)">' + Math.abs(gainMonths) + ' mois de retard</span>';
+        else
+          gainEl.textContent = '';
+      }
+    }
   }
 
   // ─── Positions ────────────────────────────────────────────
@@ -5322,171 +5482,4 @@ body { padding-bottom: 64px; }
   }
 
   async function deleteHolding() {
-    const editId = document.getElementById('holdingEditId').value;
-    if (!editId || !portfolioData) return;
-    if (!confirm('Supprimer cette position ?')) return;
-    portfolioData.holdings = portfolioData.holdings.filter(h => h.id !== editId);
-    await fetch('/api/stocks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saveHoldings', holdings: portfolioData.holdings }),
-    });
-    closeHoldingModal();
-    renderPortfolio();
-  }
-
-  function formatEurInvest(n) {
-    if (!isFinite(n)) return '—';
-    const abs = Math.abs(n);
-    if (abs >= 1000000) return (n / 1000000).toFixed(2) + ' M€';
-    if (abs >= 1000)    return (n / 1000).toFixed(1)    + ' k€';
-    return Math.round(n) + ' €';
-  }
-
-</script>
-
-<!-- BRIEF OVERLAY + BOTTOM SHEET -->
-<div class="brief-overlay" id="briefOverlay"></div>
-<div class="brief-sheet" id="briefSheet">
-  <div class="brief-sheet-drag"></div>
-  <div class="brief-sheet-head">
-    <span class="brief-sheet-title">✶ Brief du jour</span>
-    <button class="brief-close-btn" onclick="closeBrief()">✕</button>
-  </div>
-  <div class="brief-scroll" id="briefScroll">
-    <div class="brief-body" id="briefBody">
-      <div class="brief-loading">
-        <div class="brief-spinner"></div>
-        <span>Elie prépare ton brief…</span>
-      </div>
-    </div>
-    <div class="brief-thread" id="briefThread"></div>
-  </div>
-  <div class="brief-input-row" id="briefInputRow" style="display:none">
-    <input type="text" class="brief-input" id="briefInput"
-           placeholder="Demande à Elie…" autocomplete="off"
-           oninput="updateBriefSendBtn()"
-           onkeydown="if(event.key==='Enter')sendBriefMessage()">
-    <button class="brief-send-btn" id="briefSendBtn" onclick="sendBriefMessage()">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-        <path d="M14.5 8L1.5 2 4.5 8 1.5 14 14.5 8z" fill="currentColor"/>
-      </svg>
-    </button>
-  </div>
-</div>
-
-<!-- CHAT PANEL (slide-up depuis le bas) -->
-<div class="chat-panel" id="chatPanel">
-  <div class="chat-panel-head">
-    <span class="chat-panel-title">✶ ELIE</span>
-    <button class="chat-panel-close" onclick="closeChatPanel()">✕</button>
-  </div>
-  <div class="chat-messages" id="chatMessages"></div>
-  <div class="chat-typing" id="chatTyping">
-    <span></span><span></span><span></span>
-  </div>
-</div>
-
-<!-- CHAT BAR (barre fixe en bas) -->
-<div class="chat-bar" id="chatBar">
-  <div id="chatImagePreview" style="display:none;margin:6px 8px 0;position:relative">
-    <img id="chatPreviewImg" style="max-height:60px;border-radius:6px;border:1px solid var(--line)">
-    <button onclick="clearChatImage()" style="position:absolute;top:-6px;right:-6px;background:var(--ink);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer;line-height:1">✕</button>
-  </div>
-  <div class="chat-input-row">
-    <label for="chatImageInput" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;cursor:pointer;color:var(--ink-3);flex-shrink:0" title="Joindre une image">
-      📎
-      <input type="file" id="chatImageInput" accept="image/*" style="display:none" onchange="if(this.files[0])attachChatImage(this.files[0]);this.value=''">
-    </label>
-    <input type="text" class="chat-input" id="chatInput"
-           placeholder="Dis à Elie quoi faire…" autocomplete="off"
-           oninput="updateSendBtn()"
-           onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendChatMessage()">
-    <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M14.5 8L1.5 2 4.5 8 1.5 14 14.5 8z" fill="currentColor"/>
-      </svg>
-    </button>
-  </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
-  <div class="settings-sheet">
-    <div class="settings-handle"></div>
-    <div class="settings-title">⚙️ Paramètres</div>
-
-    <!-- NOTIFICATIONS -->
-    <div class="settings-section">
-      <div class="settings-section-label">Notifications push</div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">☀️</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Brief du matin</div>
-          <div class="settings-row-sub">Lun–Ven · <select class="settings-hour-select" id="hour_notif_morning" onchange="saveNotifPref('notif_morning_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7" selected>07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <input type="checkbox" id="toggle_notif_morning" onchange="saveNotifPref('notif_morning',this.checked)">
-          <div class="settings-toggle-track"></div>
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">\U0001f5d3</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Brief hebdo</div>
-          <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_weekly" onchange="saveNotifPref('notif_weekly_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <input type="checkbox" id="toggle_notif_weekly" onchange="saveNotifPref('notif_weekly',this.checked)">
-          <div class="settings-toggle-track"></div>
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">\U0001f4cb</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Tâches en attente</div>
-          <div class="settings-row-sub">Lun–Ven · <select class="settings-hour-select" id="hour_notif_tasks" onchange="saveNotifPref('notif_tasks_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17" selected>17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <input type="checkbox" id="toggle_notif_tasks" onchange="saveNotifPref('notif_tasks',this.checked)">
-          <div class="settings-toggle-track"></div>
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">\U0001f4f8</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Upload budget</div>
-          <div class="settings-row-sub">Dimanche · <select class="settings-hour-select" id="hour_notif_budget" onchange="saveNotifPref('notif_budget_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9">09h00</option><option value="10" selected>10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <input type="checkbox" id="toggle_notif_budget" onchange="saveNotifPref('notif_budget',this.checked)">
-          <div class="settings-toggle-track"></div>
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-
-      <div class="settings-row">
-        <div class="settings-row-icon">\U0001f4c8</div>
-        <div class="settings-row-info">
-          <div class="settings-row-label">Bilan investissements</div>
-          <div class="settings-row-sub">1er du mois · <select class="settings-hour-select" id="hour_notif_invest" onchange="saveNotifPref('notif_invest_hour',this.value)"><option value="5">05h00</option><option value="6">06h00</option><option value="7">07h00</option><option value="8">08h00</option><option value="9" selected>09h00</option><option value="10">10h00</option><option value="11">11h00</option><option value="12">12h00</option><option value="13">13h00</option><option value="14">14h00</option><option value="15">15h00</option><option value="16">16h00</option><option value="17">17h00</option><option value="18">18h00</option><option value="19">19h00</option><option value="20">20h00</option><option value="21">21h00</option><option value="22">22h00</option></select></div>
-        </div>
-        <label class="settings-toggle">
-          <div class="settings-toggle-thumb"></div>
-        </label>
-      </div>
-    </div>
-
-    <p class="settings-notif-hint">Les notifications fonctionnent uniquement depuis l&#39;app installée sur ton écran d&#39;accueil.</p>
-    <button class="settings-close-btn" onclick="closeSettings()">Fermer</button>
-  </div>
-</div>
-</body>
-</html>
+    const editId = document.getElementById('holdi
