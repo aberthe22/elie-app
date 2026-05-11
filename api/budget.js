@@ -149,11 +149,18 @@ export default async function handler(req, res) {
           catMap[c.name] = { name: c.name, spent: c.spent || 0 };
         }
       });
-      existing.categories   = Object.values(catMap);
-      existing.totalSpent   = data.totalSpent   ?? existing.totalSpent;
-      existing.balance      = data.balance      ?? existing.balance;
-      existing.month        = data.month        ?? existing.month;
-      existing.uploadedAt   = new Date().toISOString();
+      existing.categories  = Object.values(catMap);
+      existing.totalSpent  = data.totalSpent ?? existing.totalSpent;
+      existing.balance     = data.balance    ?? existing.balance;
+      existing.month       = data.month      ?? existing.month;
+      existing.uploadedAt  = new Date().toISOString();
+      // Sauvegarder les budgets par catégorie extraits par Revolut (si présents)
+      existing.catBudgets  = existing.catBudgets || {};
+      (data.categories || []).forEach(c => {
+        if (c.budget && c.budget > 0 && !existing.catBudgets[c.name]) {
+          existing.catBudgets[c.name] = c.budget;
+        }
+      });
       await saveMonth(existing);
       return res.status(200).json({ ok: true, data: existing });
     }

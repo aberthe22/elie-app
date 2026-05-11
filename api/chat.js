@@ -314,7 +314,7 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY manquant' });
 
-  const { message, history = [], context = '', image } = req.body ?? {};
+  const { message, history = [], context = '', image, portfolioContext } = req.body ?? {};
   if (!message?.trim()) return res.status(400).json({ error: 'message requis' });
 
   try {
@@ -343,7 +343,15 @@ Comportement :
 
 Contexte mémorisé des sessions précédentes :
 ${context || '(aucun contexte encore)'}
-
+${portfolioContext ? `
+── PORTEFEUILLE EN DIRECT ──
+Valorisation totale : ${portfolioContext.totalValue?.toLocaleString('fr-FR')} €  |  Cash : ${portfolioContext.cash?.toLocaleString('fr-FR')} €
+Positions :
+${(portfolioContext.holdings || []).map(h =>
+  `• ${h.symbol} (${h.name}) : ${h.shares} parts · valeur ~${h.current?.toLocaleString('fr-FR')} € · PnL ${h.pnl != null ? (h.pnl >= 0 ? '+' : '') + h.pnl.toLocaleString('fr-FR') + ' € (' + (h.pnlPct >= 0 ? '+' : '') + h.pnlPct + '%)' : 'N/A'} · variation jour ${h.dayChg != null ? (h.dayChg >= 0 ? '+' : '') + h.dayChg.toFixed(2) + '%' : 'N/A'}`
+).join('\n')}
+${portfolioContext.news?.length ? `\nActualités récentes des titres :\n${portfolioContext.news.map(n => `• [${n.symbol}] ${n.title} — ${n.source}`).join('\n')}` : ''}
+──────────────────────────────` : ''}
 Date et heure : ${datetime}`;
 
   // Construire les messages pour Claude
@@ -422,31 +430,4 @@ Date et heure : ${datetime}`;
               case 'get_calendar':   result = await toolGetCalendar(tb.input);        break;
               case 'create_event':   result = await toolCreateEvent(tb.input);        break;
               case 'get_budget':     result = { info: 'Budget non chargé côté serveur — consulte l\'onglet Budget dans l\'app' }; break;
-              case 'add_expense':    result = { info: 'Dépense enregistrée côté client — utilise le bouton + Dépense manuelle dans l\'app' }; break;
-              default:               result = { error: `Outil inconnu: ${tb.name}` };
-            }
-            actionsTaken.push(tb.name);
-          } catch (e) {
-            result = { error: e.message };
-            console.error(`[chat/${tb.name}]`, e.message);
-          }
-          return { type: 'tool_result', tool_use_id: tb.id, content: JSON.stringify(result) };
-        })
-      );
-
-      currentMessages.push({ role: 'user', content: toolResults });
-    }
-  }
-
-  // Sécurité : max itérations atteint
-  return res.status(200).json({
-    reply: 'J\'ai traité ta demande mais ai atteint la limite de traitement. Reformule si besoin.',
-    history: [...history.slice(-28), { role: 'user', content: message }],
-    actions_taken: actionsTaken,
-  });
-
-  } catch (err) {
-    console.error('[chat] erreur:', err.message);
-    return res.status(500).json({ error: err.message ?? 'Erreur interne' });
-  }
-}
+              case 'add_expense':    result = { info: 'Dépense enregistrée côté client — utilise le bouton + Dépense manuelle dans l\'app' }

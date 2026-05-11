@@ -148,35 +148,79 @@ export default async function handler(req, res) {
     const sub  = JSON.parse(subStr);
     const sent = [];
 
-    const send = async (key, body) => {
+    const send = async (key, title, body) => {
       const enabled = await getConfig(`notif_${key}`);
       if (enabled === '0') return;
       await webpush.default.sendNotification(sub, JSON.stringify({
-        title: '✶ Elie', body, icon: '/icon-192.png', data: { url: '/' },
+        title: title || '✶ Elie', body, icon: '/icon-192.png', data: { url: '/' },
       }));
       sent.push(key);
     };
 
+    // ── Fetch tâches du jour pour enrichir les notifs ──────────
+    const todayStr  = new Date().toISOString().split('T')[0];
+    let todayTasks  = [];
+    let urgentTasks = [];
+    try {
+      const tRes = await fetch(`${NOTION_API}/databases/${dbId}/query`, {
+        method: 'POST', headers: notionHeaders(),
+        body: JSON.stringify({
+          filter: {
+            and: [
+              { property: 'État',           status:   { does_not_equal: 'Terminé' } },
+              { property: 'élément parent', relation: { is_empty: true            } },
+              { property: 'Date',           date:     { on_or_before: todayStr   } },
+            ]
+          },
+          sorts: [{ property: 'Importance', direction: 'descending' }],
+          page_size: 8,
+        }),
+      });
+      if (tRes.ok) {
+        const tData = await tRes.json();
+        todayTasks  = (tData.results || []).map(p => p.properties['Tâche']?.title?.[0]?.plain_text ?? '').filter(Boolean);
+        urgentTasks = (tData.results || [])
+          .filter(p => {
+            const imp  = p.properties['Importance']?.select?.name;
+            const date = p.properties['Date']?.date?.start;
+            return imp === 'Haute' || (date && date < todayStr);
+          })
+          .map(p => p.properties['Tâche']?.title?.[0]?.plain_text ?? '')
+          .filter(Boolean)
+          .slice(0, 3);
+      }
+    } catch {}
+
     if (notifyType === 'morning') {
-      // Lun-Ven : brief du matin
+      // Lun-Ven : brief du matin avec top tâches
       if ([1,2,3,4,5].includes(jsDay)) {
-        await send('morning', 'Ton brief du jour est prêt. Bonne journée ! ☀️');
+        const top = (urgentTasks.length ? urgentTasks : todayTasks).slice(0, 3);
+        const body = top.length
+          ? '☀️ Aujourd\'hui : ' + top.map(t => t.length > 28 ? t.slice(0, 26) + '…' : t).join(' · ')
+          : '☀️ Bonne journée, Alexis ! Ton brief est prêt.';
+        await send('morning', '✶ Elie — Brief du jour', body);
       }
     }
 
     if (notifyType === 'check') {
       // Dimanche : brief hebdo + rappel budget
       if (jsDay === 0) {
-        await send('weekly', 'C\'est le week-end — ton brief hebdo t\'attend dans Elie 🗓');
-        await send('budget', 'Rappel : pense à uploader ta capture Revolut 📸');
+        await send('weekly', '✶ Elie — Récap hebdo', 'C\'est le week-end — ton bilan de semaine t\'attend 🗓');
+        await send('budget', '✶ Elie — Budget', 'Rappel : pense à uploader ta capture Revolut 📸');
       }
-      // 1er du mois (tous les jours) : bilan investissements
+      // 1er du mois : bilan investissements
       if (monthDay === 1) {
-        await send('invest', 'C\'est le 1er du mois — fais le point sur tes investissements 📈');
+        await send('invest', '✶ Elie — Investissements', 'C\'est le 1er du mois — fais le point sur ton portefeuille 📈');
       }
-      // Tâches en attente : lun-ven (via le check de 10h, décalé mais fonctionnel)
-      if ([1,2,3,4,5].includes(jsDay)) {
-        await send('tasks', 'Des tâches en attente t\'attendent encore aujourd\'hui 💪');
+      // Tâches en attente : lun-ven — liste les titres
+      if ([1,2,3,4,5].includes(jsDay) && todayTasks.length > 0) {
+        const listed = todayTasks.slice(0, 3).map(t => t.length > 28 ? t.slice(0, 26) + '…' : t).join(' · ');
+        const body   = todayTasks.length <= 3
+          ? `N'oublie pas : ${listed} 💪`
+          : `${todayTasks.length} tâches : ${listed}… 💪`;
+        await send('tasks', '✶ Elie — Tâches du jour', body);
+      } else if ([1,2,3,4,5].includes(jsDay)) {
+        await send('tasks', '✶ Elie — Tâches', 'Pas de tâche urgente aujourd\'hui — bien joué ! 🎯');
       }
     }
 
@@ -281,77 +325,4 @@ export default async function handler(req, res) {
   }
 }
 
-// ── HELPERS ───────────────────────────────────────────────
-
-function headers(token) {
-  return {
-    'Authorization':  `Bearer ${token}`,
-    'Notion-Version': '2022-06-28',
-    'Content-Type':   'application/json',
-  };
-}
-
-function parsePage(page, today) {
-  const p = page.properties;
-  const dateRaw    = p['Date']?.date?.start ?? null;
-  const importance = p['Importance']?.select?.name ?? null;
-  const status     = p['État']?.status?.name ?? 'Pas commencé';
-
-  // Tag affiché dans la carte
-  let tag = null, tagClass = null;
-  if (dateRaw && dateRaw < today) {
-    tag = 'En retard'; tagClass = 'urgent';
-  } else if (importance === 'Haute') {
-    tag = 'Urgent'; tagClass = 'urgent';
-  } else if (dateRaw === today) {
-    tag = 'Aujourd\'hui'; tagClass = 'today';
-  } else if (dateRaw) {
-    const label = new Date(dateRaw + 'T12:00:00')
-      .toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
-    tag = label.charAt(0).toUpperCase() + label.slice(1);
-    tagClass = 'soon';
-  } else if (importance === 'Moyenne') {
-    tag = 'Moyenne'; tagClass = 'soon';
-  }
-
-  return {
-    id:         page.id,
-    title:      p['Tâche']?.title?.[0]?.plain_text ?? 'Sans titre',
-    status,
-    done:       status === 'Terminé',
-    importance,
-    domain:     p['Domaine']?.select?.name ?? null,
-    date:       dateRaw,
-    tag,
-    tagClass,
-    url:        page.url,
-    lastEdited: page.last_edited_time ?? null,
-  };
-}
-
-function scoreTask(task, today) {
-  let score = 0;
-
-  // Score par date
-  if (task.date) {
-    if (task.date < today)  score += 40;  // en retard
-    else if (task.date === today) score += 25;  // aujourd'hui
-    else {
-      const days = Math.ceil(
-        (new Date(task.date) - new Date(today)) / 86400000
-      );
-      if (days <= 3) score += 15;
-      else if (days <= 7) score += 10;
-    }
-  }
-
-  // Score par importance
-  if (task.importance === 'Haute')   score += 30;
-  if (task.importance === 'Moyenne') score += 15;
-
-  // Score par statut
-  if (task.status === 'En cours') score += 20;
-  if (task.status === 'Bloqué')   score += 10;
-
-  return score;
-}
+// ── HELPERS ─────�
